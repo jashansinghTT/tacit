@@ -113,15 +113,15 @@ export function AnswerTab({ skill }: { skill: Skill }) {
             </EmptyState>
           </Panel>
         ) : (
-          pending.map((q) => <QuestionCard key={q.id ?? `${q.step_id}-${q.t}`} skill={skill} q={q} onSaved={onSaved} />)
+          pending.map((q, i) => <QuestionCard key={`${q.id}-${i}`} skill={skill} q={q} onSaved={onSaved} />)
         )}
       </div>
       <Panel title="Answered" eyebrow={`${answered.length} answers in the expert's words`} pad={false}>
         <ul className="divide-y divide-line">
-          {answered.map((q) => {
+          {answered.map((q, i) => {
             const step = skill.steps.find((s) => s.id === q.step_id)
             return (
-              <li key={q.id ?? q.step_id} className="px-4 py-3">
+              <li key={`${q.id}-${i}`} className="px-4 py-3">
                 <div className="text-[11px] text-fg-subtle">{step ? `Step ${step.index} · ${step.title}` : q.step_id}</div>
                 <div className="mt-1 text-[13px] text-fg-muted">{q.question}</div>
                 <div className="mt-1.5 text-[13px] text-fg italic">"{q.answer}"</div>

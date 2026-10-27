@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { blobToBase64, useFrameGrabber } from '@/lib/media'
-import { sockets, type AnalysisMsg, type CaptureEventMsg, type CaptureServerMsg, type ServedBy, type Step, type TacitSocket, type CaptureClientMsg } from '@/lib/api'
+import { api, sockets, type AnalysisMsg, type CaptureEventMsg, type CaptureServerMsg, type ServedBy, type Step, type TacitSocket, type CaptureClientMsg } from '@/lib/api'
 
 export type CapturePhase = 'idle' | 'connecting' | 'live' | 'stopping' | 'saved' | 'error'
 
@@ -43,12 +43,18 @@ export function useCapture() {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const grab = useFrameGrabber(960)
   const counters = useRef({ sent: 0, analysed: 0, dropped: 0, window: [] as number[], lag: 0 })
+  const skillIdRef = useRef<string | null>(null)
+  const phaseRef = useRef<CapturePhase>('idle')
+  const stopPoll = useRef<ReturnType<typeof setTimeout> | null>(null)
+  skillIdRef.current = skillId
+  phaseRef.current = phase
   const listeners = useRef<{ onCoach?: (l: ChatLine) => void; onCoachAudio?: (id: string, audio: string) => void }>({})
 
   const cleanup = useCallback(() => {
     if (timer.current) clearInterval(timer.current)
     timer.current = null
   }, [])
+  useEffect(() => () => void (stopPoll.current && clearTimeout(stopPoll.current)), [])
 
   const handle = useCallback((m: CaptureServerMsg) => {
     switch (m.type) {
@@ -141,9 +147,22 @@ export function useCapture() {
           setPhase((p) => (p === 'saved' ? p : 'error'))
           cleanup()
         } else if (st === 'closed') {
-          setPhase((p) => (p === 'saved' ? p : p === 'stopping' ? 'saved' : 'error'))
-          if (reason) setError(reason)
           cleanup()
+          setPhase((p) => {
+            if (p === 'stopping') {
+              // Closed after stop without a `saved` message: the skill record knows its job.
+              void api
+                .skill(id)
+                .then((sk) => {
+                  setJobId((j) => j ?? sk.job_id ?? null)
+                  setPhase('saved')
+                })
+                .catch(() => setError('The capture was stopped, but the box did not confirm it was saved.'))
+              return p
+            }
+            if (p !== 'saved' && reason) setError(reason)
+            return p === 'saved' ? p : 'error'
+          })
         }
       })
       timer.current = setInterval(async () => {
@@ -174,6 +193,27 @@ export function useCapture() {
     cleanup()
     setPhase('stopping')
     sock.current?.send({ type: 'stop' })
+    // The box normally answers `saved` within a second, but it can be busy finishing coach audio.
+    // If it is slow, follow the skill record instead: it gets its job id when processing starts.
+    const id = skillIdRef.current
+    if (!id) return
+    let tries = 0
+    const poll = async () => {
+      if (phaseRef.current !== 'stopping') return
+      try {
+        const sk = await api.skill(id)
+        if (sk.job_id && phaseRef.current === 'stopping') {
+          setJobId(sk.job_id)
+          setPhase('saved')
+          return
+        }
+      } catch {
+        /* keep waiting */
+      }
+      if (++tries < 40) stopPoll.current = setTimeout(poll, 3000)
+      else setError('The box has not confirmed the capture yet. It is listed under Skills once processing starts.')
+    }
+    stopPoll.current = setTimeout(poll, 12000)
   }, [cleanup])
 
   const answer = useCallback(async (wav: Blob, questionId: string | null) => {

@@ -21,6 +21,8 @@ export const api = {
   box: () => request<T.BoxStatus>('/api/box').then(normalizeBox),
   users: () => request<T.User[]>('/api/users'),
   samples: () => request<T.Sample[]>('/api/samples'),
+  /** VGGT verification of a sample clip (cached by the backend). */
+  sampleVerify: (id: string) => request<T.SampleVerification>(`/api/samples/${id}/verify`),
 
   skills: (filter: { status?: string; expert_id?: string } = {}) =>
     request<T.SkillSummary[]>(`/api/skills${qs(filter)}`).then((l) => l.map(normalizeSummary)),
