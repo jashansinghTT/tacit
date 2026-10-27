@@ -1,0 +1,105 @@
+{
+ "smp_vase": {
+  "detected": 4,
+  "ground_truth": 6,
+  "matched": 2,
+  "precision": 0.5,
+  "recall": 0.333,
+  "f1": 0.4,
+  "boundary_err_s": 2.05,
+  "start_err_s": 0.85,
+  "end_err_s": 3.25,
+  "hand_agree": 0.5,
+  "objects_agree": 0.0,
+  "pairs": [
+   {
+    "det": 2,
+    "gt": 2,
+    "iou": 0.333
+   },
+   {
+    "det": 3,
+    "gt": 4,
+    "iou": 0.577
+   }
+  ],
+  "skill": "sk_c28f1461",
+  "steps": [
+   {
+    "t_start": 3.5,
+    "t_end": 7.2,
+    "hand": "left",
+    "objects": [],
+    "draft": "Move left hand to left. Move left hand from middle to left of bench."
+   },
+   {
+    "t_start": 10.9,
+    "t_end": 13.3,
+    "hand": "left",
+    "objects": [],
+    "draft": "Move left hand to middle. Move left hand from left to middle of bench."
+   },
+   {
+    "t_start": 15.5,
+    "t_end": 24.5,
+    "hand": "left",
+    "objects": [],
+    "draft": "Move left hand to left again. Move left hand from middle to left of bench."
+   },
+   {
+    "t_start": 29.8,
+    "t_end": 35.0,
+    "hand": "right",
+    "objects": [],
+    "draft": "Position right hand at middle. Place right hand at middle of bench."
+   }
+  ]
+ },
+ "smp_jars": {
+  "detected": 3,
+  "ground_truth": 5,
+  "matched": 0,
+  "precision": 0.0,
+  "recall": 0.0,
+  "f1": 0.0,
+  "boundary_err_s": null,
+  "start_err_s": null,
+  "end_err_s": null,
+  "hand_agree": null,
+  "objects_agree": null,
+  "pairs": [],
+  "skill": "sk_3b7c613d",
+  "steps": [
+   {
+    "t_start": 1.9,
+    "t_end": 37.9,
+    "hand": "left",
+    "objects": [
+     "cup",
+     "bottle"
+    ],
+    "draft": "Place cup on bottle. Pick up the cup with your left hand and set it on the bottle."
+   },
+   {
+    "t_start": 33.8,
+    "t_end": 35.0,
+    "hand": "left",
+    "objects": [
+     "bottle",
+     "cup"
+    ],
+    "draft": "Move bottle to cup. Pick up the bottle with your left hand and place it on the cup."
+   },
+   {
+    "t_start": 34.0,
+    "t_end": 35.5,
+    "hand": "left",
+    "objects": [
+     "cup",
+     "bottle"
+    ],
+    "draft": "Return cup to bottle. Pick up the cup with your left hand and set it back on the bottle."
+   }
+  ]
+ }
+}
