@@ -1,36 +1,32 @@
 # Status: qa
 
 State: running
-Updated: 2026-10-27T19:40Z
+Updated: 2026-10-27T20:10Z
 
 ## Works
-- API E2E suite `tests/e2e/` (pytest + httpx + websockets, `uv run --project tests/e2e pytest tests/e2e`),
-  one test per SPEC section 9 flow, timings with "a person would accept" limits, evidence per run under
-  `.orchestration/evidence/qa/runs/<UTC>-api/`, `scripts/e2e/report.py` writes `RESULTS.md`.
-- Flow 3 (live capture → coach question text + S2 Pro voice → spoken answer WAV → Whisper transcript →
-  attached to a step's why after processing) PASSED on the real stack (dev run, sd_6898012 clip):
-  coach text 1.3 s after the step closed, voice 7.7 s later, transcript 0.6 s, analysis p50 83 ms.
-- Flow 7 (Box) PASSED: 9/9 healthy on 4 chips once the vision cohost came up.
-- `scripts/e2e/make_media.sh` (y4m 640x360 15 fps + 16 kHz answer/question WAVs from S2 Pro).
-- `scripts/e2e/playwright.config.ts` (Chromium fake camera/mic, JSON report into the run folder).
+- API suite `tests/e2e/` (one test per SPEC 9 flow; timings with "a person would accept" limits; evidence per
+  run in `.orchestration/evidence/qa/runs/<UTC>-api/`; `scripts/e2e/report.py` writes `RESULTS.md`).
+  Follows the lead's conventions: "QA " titles (test skills, hidden unless include_test=1), background
+  narration (polled, flagged if > 2 min), interrupted jobs followed to their re-run (flagged).
+- Browser suite `web/e2e/flows.spec.ts` + `scripts/e2e/playwright.config.ts` + `scripts/e2e/ui.sh` (merges
+  work/web, web-learn, web-exchange, web-robot into a local throwaway `qa/ui-merge` at `~/tacit-wt/qa-ui`, builds,
+  serves on :5790 proxied to 8710, Chromium with fake camera/mic from `~/tacit/data/e2e`). All 7 flows written
+  against the real test ids; F1 and F7 pass in the browser.
+- `scripts/e2e/make_media.sh`: capture/practice y4m (640x360, 15 fps) from smp_vase, answer/question WAVs (S2 Pro).
+- Seen passing on the real stack in dev runs: API F1, F3 (live capture: coach text 0.8 to 1.3 s after the step
+  closes, transcript, answer attached to a step), F7; UI F1, F7.
 
-## Findings filed (record: `.orchestration/evidence/qa/FINDINGS.md`)
-- QA-1 backend: a backend restart orphans running jobs; skill stuck in "processing" (told the lead).
+## Findings (record: `.orchestration/evidence/qa/FINDINGS.md`)
+- QA-1 backend: restart orphaned running jobs. Fixed by the lead (re-run on startup); seen working.
+- QA-2 sim: BC policy 0/20 on a two-object program (19/20 on one object). Sent to sim-c4. Open.
+- QA-3 backend/speech: interactive TTS queued minutes behind narration, 120 s timeouts. Fixed by the lead
+  (one S2 Pro slot, interactive first); verifying. Related: STT waits behind S2 Pro on chip 1 (transcript
+  50.6 s before the fix); asked the lead to give STT the same priority.
 
-## Blocked / waiting
-- Flow 1 fails until the backend serves a built web app at `/` (currently `{"web": "not built yet"}`).
-- `/api/samples` is empty (`~/tacit/data/samples/samples.json` missing), so flows 2, 4, 5, 6 run on an uploaded
-  raw clip for now (`QA_UPLOAD_VIDEO`); a release run must use a sample.
-- Browser flows wait for the web branches' pages.
-
-## Decisions
-- Findings go in my own evidence folder, not in other cards' worktrees: writing into another checkout is
-  blocked by my sandbox. Owners get a SendMessage with the finding id.
-- Slow steps are flagged in RESULTS.md, not failed; a flow fails on a wrong or missing result, or a model result
-  that did not come from a TT chip.
-- QA skills are titled "QA ..." (re-prefixed after processing, since the writer renames skills). Listings made by
-  the Exchange flow cannot be removed (no unlist endpoint), so each run leaves one QA listing.
+## Blockers
+- The backend restarts often while the lead merges (3 of my last 4 runs were interrupted). Asked the lead for a
+  deploy-free window for the two consecutive release runs.
 
 ## Next
-1. Finish the first full API run (flows 2, 4, 5, 6 on an uploaded clip), file findings.
-2. Browser spec `web/e2e/flows.spec.ts` against a throwaway merge of the web branches.
+1. Full API run dev-iter4, then the full browser run; file what fails.
+2. Two consecutive green timestamped runs, API and UI; RESULTS.md; handoff.
