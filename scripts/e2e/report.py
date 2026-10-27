@@ -78,7 +78,7 @@ def ui_run(d: Path) -> dict | None:
                         timings = []
             target = flows if m.group(1) == "F" else extras
             target[int(m.group(2))] = {"outcome": outcome, "seconds": round(last.get("duration", 0) / 1000, 1),
-                                      "flags": [t_["step"] + " slow" for t_ in timings if t_.get("slow")], "timings": timings,
+                                      "flags": [f"slow: {t_['step']} took {t_['s']:.1f} s (limit {t_['limit_s']:g} s)" for t_ in timings if t_.get("slow")], "timings": timings,
                                       "error": re.sub(r"\x1b\[[0-9;]*m", "", err)[:400] if err else None,
                                       "evidence": str(d.relative_to(REPO)), "attachments": atts, "notes": notes}
     stats = data.get("stats", {})
@@ -156,7 +156,8 @@ def main() -> int:
     if problems:
         lines += ["", "## Failures and flags in the last runs", ""] + problems
     for label, r in (("API", la), ("UI", lu)):
-        notes = [f"- F{n}: {x}" for n, f in sorted((r or {"flows": {}})["flows"].items()) for x in f.get("notes", [])]
+        notes = [f"- F{n}: " + " / ".join(ln.strip() for ln in x.splitlines() if ln.strip())
+                 for n, f in sorted((r or {"flows": {}})["flows"].items()) for x in f.get("notes", [])]
         if notes:
             lines += ["", f"## Notes from the last {label} run", ""] + notes
     if lu and lu.get("extras"):

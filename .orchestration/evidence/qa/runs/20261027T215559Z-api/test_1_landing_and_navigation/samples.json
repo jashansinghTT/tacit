@@ -1,0 +1,54 @@
+[
+  {
+    "id": "smp_vase",
+    "title": "Arranging dried stems in a vase",
+    "video": "/media/samples/vase.mp4",
+    "thumb": "/media/samples/vase.jpg",
+    "duration": 44.5,
+    "kind": "real",
+    "objects": [
+      "vase",
+      "potted plant",
+      "dining table"
+    ],
+    "task": "She gathers loose dried stems from the table into a bundle, holds the bundle in her left hand, then pulls out one stem at a time with her right hand and pushes it into the black vase on her right (image left) until the arrangement is done.",
+    "source_url": "https://www.pexels.com/video/person-placing-flowers-on-a-vase-6608029/",
+    "author": "Anastasia Shuraeva (https://www.pexels.com/@anastasia-shuraeva/)",
+    "license": "Pexels License (https://www.pexels.com/license/)"
+  },
+  {
+    "id": "smp_jars",
+    "title": "Checking candle jars and bottles at a workbench",
+    "video": "/media/samples/jars.mp4",
+    "thumb": "/media/samples/jars.jpg",
+    "duration": 38.0,
+    "kind": "real",
+    "objects": [
+      "bottle",
+      "cup",
+      "bowl",
+      "spoon",
+      "potted plant",
+      "dining table"
+    ],
+    "task": "At a candle-making bench she lifts a small glass beaker from beside the corked carafe and sets it back, walks to the middle, picks up a labeled candle jar, smells it, sets it down beside the yellow candle, handles a second small jar, then reaches right for a white bottle and inspects it.",
+    "source_url": "https://www.pexels.com/video/a-woman-checking-things-on-the-table-5893752/",
+    "author": "Anna Shvets (https://www.pexels.com/@shvetsa/)",
+    "license": "Pexels License (https://www.pexels.com/license/)"
+  },
+  {
+    "id": "smp_fake",
+    "title": "AI-generated: picking apples into a basket",
+    "video": "/media/samples/fake.mp4",
+    "thumb": "/media/samples/fake.jpg",
+    "duration": 5.07,
+    "kind": "ai-generated",
+    "objects": [
+      "apple"
+    ],
+    "task": "At a market fruit stall she steadies a wicker basket with her left hand while her right hand places red apples into it and reaches back to the display for another.",
+    "source_url": "https://pixabay.com/videos/ai-generated-market-food-shopping-371474/",
+    "author": "flutie8211 (https://pixabay.com/users/flutie8211-17475707/)",
+    "license": "Pixabay Content License (https://pixabay.com/service/license-summary/); labeled AI generated on Pixabay"
+  }
+]

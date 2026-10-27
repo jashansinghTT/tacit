@@ -125,8 +125,9 @@ it is fixed.
 ## QA-9 web (Studio): hands-free answering never opens while the coach's voice is slow
 
 - Owner: web (tacit-web). State: fixed on work/polish (web-1e, 21:40Z: hands-free arms on the question text,
-  echo guard and ducking while the voice plays, answer pinned to the open question); QA re-verifies in browser
-  F3 on the release candidate. Sent to web-1e (cc lead) 2026-10-27 21:16Z.
+  echo guard and ducking while the voice plays, answer pinned to the open question), on main as bffcf3b.
+  Verified on RC 27010cd: browser F3 in `runs/20261027T215602Z-ui` has the mic recording at 9.0 s, the moment the
+  question text appeared. Sent to web-1e (cc lead) 2026-10-27 21:16Z.
 - Seen (browser F3, fake camera and microphone): with S2 Pro at RTF ~8 (21:00Z), coach questions arrived at
   18.5 s, 27.7 s, 51.2 s, ... and each new one was "voice coming" before the previous one's listening window
   opened; the mic never armed in 90 s, so the expert could not answer (`findings/QA-9-handsfree-never-armed.png`).
@@ -174,7 +175,8 @@ it is fixed.
 ## QA-12 backend: the listing page returns 500 for every skill with a trained policy
 
 - Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z); QA re-checked `lst_49b25ff3`: 200 at
-  21:45Z. F6 re-verifies on a trained skill in the release runs. Found 2026-10-27 21:28Z.
+  21:45Z; on RC 27010cd F6 passes on a trained skill in both suites (`runs/20261027T215559Z-api`, `-ui`).
+  Found 2026-10-27 21:28Z.
 - Seen: API release run #1 (`runs/20261027T210713Z-api`) F6: `GET /api/exchange/listings/{id}` returned
   `500 Internal Server Error` (text/plain) after F5 had trained the skill. Reproduced on the seeded listing
   `lst_49b25ff3` (`sk_3b7c613d`). Traceback (backend.log 21:20:00Z): `market._count_episodes` does
@@ -201,8 +203,8 @@ it is fixed.
 
 ## QA-14 backend (Box): GR00T always shows 0 calls and no latency
 
-- Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z): GR00T calls from the run stream count
-  toward chip 3; re-verify in the release runs (F7 after F5). Found 2026-10-27 21:33Z.
+- Owner: backend (lead). State: fixed in e0061bd; verified on RC 27010cd: F7 in `runs/20261027T215559Z-api`
+  shows GR00T 38 calls, p50 220 ms after F5's run. Found 2026-10-27 21:33Z.
 - Seen: right after API run #1's F5 GR00T run (34 GR00T queries, p50 113 ms from the run's `gr00t` messages),
   `/api/box` reports `GR00T N1.7 calls 0, p50 None`. The sim's GR00T loop calls :21030 directly, so the backend's
   per-model stats never see it; the Box page (the "nine models on one box" proof) shows chip 3 idle.

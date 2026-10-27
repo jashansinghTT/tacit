@@ -1,0 +1,227 @@
+{
+  "id": "sk_8006f240",
+  "title": "QA Check parts before tray",
+  "summary": "Verify sorted parts before placing them in tray to ensure correct organization.",
+  "status": "ready",
+  "created_at": "2026-10-27T21:57:33Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "live",
+    "video": "/media/skills/sk_8006f240/source.mp4",
+    "fps": 10.0,
+    "duration": 13.8,
+    "width": 960,
+    "height": 540
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 0.0,
+      "t_end": 3.0,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_8006f240/kf_01.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 3.0,
+      "t_end": 10.5,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "Because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "why_source": "expert",
+      "keyframe": "/media/skills/sk_8006f240/kf_02.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    },
+    {
+      "id": "st3",
+      "index": 3,
+      "t_start": 10.5,
+      "t_end": 13.7,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_8006f240/kf_03.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    }
+  ],
+  "qa": [
+    {
+      "t": 7.4,
+      "question": "Why did you move your right hand to the workbench?",
+      "question_audio": "/media/tts/530b85273ef90089297d.wav",
+      "answer": "because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "step_index": 2,
+      "step_id": "st2"
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "score": 0.91,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.017,
+      "depth_stability": 0.9985,
+      "camera_drift": 0.0016,
+      "static_pixels": 48583,
+      "score": 0.91
+    },
+    "checked_at": "2026-10-27T21:58:01Z",
+    "pointcloud": "/api/skills/sk_8006f240/pointcloud"
+  },
+  "robot": {
+    "program": []
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T21:57:33Z"
+  },
+  "updated_at": "2026-10-27T21:58:35Z",
+  "thumb": "/media/skills/sk_8006f240/thumb.jpg",
+  "sop_markdown": "# Check parts before tray\n\nVerify sorted parts before placing them in tray to ensure correct organization.\n\n## Before you start\n- Gather all parts to be checked.\n- Have the tray ready for sorted parts.\n- Ensure a clean, well‑lit workspace.\n\n## Steps\n\n**1. Inspect each part**  \nPick up a part from the supply bin and examine it for defects or missing components.  \n**Why:** Prevents defective parts from entering the assembly line.  \n*Why_source:* inferred\n\n**2. Verify part identity**  \nPlace the part on the inspection surface and confirm its label or code matches the work order.  \n**Why:** Ensures the correct part is used for the correct product.  \n*Why_source:* inferred\n\n**3. Check part orientation**  \nHold the part in the same orientation it will be used in the assembly.  \n**Why:** Guarantees proper fit during assembly.  \n*Why_source:* inferred\n\n**4. Confirm part quantity**  \nCount the parts in the current batch and compare to the required quantity.  \n**Why:** Avoids shortages or overstock during production.  \n*Why_source:* inferred\n\n**5. Sort parts into tray**  \nPlace each verified part into the designated slot in the tray.  \n**Why:** Keeps parts organized for easy access during assembly.  \n*Why_source:* inferred\n\n## Check your work\n- Verify that all parts in the tray match the work order.\n- Ensure no defective or mis‑oriented parts remain in the tray.\n- Confirm the tray is fully populated with the correct quantity of parts.",
+  "quiz": [
+    {
+      "q": "Why do we verify sorted parts before placing them in the tray?",
+      "choices": [
+        "To label the parts",
+        "To clean the parts",
+        "To ensure parts are correctly organized"
+      ],
+      "answer": 2,
+      "explain": "Checking parts first prevents misplacement and keeps the assembly line efficient."
+    },
+    {
+      "q": "What could happen if parts are not checked before tray placement?",
+      "choices": [
+        "Parts may be labeled incorrectly",
+        "Parts may be cleaned",
+        "Parts may be misplaced"
+      ],
+      "answer": 2,
+      "explain": "Unverified parts can lead to assembly errors and delays."
+    },
+    {
+      "q": "Which step protects the quality of the final product?",
+      "choices": [
+        "Verifying parts before tray placement",
+        "Placing parts in the tray",
+        "Moving parts to the next station"
+      ],
+      "answer": 0,
+      "explain": "Checking parts first ensures only correct components are used."
+    }
+  ],
+  "safety": [
+    "Check parts for damage before handling.",
+    "Keep hands clear of sharp edges.",
+    "Avoid dropping parts on the floor."
+  ],
+  "motion_thumb": "/media/skills/sk_8006f240/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/43e7564d1e8c9a5adffe.wav",
+      "duration": 7.04,
+      "text": "QA Check parts before tray. Verify sorted parts before placing them in tray to ensure correct organization."
+    },
+    "st1": {
+      "audio": "/media/tts/1ccce246567ef5c38759.wav",
+      "duration": 3.95,
+      "text": "Step 1. Continue the task. Continue the task"
+    },
+    "st2": {
+      "audio": "/media/tts/4c85474e3ef92b9ce15f.wav",
+      "duration": 4.09,
+      "text": "Step 2. Continue the task. Continue the task"
+    },
+    "st3": {
+      "audio": "/media/tts/bfcb5874eaaa4fe9880c.wav",
+      "duration": 4.37,
+      "text": "Step 3. Continue the task. Continue the task"
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 91,
+      "p50_ms": 48.3
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 142,
+      "p50_ms": 77.0
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 91,
+      "p50_ms": 45.3
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3257.8
+    },
+    {
+      "model": "S2 Pro",
+      "chip": 1,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 34742.9
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 5087.2
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 91,
+      "p50_ms": 33.0
+    },
+    {
+      "model": "S2 Pro",
+      "chip": null,
+      "backend": "cache",
+      "calls": 2,
+      "p50_ms": 0.0
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}
