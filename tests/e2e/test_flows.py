@@ -545,6 +545,7 @@ def test_5_robot_lab_train_evaluate_run(api, rec, ready_skill):
     p50 = statistics.median([x for x in gr["gr00t"] if x is not None])
     rec.mark("GR00T inference p50 (ms -> s)", p50 / 1000, limit_s=0.5)
     rec.mark("GR00T run: first camera frame", gr.get("first_camera_s", 99), limit_s=10)
+    lib.CREATED["gr00t_queries"] = [len(gr["gr00t"])]
     rec.note(f"GR00T run: {gr['states']} states, cameras {gr['cameras']}, {len(gr['gr00t'])} queries, p50 {p50:.0f} ms, "
              f"done {gr['done']}, timeout {gr.get('timeout', False)}")
     assert gr["done"] is not None or gr.get("timeout"), "GR00T run ended without done"
@@ -642,7 +643,7 @@ def test_7_box_nine_models_four_chips(api, rec):
     rec.note(f"speech queue: {q}")
     gr = next(m for c in box["chips"] for m in c["models"] if m["name"].startswith("GR00T"))
     rec.note(f"GR00T on the Box: {gr['calls']} calls, p50 {gr['p50_ms']} ms")
-    if any(r["flow"] == 5 and r["outcome"] == "passed" for r in __import__("conftest").RESULTS.values()):
+    if lib.CREATED.get("gr00t_queries"):
         assert gr["calls"] > 0 and gr["p50_ms"], f"the Box does not count the GR00T run F5 just made: {gr}"
     idle = [m["name"] for c in box["chips"] for m in c["models"] if m.get("p50_ms") is None]
     if idle:
