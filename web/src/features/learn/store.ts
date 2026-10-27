@@ -22,6 +22,8 @@ interface LessonState {
   autoAdvance: boolean
   practice: Record<number, StepPractice>
   sessionId: string | null
+  /** The trainee is asking the expert or listening to the answer: hold narration and auto-advance. */
+  tutorActive: boolean
 
   reset: (skillId: string, stepCount: number) => void
   goStep: (step: number) => void
@@ -31,6 +33,7 @@ interface LessonState {
   setMode: (m: LessonMode) => void
   setNarrate: (v: boolean) => void
   setAutoAdvance: (v: boolean) => void
+  setTutorActive: (v: boolean) => void
   recordScore: (step: number, score: number) => void
   recordDone: (step: number, score: number) => void
   ensureSession: (lang: string) => Promise<string>
@@ -50,6 +53,7 @@ export const useLesson = create<LessonState>((set, get) => ({
   autoAdvance: true,
   practice: {},
   sessionId: null,
+  tutorActive: false,
 
   reset: (skillId, stepCount) => {
     if (get().skillId === skillId) {
@@ -76,6 +80,7 @@ export const useLesson = create<LessonState>((set, get) => ({
   setMode: (mode) => set({ mode, view: 'step' }),
   setNarrate: (narrate) => set({ narrate }),
   setAutoAdvance: (autoAdvance) => set({ autoAdvance }),
+  setTutorActive: (tutorActive) => set({ tutorActive }),
   recordScore: (step, score) =>
     set((s) => {
       const p = s.practice[step] ?? { scores: [], best: 0, done: null }

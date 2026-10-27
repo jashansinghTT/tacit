@@ -9,6 +9,7 @@ import { fmtMs } from '@/lib/format'
 import { Avatar, Badge, IconButton, Select } from '@/components/ui'
 import { LevelMeter } from '@/components/speech/Speech'
 import { useLessonCtx } from './context'
+import { useNarration } from './narration'
 import { useLesson } from './store'
 import { splitSentences, TUTOR_LANGS, useTutor, type Turn } from './useTutor'
 
@@ -143,6 +144,15 @@ export function AskExpert({ className }: { className?: string }) {
   })
   const recording = mic.state === 'recording'
   const first = lesson.expert.name.split(' ')[0]
+
+  // While the trainee asks or the answer is spoken, the lesson's own voice and auto-advance wait.
+  const active = recording || tutor.busy || tutor.turns.some((t) => t.speaking !== null || (t.voicing && t.status !== 'error'))
+  const setTutorActive = useLesson((s) => s.setTutorActive)
+  useEffect(() => {
+    setTutorActive(active)
+    if (active && useNarration.getState().status === 'playing') useNarration.getState().pause()
+  }, [active, setTutorActive])
+  useEffect(() => () => setTutorActive(false), [setTutorActive])
 
   useEffect(() => {
     const el = scroller.current

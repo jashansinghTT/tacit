@@ -69,13 +69,14 @@ function useNarrationDirector(active: boolean) {
     if (active && narrate && line?.key === 'intro' && status === 'ended') play(stepLine(step, lesson.lang))
   }, [active, narrate, line, status, step, lesson.lang, play])
 
-  // Pausing the demo pauses the voice too.
+  // Pausing the demo pauses the voice too; so does the tutor, until its answer has been spoken.
+  const tutorActive = useLesson((s) => s.tutorActive)
   useEffect(() => {
     const n = useNarration.getState()
     if (!active || !n.line) return
-    if (!pb.playing && n.status === 'playing') n.pause()
-    else if (pb.playing && n.status === 'paused') n.resume()
-  }, [pb.playing, active])
+    if ((!pb.playing || tutorActive) && n.status === 'playing') n.pause()
+    else if (pb.playing && !tutorActive && n.status === 'paused') n.resume()
+  }, [pb.playing, active, tutorActive])
 
   useEffect(() => () => useNarration.getState().stop(), [])
 }
@@ -104,13 +105,14 @@ function useAutoAdvance(active: boolean) {
   const next = useLesson((s) => s.next)
   const line = useNarration((s) => s.line)
   const status = useNarration((s) => s.status)
+  const tutorActive = useLesson((s) => s.tutorActive)
   const loops = useLoopCount()
   const [deadline, setDeadline] = useState<number | null>(null)
   const [skipped, setSkipped] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
 
   const voiceDone = !narrate || status === 'blocked' || (line?.key === step.id && status === 'ended')
-  const ready = active && autoAdvance && pb.playing && voiceDone && loops >= 1 && skipped !== step.id
+  const ready = active && autoAdvance && !tutorActive && pb.playing && voiceDone && loops >= 1 && skipped !== step.id
 
   useEffect(() => {
     if (!ready) {
