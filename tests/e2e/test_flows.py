@@ -126,8 +126,13 @@ def test_2_sample_process_ready(api, rec, processed):
     rec.save("models_used.json", sk.get("models_used"))
     missing = {"HaMeR", "RF-DETR", "VGGT-1B", "gpt-oss-20b", "S2 Pro"} - set(used)
     assert not missing, f"models_used lacks {missing}: {sorted(used)}"
-    off_chip = [m for m in sk["models_used"] if m["model"] in TT_MODELS and m.get("backend") != "tt"]
+    # "cache" is S2 Pro audio made on chip 1 earlier and reused for identical text (API.md labels it); "cpu" or
+    # "mock" would be a fallback off the chips.
+    off_chip = [m for m in sk["models_used"] if m["model"] in TT_MODELS and m.get("backend") not in ("tt", "cache")]
     assert not off_chip, f"results not served by the TT chips: {off_chip}"
+    cached = [m["model"] for m in sk["models_used"] if m.get("backend") == "cache"]
+    if cached:
+        rec.note(f"served from the cache of earlier TT results: {cached}")
     got = {}
     for name in ("tracks", "twin"):
         with rec.time(f"GET {name}", limit_s=2.0):

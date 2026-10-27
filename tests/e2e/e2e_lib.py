@@ -149,8 +149,9 @@ def stage_times(job: dict) -> dict[str, float]:
 
 
 def non_tt(served_by: list[dict]) -> list[dict]:
-    """Results that did not come from a Tenstorrent chip (MediaPipe on CPU is expected and allowed)."""
-    return [s for s in served_by or [] if s.get("backend") != "tt" and "mediapipe" not in str(s.get("model", "")).lower()]
+    """Results that did not come from a Tenstorrent chip. MediaPipe on CPU is by design; "cache" is an earlier TT
+    result reused for identical input."""
+    return [s for s in served_by or [] if s.get("backend") not in ("tt", "cache") and "mediapipe" not in str(s.get("model", "")).lower()]
 
 
 def fetch(api: httpx.Client, url: str) -> httpx.Response:

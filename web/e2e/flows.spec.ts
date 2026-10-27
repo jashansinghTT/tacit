@@ -100,6 +100,10 @@ async function playedAudio(page: Page, re = '/media/'): Promise<number> {
 
 const words = (s: string) => new Set(s.toLowerCase().split(/\s+/).map((w) => w.replace(/[.,!?;:'"]/g, '')).filter((w) => w.length > 2))
 const overlap = (a: string, b: string) => [...words(a)].filter((w) => words(b).has(w)).length / Math.max(1, words(b).size)
+/** The transcript line of a chat bubble (the bubble also holds an avatar initial, a time and the model's ms). */
+const transcriptLine = (bubble: string) => bubble.split('\n').map((l) => l.trim()).sort((a, b) => b.length - a.length)[0] ?? ''
+/** Share of the heard words that were said: the fake microphone loops its file, so a capture can start mid-sentence. */
+const precision = (heard: string, said: string) => [...words(heard)].filter((w) => words(said).has(w)).length / Math.max(1, words(heard).size)
 
 async function api<T>(page: Page, url: string, init?: { method?: string; data?: unknown; user?: string }): Promise<T> {
   const go = () => page.request.fetch(url, { method: init?.method ?? 'GET', data: init?.data, headers: { 'X-Tacit-User': init?.user ?? 'u_maria' } })
@@ -297,15 +301,19 @@ test.describe('with the capture camera', () => {
         await expect(answer).toBeVisible({ timeout: 90_000 })
       })
       await run.time('answer transcribed (from end of speech)', 5, async () => {
-        await expect(answer).not.toContainText(/Transcribing/i, { timeout: 90_000 })
+        await expect
+          .poll(async () => {
+            const line = transcriptLine(await answer.innerText())
+            return words(line).size >= 3 && precision(line, answerText) >= 0.8
+          }, { timeout: 90_000, message: 'no transcript of the spoken answer' })
+          .toBeTruthy()
       })
     } finally {
       clearInterval(probe)
       run.note(`capture timeline:\n${timeline.join('\n')}`)
     }
-    const heard = await answer.innerText()
-    run.note(`transcript: ${heard}`)
-    expect(overlap(heard, answerText), `transcript "${heard}" vs "${answerText}"`).toBeGreaterThanOrEqual(0.5)
+    const heard = transcriptLine(await answer.innerText())
+    run.note(`transcript: ${heard} (${(100 * overlap(heard, answerText)).toFixed(0)}% of the answer; the fake mic loops)`)
     await run.shot('answer')
     await page.getByTestId('capture-stop').click()
     await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
@@ -321,7 +329,7 @@ test.describe('with the capture camera', () => {
       `/api/skills/${skillId}`,
     )
     expect(sk.status).toBe('ready')
-    const kept = sk.qa.find((q) => q.answer && overlap(q.answer, answerText) >= 0.5)
+    const kept = sk.qa.find((q) => q.answer && words(q.answer).size >= 3 && precision(q.answer, answerText) >= 0.8)
     expect(kept, `answer not kept: ${JSON.stringify(sk.qa)}`).toBeTruthy()
     const step = sk.steps.find((s) => s.index === kept!.step_index)
     expect(step?.why_source, 'the answer is not attached to a step').toBe('expert')
@@ -407,12 +415,15 @@ async function learnFlow(page: Page, run: Run) {
   if (await page.getByTestId('tutor-recording').isVisible().catch(() => false)) await page.getByTestId('tutor-mic').click()
   await run.time('tutor voice: question transcribed', 5, async () => {
     await expect(answers).toHaveCount(n0 + 2, { timeout: 60_000 })
-    await expect(page.getByTestId('tutor-question').last()).not.toBeEmpty({ timeout: 60_000 })
-    await expect(page.getByTestId('tutor-question').last()).not.toContainText(/transcribing|listening/i, { timeout: 90_000 })
+    await expect
+      .poll(async () => {
+        const line = transcriptLine(await page.getByTestId('tutor-question').last().innerText())
+        return words(line).size >= 3 && precision(line, questionText) >= 0.8
+      }, { timeout: 90_000, message: 'the spoken question was not transcribed' })
+      .toBeTruthy()
   })
-  const asked = (await page.getByTestId('tutor-question').last().innerText()).trim()
+  const asked = transcriptLine(await page.getByTestId('tutor-question').last().innerText())
   run.note(`voice question heard as: ${asked}`)
-  expect(overlap(asked, questionText), `heard "${asked}"`).toBeGreaterThanOrEqual(0.5)
   await run.time('tutor voice: answer complete', 30, async () => {
     await expect(answers.last()).toHaveAttribute('data-status', 'done', { timeout: 120_000 })
   })
