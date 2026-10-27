@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
+import random
 
 from ..models import llm
 
@@ -84,6 +86,13 @@ def _skill_json(structure: dict) -> str:
     return json.dumps({k: structure.get(k) for k in ("title", "summary", "steps")}, ensure_ascii=False)
 
 
+def shuffled(q: dict) -> dict:
+    """The same question with its choices in a fixed order of their own: the model puts the right one first."""
+    order = list(range(len(q["choices"])))
+    random.Random(hashlib.sha1(q["q"].encode()).digest()).shuffle(order)
+    return {**q, "choices": [q["choices"][i] for i in order], "answer": order.index(q["answer"])}
+
+
 def valid_quiz(items) -> list[dict]:
     """Questions a lesson can show: text, at least two choices and an answer index among them."""
     out = []
@@ -93,7 +102,7 @@ def valid_quiz(items) -> list[dict]:
         choices = [str(c) for c in it["choices"]]
         a = it.get("answer")
         if len(choices) >= 2 and isinstance(a, int) and not isinstance(a, bool) and 0 <= a < len(choices):
-            out.append({"q": it["q"], "choices": choices, "answer": a, "explain": str(it.get("explain") or "")})
+            out.append(shuffled({"q": it["q"], "choices": choices, "answer": a, "explain": str(it.get("explain") or "")}))
     return out
 
 
