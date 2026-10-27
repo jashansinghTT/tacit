@@ -38,3 +38,30 @@ export async function openReadySkill(page: Page): Promise<string> {
   await expect(page.getByTestId('page-skill')).toBeVisible()
   return id
 }
+
+/**
+ * On the real stack, rename a skill the suite created to "QA ..." so the backend flags it as a
+ * test and hides it from the demo (lists skip test skills unless include_test=1).
+ */
+export async function markTestSkill(page: Page, skillId: string, what: string) {
+  if (!REAL || !skillId) return
+  const res = await page.request.patch(`/api/skills/${skillId}`, { data: { title: `QA e2e ${what}` }, headers: { 'X-Tacit-User': 'u_maria' } })
+  expect(res.ok(), `could not mark ${skillId} as a test skill`).toBeTruthy()
+}
+
+/** The skill id behind the Studio's "Open the skill" link after a capture. */
+export async function capturedSkillId(page: Page) {
+  const href = (await page.getByTestId('open-skill').getAttribute('href')) ?? ''
+  return href.split('/').pop() ?? ''
+}
+
+/**
+ * A skill a test may write to: on the mock any ready skill; on the real stack only a test ("QA ")
+ * skill, so demo data is never touched. Returns null if there is none.
+ */
+export async function writableSkillId(page: Page): Promise<string | null> {
+  if (!REAL) return null
+  const res = await page.request.get('/api/skills?include_test=1&status=ready')
+  const rows = (await res.json()) as { id: string; title: string; steps_count: number }[]
+  return rows.find((r) => r.title.startsWith('QA ') && r.steps_count > 0)?.id ?? null
+}
