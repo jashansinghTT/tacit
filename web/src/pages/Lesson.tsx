@@ -93,6 +93,11 @@ function LessonHeader({ lesson, skill, passed, translating }: { lesson: LessonDe
           <Badge icon={<ListChecks className="size-3" />}>{lesson.steps.length} steps</Badge>
           {duration != null && <Badge icon={<Clock className="size-3" />}>{fmtDuration(duration)}</Badge>}
           {skill && <VerifiedBadge status={skill.verification.status} score={skill.verification.score} />}
+          {skill?.status === 'processing' && (
+            <Badge tone="warn" dot pulse data-testid="lesson-updating">
+              Being reprocessed; steps may change
+            </Badge>
+          )}
           {passed ? (
             <Badge tone="ok" icon={<GraduationCap className="size-3" />}>
               Certified
