@@ -1,0 +1,50 @@
+{
+  "delta": [
+    "I",
+    "’m",
+    " not",
+    " sure",
+    " from",
+    " this",
+    " recording",
+    ".",
+    " It",
+    " would",
+    " be",
+    " best",
+    " to",
+    " ask",
+    " a",
+    " supervisor",
+    " for",
+    " the",
+    " pre",
+    "‑",
+    "task",
+    " checks",
+    "."
+  ],
+  "audio": [
+    {
+      "index": 0,
+      "audio": "/media/tts/3ac90debb5da2625fea9.wav",
+      "duration": 2.41
+    },
+    {
+      "index": 1,
+      "audio": "/media/tts/da137bc2c35521f304f2.wav",
+      "duration": 4.18
+    }
+  ],
+  "done": {
+    "text": "I’m not sure from this recording. It would be best to ask a supervisor for the pre‑task checks.",
+    "audio_parts": 2,
+    "sources": [],
+    "question": "What should I check before I start this task?"
+  },
+  "end": true,
+  "transcript": {
+    "text": "What should I check before I start this task?"
+  },
+  "error": null
+}

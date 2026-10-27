@@ -212,3 +212,14 @@ it is fixed.
 - Suggestion: record each `gr00t` message's `ms` from the run stream into the box stats for GR00T.
 - Related numbers from the same moment: Whisper p50 0.75 s (so the 7 to 13 s transcripts are queueing behind
   S2 Pro, not Whisper), S2 Pro p50 18.9 s over 44 calls.
+
+## QA-15 backend (tutor prompt): the tutor sometimes declines the most basic question
+
+- Owner: backend (lead). State: open (low, content quality). Found 2026-10-27 22:19Z.
+- Seen: browser round 3 (`runs/20261027T221420Z-ui`, F4): asked "Why does the first step matter?", the tutor
+  answered "I'm not sure from this recording. It would be best to ask a supervisor for clarification." although
+  step 1 has a why ("To begin arranging stems evenly.", inferred) (`findings/QA-15-tutor-declines.png`). The API
+  runs' tutor answers the same question substantively ("Maria says the first stem sets the foundation ..."), so
+  this is model variance on a grounded prompt, not a broken path. F4 passes either way.
+- Suggestion: tell the tutor to answer from the step's why and tips (saying when the reason was inferred, not
+  stated by the expert) before suggesting a supervisor.
