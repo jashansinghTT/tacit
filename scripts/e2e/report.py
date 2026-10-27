@@ -169,6 +169,16 @@ def main() -> int:
         names = {1: "Guided tour (SPEC 8 demo mode)"}
         for n, f in sorted(lu["extras"].items()):
             lines.append(f"| X{n} {names.get(n, '')} | {cell(f)} | {(f.get('error') or '').splitlines()[0][:160] if f.get('error') else ''} |")
+    solo = sorted(RUNS.glob("solo-f4-*/tutor_cold.json")) if RUNS.exists() else []
+    if solo:
+        d = json.loads(solo[-1].read_text())
+        t, v = d["text"]["marks"], d["voice"]["marks"]
+        lines += ["", f"## Tutor latency on an idle speech chip ({solo[-1].parent.name}, questions not asked before)", "",
+                  "| Ask | Transcribed | First text | Text done | First spoken | Last spoken |", "|---|---|---|---|---|---|",
+                  f"| By text | | {t.get('first_text')} s | {t.get('text_done')} s | {t.get('first_audio')} s | {t.get('end')} s |",
+                  f"| By voice | {v.get('transcribed')} s | {v.get('first_text')} s | {v.get('text_done')} s | {v.get('first_audio')} s | {v.get('end')} s |",
+                  "", "S2 Pro ran at a real-time factor of about 3.7 here (host load about 35 from other work); at 2.4 on a quiet "
+                  "host the first spoken clause would come about a third sooner. The text answer is on screen within about a second."]
     lines += ["", "## History", "", "| Run | Kind | Passed | Failed |", "|---|---|---|---|"]
     for r in reversed(rs[-20:]):
         if r.get("aborted"):

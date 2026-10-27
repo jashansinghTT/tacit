@@ -1,0 +1,122 @@
+{
+  "run_id": "solo-f4-20261027T224830Z",
+  "kind": "api",
+  "base": "http://127.0.0.1:8710",
+  "started": "2026-10-27T22:48:30+00:00",
+  "finished": "2026-10-27T22:48:41+00:00",
+  "git": "5786310",
+  "tests": [
+    {
+      "test": "test_4_learn_narration_practice_tutor",
+      "flow": 4,
+      "outcome": "passed",
+      "seconds": 10.63,
+      "error": null,
+      "timings": [
+        {
+          "step": "GET /api/learn/lessons",
+          "s": 0.007,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "GET lesson",
+          "s": 0.001,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "fetch the first narration clip",
+          "s": 0.003,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "lesson in Spanish (first request translates)",
+          "s": 0.001,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "POST /api/learn/sessions",
+          "s": 0.001,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "first practice feedback",
+          "s": 0.281,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): first text",
+          "s": 0.826,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): first spoken sentence",
+          "s": 0.937,
+          "limit_s": 8,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): answer text complete",
+          "s": 1.218,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): last sentence spoken (stream end)",
+          "s": 1.225,
+          "limit_s": 45,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): question transcribed",
+          "s": 0.516,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): first text",
+          "s": 1.278,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): first spoken sentence",
+          "s": 1.464,
+          "limit_s": 8,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): answer text complete",
+          "s": 1.75,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): last sentence spoken (stream end)",
+          "s": 1.758,
+          "limit_s": 45,
+          "slow": false
+        },
+        {
+          "step": "complete the lesson (quiz)",
+          "s": 0.015,
+          "limit_s": 2,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "es step 1: Inserta el tallo en el jarrón a tu derecha.",
+        "practice: 51 feedback messages, best score 0.96, hints ['Hold the stem steady while inserting.', 'Keep the stem upright as you insert.', 'Maintain a consistent insertion depth.']"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/solo-f4-20261027T224830Z/test_4_learn_narration_practice_tutor"
+    }
+  ],
+  "cleanup": []
+}

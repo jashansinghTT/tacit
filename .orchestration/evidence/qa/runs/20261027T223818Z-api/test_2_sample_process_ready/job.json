@@ -1,0 +1,87 @@
+{
+  "id": "job_2c235940",
+  "kind": "process",
+  "skill_id": "sk_c1cc1209",
+  "status": "done",
+  "progress": 1.0,
+  "stage": "ready",
+  "stages": [
+    {
+      "name": "decode",
+      "status": "done",
+      "detail": "1280x720, 44.5 s",
+      "progress": 1.0,
+      "ms": 2646
+    },
+    {
+      "name": "perceive",
+      "status": "done",
+      "models": [
+        "MediaPipe@cpu",
+        "HaMeR@0",
+        "Gaze-LLE@0",
+        "RF-DETR@0"
+      ],
+      "progress": 1.0,
+      "detail": "445 frames",
+      "ms": 59536
+    },
+    {
+      "name": "steps",
+      "status": "done",
+      "detail": "5 steps; objects: vase",
+      "progress": 1.0,
+      "ms": 43
+    },
+    {
+      "name": "write",
+      "status": "done",
+      "models": [
+        "gpt-oss-20b@2"
+      ],
+      "progress": 1.0,
+      "detail": "\"QA Arranging dried stems in a vase\"",
+      "ms": 14333
+    },
+    {
+      "name": "verify",
+      "status": "done",
+      "models": [
+        "VGGT-1B@0"
+      ],
+      "progress": 1.0,
+      "ms": 3936,
+      "detail": "score 0.90: verified"
+    },
+    {
+      "name": "twin",
+      "status": "done",
+      "detail": "445 frames, 60000 points",
+      "progress": 1.0,
+      "ms": 434
+    },
+    {
+      "name": "narrate",
+      "status": "done",
+      "models": [
+        "S2 Pro@1"
+      ],
+      "progress": 1.0,
+      "detail": "3 of 6 lines now, the rest in the background",
+      "ms": 16
+    },
+    {
+      "name": "ready",
+      "status": "done",
+      "progress": 1.0,
+      "ms": 5,
+      "detail": "5 steps, verification verified"
+    }
+  ],
+  "error": null,
+  "result": {
+    "skill_id": "sk_c1cc1209",
+    "steps": 5,
+    "verification": "verified"
+  }
+}

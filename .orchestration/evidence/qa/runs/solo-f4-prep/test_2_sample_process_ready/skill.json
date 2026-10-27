@@ -1,0 +1,287 @@
+{
+  "id": "sk_30a3a915",
+  "title": "QA Arranging dried stems in a vase",
+  "summary": "Place each stem into the vase to create a balanced arrangement, ensuring a stable and attractive display.",
+  "status": "ready",
+  "created_at": "2026-10-27T22:46:49Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "sample",
+    "sample_id": "smp_vase",
+    "video": "/media/skills/sk_30a3a915/source.mp4",
+    "fps": 30.0,
+    "duration": 44.5,
+    "width": 1280,
+    "height": 720
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T22:46:49Z"
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 6.8,
+      "t_end": 11.4,
+      "title": "Insert first stem",
+      "instruction": "Insert the stem into the vase on your right.",
+      "why": "Place the stem to build the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_30a3a915/kf_01.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Hold the stem steady while inserting.",
+        "Check the stem’s alignment with the vase’s center."
+      ]
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 16.0,
+      "t_end": 19.1,
+      "title": "Insert second stem",
+      "instruction": "Insert the stem into the vase on your right.",
+      "why": "Add another stem to the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_30a3a915/kf_02.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Keep the stem upright as you insert.",
+        "Ensure the stem doesn’t touch the vase’s rim."
+      ]
+    },
+    {
+      "id": "st3",
+      "index": 3,
+      "t_start": 22.1,
+      "t_end": 27.8,
+      "title": "Insert third stem",
+      "instruction": "Insert the stem into the vase on your right.",
+      "why": "Continue building the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_30a3a915/kf_03.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Maintain a consistent insertion depth.",
+        "Avoid over‑crowding the vase."
+      ]
+    },
+    {
+      "id": "st4",
+      "index": 4,
+      "t_start": 31.3,
+      "t_end": 36.6,
+      "title": "Insert fourth stem",
+      "instruction": "Insert the stem into the vase on your right.",
+      "why": "Add the fourth stem to the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_30a3a915/kf_04.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Check the stem’s position relative to others.",
+        "Keep the insertion angle gentle."
+      ]
+    },
+    {
+      "id": "st5",
+      "index": 5,
+      "t_start": 41.6,
+      "t_end": 44.4,
+      "title": "Insert fifth stem",
+      "instruction": "Insert the stem into the vase on your right.",
+      "why": "Complete the arrangement with the final stem.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_30a3a915/kf_05.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Ensure the final stem is centered.",
+        "Verify the vase’s balance after insertion."
+      ]
+    }
+  ],
+  "qa": [],
+  "verification": {
+    "status": "verified",
+    "score": 0.901,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.0162,
+      "depth_stability": 0.9946,
+      "camera_drift": 0.0014,
+      "static_pixels": 59125,
+      "score": 0.901
+    },
+    "checked_at": "2026-10-27T22:48:10Z",
+    "pointcloud": "/api/skills/sk_30a3a915/pointcloud"
+  },
+  "robot": {
+    "program": [
+      {
+        "op": "pick",
+        "object": "stem"
+      },
+      {
+        "op": "place",
+        "target": "vase"
+      }
+    ]
+  },
+  "updated_at": "2026-10-27T22:48:10Z",
+  "title_locked": true,
+  "thumb": "/media/skills/sk_30a3a915/thumb.jpg",
+  "sop_markdown": "# Insert Stem into Vase\n\nCreate a balanced arrangement by inserting each stem into the vase on your right.\n\n## Before you start\n- Gather all stems and the vase.\n- Ensure the vase is clean and stable.\n- Have a flat surface nearby for any adjustments.\n\n## 1. **Insert first stem**  \nInsert the stem into the vase on your right.  \n**Why:** Place the stem to build the arrangement.  \n\n## 2. **Insert second stem**  \nInsert the stem into the vase on your right.  \n**Why:** Add another stem to the arrangement.  \n\n## 3. **Insert third stem**  \nInsert the stem into the vase on your right.  \n**Why:** Continue building the arrangement.  \n\n## 4. **Insert fourth stem**  \nInsert the stem into the vase on your right.  \n**Why:** Add the fourth stem to the arrangement.  \n\n## 5. **Insert fifth stem**  \nInsert the stem into the vase on your right.  \n**Why:** Complete the arrangement with the final stem.  \n\n## Check your work\n- Verify all stems are centered and evenly spaced.\n- Ensure the vase remains balanced and stable.",
+  "quiz": [
+    {
+      "q": "Why do we insert each stem into the vase on the right side?",
+      "choices": [
+        "To match the vase’s color",
+        "To keep the vase balanced",
+        "To avoid touching the rim"
+      ],
+      "answer": 1,
+      "explain": "Placing stems on the right side helps maintain a balanced arrangement."
+    },
+    {
+      "q": "What is the main reason for checking the stem’s alignment with the vase’s center before insertion?",
+      "choices": [
+        "To prevent the stem from falling out",
+        "To keep the vase stable",
+        "To ensure the stem looks neat"
+      ],
+      "answer": 1,
+      "explain": "Aligning the stem with the center keeps the vase stable."
+    },
+    {
+      "q": "Why should the insertion angle be gentle?",
+      "choices": [
+        "It reduces damage to the stem",
+        "It keeps the vase from tipping",
+        "It looks more natural"
+      ],
+      "answer": 1,
+      "explain": "A gentle angle prevents the vase from tipping during insertion."
+    }
+  ],
+  "safety": [
+    "Avoid over‑crowding the vase to prevent tipping.",
+    "Hold stems steady to prevent dropping.",
+    "Check alignment to keep the vase stable."
+  ],
+  "motion_thumb": "/media/skills/sk_30a3a915/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/c4ca924e8f32da63651b.wav",
+      "duration": 9.73,
+      "text": "QA Arranging dried stems in a vase. Place each stem into the vase to create a balanced arrangement, ensuring a stable and attractive display."
+    },
+    "st1": {
+      "audio": "/media/tts/fca7783cbe9761674ab7.wav",
+      "duration": 5.97,
+      "text": "Step 1. Insert first stem. Insert the stem into the vase on your right."
+    },
+    "st2": {
+      "audio": "/media/tts/0b3ae7d07b9b0fa58ff0.wav",
+      "duration": 5.74,
+      "text": "Step 2. Insert second stem. Insert the stem into the vase on your right."
+    },
+    "st3": {
+      "audio": "/media/tts/3f6cc6450eba7486a9b6.wav",
+      "duration": 6.11,
+      "text": "Step 3. Insert third stem. Insert the stem into the vase on your right."
+    },
+    "st4": {
+      "audio": "/media/tts/a450b6eaa52c52d270f9.wav",
+      "duration": 6.06,
+      "text": "Step 4. Insert fourth stem. Insert the stem into the vase on your right."
+    },
+    "st5": {
+      "audio": "/media/tts/c276b8ff8e876e79e991.wav",
+      "duration": 6.16,
+      "text": "Step 5. Insert fifth stem. Insert the stem into the vase on your right."
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 445,
+      "p50_ms": 42.7
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 654,
+      "p50_ms": 63.3
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 445,
+      "p50_ms": 51.0
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3438.1
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 6970.4
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 445,
+      "p50_ms": 49.2
+    },
+    {
+      "model": "S2 Pro",
+      "chip": null,
+      "backend": "cache",
+      "calls": 3,
+      "p50_ms": 0.0
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}

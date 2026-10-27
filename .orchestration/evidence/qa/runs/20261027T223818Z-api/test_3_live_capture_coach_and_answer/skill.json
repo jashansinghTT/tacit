@@ -1,0 +1,227 @@
+{
+  "id": "sk_7cb944e6",
+  "title": "QA Insert Item into Vase",
+  "summary": "Place an item into a vase, ensuring proper alignment and preventing spills.",
+  "status": "ready",
+  "created_at": "2026-10-27T22:39:42Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "live",
+    "video": "/media/skills/sk_7cb944e6/source.mp4",
+    "fps": 10.0,
+    "duration": 22.7,
+    "width": 960,
+    "height": 540
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 6.8,
+      "t_end": 11.3,
+      "title": "Insert into vase",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Align the item with the vase opening to avoid spillage.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_7cb944e6/kf_01.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Hold the item steady while inserting",
+        "Check the vase opening before pushing"
+      ]
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 16.0,
+      "t_end": 18.9,
+      "title": "Insert into vase",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "why_source": "expert",
+      "keyframe": "/media/skills/sk_7cb944e6/kf_02.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Ensure left side is clear before inserting",
+        "Use a gentle push to avoid damage"
+      ]
+    }
+  ],
+  "qa": [
+    {
+      "t": 18.9,
+      "question": "Why did you choose the right hand to pick up the vase?",
+      "question_audio": "/media/tts/e7f00fd43ec0417b4e17.wav",
+      "answer": "because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "step_index": 2,
+      "step_id": "st2"
+    },
+    {
+      "step_index": 1,
+      "step_id": "st1",
+      "t": 11.3,
+      "question": "Why do you push the item into the vase rather than slide it?",
+      "answer": null,
+      "pending": true
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "score": 0.899,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.0187,
+      "depth_stability": 0.9976,
+      "camera_drift": 0.001,
+      "static_pixels": 51269,
+      "score": 0.899
+    },
+    "checked_at": "2026-10-27T22:40:28Z",
+    "pointcloud": "/api/skills/sk_7cb944e6/pointcloud"
+  },
+  "robot": {
+    "program": [
+      {
+        "op": "pick",
+        "object": "vase"
+      },
+      {
+        "op": "place",
+        "target": "vase"
+      }
+    ]
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T22:39:42Z"
+  },
+  "updated_at": "2026-10-27T22:42:51Z",
+  "thumb": "/media/skills/sk_7cb944e6/thumb.jpg",
+  "sop_markdown": "# Insert Item into Vase\n\nPlace an item into a vase, ensuring proper alignment and preventing spills.\n\n## Before you start\n- Gather the item to be inserted.\n- Locate the vase on your right.\n- Ensure the vase opening is clear.\n\n## 1. **Insert into vase**\nPush the item held in the right hand into the vase on your right.  \n**Why:** Align the item with the vase opening to avoid spillage. *(inferred)*\n\n## 2. **Insert into vase**\nPush the item held in the right hand into the vase on your right.  \n**Why:** The left side parts are already sorted, so I check them before placing into the tray. *(expert)*\n\n## Check your work\n- Verify the item sits securely inside the vase.\n- Ensure no spillage or misalignment occurred.",
+  "quiz": [
+    {
+      "q": "Why should you align the item with the vase opening before inserting?",
+      "choices": [
+        "To avoid spillage",
+        "To make the vase look neat",
+        "To save time"
+      ],
+      "answer": 0,
+      "explain": "Aligning prevents the item from falling out or spilling."
+    },
+    {
+      "q": "Why check the left side parts before placing the item into the tray?",
+      "choices": [
+        "To avoid damaging the left side parts",
+        "To ensure the tray is empty",
+        "To keep the item balanced"
+      ],
+      "answer": 0,
+      "explain": "Checking prevents accidental damage to already sorted parts."
+    },
+    {
+      "q": "Why hold the item steady while inserting?",
+      "choices": [
+        "To maintain control and avoid spills",
+        "To keep the item from spinning",
+        "To make the insertion look professional"
+      ],
+      "answer": 0,
+      "explain": "A steady hand reduces the risk of spillage."
+    }
+  ],
+  "safety": [
+    "Avoid spilling by aligning item with opening.",
+    "Check adjacent parts before insertion to prevent damage.",
+    "Hold items steadily to maintain control."
+  ],
+  "motion_thumb": "/media/skills/sk_7cb944e6/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/c82855a13e342e79232e.wav",
+      "duration": 7.83,
+      "text": "QA Insert Item into Vase. Place an item into a vase, ensuring proper alignment and preventing spills."
+    },
+    "st1": {
+      "audio": "/media/tts/ae46a1209cc914894d1d.wav",
+      "duration": 7.09,
+      "text": "Step 1. Insert into vase. Push the item held in the right hand into the vase on your right."
+    },
+    "st2": {
+      "audio": "/media/tts/e38dc8c4474b9a29d886.wav",
+      "duration": 6.95,
+      "text": "Step 2. Insert into vase. Push the item held in the right hand into the vase on your right."
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 183,
+      "p50_ms": 46.2
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 240,
+      "p50_ms": 58.2
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 183,
+      "p50_ms": 43.5
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3431.2
+    },
+    {
+      "model": "S2 Pro",
+      "chip": 1,
+      "backend": "tt",
+      "calls": 3,
+      "p50_ms": 38500.2
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 8753.9
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 183,
+      "p50_ms": 26.6
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}

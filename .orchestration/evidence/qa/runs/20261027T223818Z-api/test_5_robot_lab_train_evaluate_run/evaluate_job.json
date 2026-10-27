@@ -1,0 +1,148 @@
+{
+  "id": "job_13567bea",
+  "kind": "evaluate",
+  "skill_id": "sk_c1cc1209",
+  "status": "done",
+  "progress": 1.0,
+  "stage": "evaluate",
+  "stages": [
+    {
+      "name": "evaluate",
+      "status": "done",
+      "models": [
+        "MuJoCo@cpu",
+        "Tacit-BC@cpu"
+      ],
+      "detail": "success 100%",
+      "progress": 1.0,
+      "ms": 5438
+    }
+  ],
+  "error": null,
+  "result": {
+    "success_rate": 1.0,
+    "trials": [
+      {
+        "seed": 0,
+        "success": true,
+        "steps": 271,
+        "reason": null
+      },
+      {
+        "seed": 1,
+        "success": true,
+        "steps": 290,
+        "reason": null
+      },
+      {
+        "seed": 2,
+        "success": true,
+        "steps": 320,
+        "reason": null
+      },
+      {
+        "seed": 3,
+        "success": true,
+        "steps": 321,
+        "reason": null
+      },
+      {
+        "seed": 4,
+        "success": true,
+        "steps": 314,
+        "reason": null
+      },
+      {
+        "seed": 5,
+        "success": true,
+        "steps": 349,
+        "reason": null
+      },
+      {
+        "seed": 6,
+        "success": true,
+        "steps": 302,
+        "reason": null
+      },
+      {
+        "seed": 7,
+        "success": true,
+        "steps": 283,
+        "reason": null
+      },
+      {
+        "seed": 8,
+        "success": true,
+        "steps": 317,
+        "reason": null
+      },
+      {
+        "seed": 9,
+        "success": true,
+        "steps": 316,
+        "reason": null
+      },
+      {
+        "seed": 10,
+        "success": true,
+        "steps": 271,
+        "reason": null
+      },
+      {
+        "seed": 11,
+        "success": true,
+        "steps": 341,
+        "reason": null
+      },
+      {
+        "seed": 12,
+        "success": true,
+        "steps": 330,
+        "reason": null
+      },
+      {
+        "seed": 13,
+        "success": true,
+        "steps": 337,
+        "reason": null
+      },
+      {
+        "seed": 14,
+        "success": true,
+        "steps": 277,
+        "reason": null
+      },
+      {
+        "seed": 15,
+        "success": true,
+        "steps": 280,
+        "reason": null
+      },
+      {
+        "seed": 16,
+        "success": true,
+        "steps": 307,
+        "reason": null
+      },
+      {
+        "seed": 17,
+        "success": true,
+        "steps": 293,
+        "reason": null
+      },
+      {
+        "seed": 18,
+        "success": true,
+        "steps": 269,
+        "reason": null
+      },
+      {
+        "seed": 19,
+        "success": true,
+        "steps": 280,
+        "reason": null
+      }
+    ],
+    "seconds": 5.43
+  }
+}

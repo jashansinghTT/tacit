@@ -10,7 +10,16 @@ in a row on release candidate 27010cd (deployed 2026-10-27 21:49:50Z, under the 
 | 3 | `runs/20261027T221417Z-api`: 7/7, 5.1 min | `runs/20261027T221420Z-ui`: 7/7 + X1 tour, 3.8 min |
 | 4 | `runs/20261027T221939Z-api`: 7/7, 5.0 min | `runs/20261027T221941Z-ui`: 7/7 + X1 tour, 3.9 min |
 
-FINAL_ROUND_PLACEHOLDER
+Confirmation round on the final build (main a56321c, deployed 22:32:55Z): API `runs/20261027T223818Z-api` 7/7
+(8.1 min), browser `runs/20261027T223821Z-ui` 7/7 + X1 (6.3 min). That makes three green rounds in a row in both
+suites.
+
+Tutor latency on an idle speech chip, questions the tutor had not seen before (`runs/solo-f4-20261027T224830Z/`,
+`scripts/e2e/tutor_probe.py`): the text answer is on screen in 0.75 s (by voice: transcribed 0.6 s, text 1.2 s).
+The first spoken clause comes at 16 to 19 s and the last at 37 to 47 s, because S2 Pro ran at a real-time
+factor of about 3.7 under the box's load from other work (2.4 on a quiet host). That is the main latency to
+mention in a demo. With the same question asked twice, the second answer is spoken almost at once from the
+TTS cache (0.9 s).
 
 Details, timings and history: `.orchestration/evidence/qa/RESULTS.md`. Every finding QA filed (15, with owner,
 state, repro and evidence): `.orchestration/evidence/qa/FINDINGS.md`.

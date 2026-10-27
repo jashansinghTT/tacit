@@ -1,0 +1,540 @@
+{
+  "run_id": "20261027T223818Z-api",
+  "kind": "api",
+  "base": "http://127.0.0.1:8710",
+  "started": "2026-10-27T22:38:18+00:00",
+  "finished": "2026-10-27T22:46:26+00:00",
+  "git": "5786310",
+  "tests": [
+    {
+      "test": "test_1_landing_and_navigation",
+      "flow": 1,
+      "outcome": "passed",
+      "seconds": 0.04,
+      "error": null,
+      "timings": [
+        {
+          "step": "GET /",
+          "s": 0.002,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /studio (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /learn (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /robot (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /exchange (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /box (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /some/deep/link (SPA fallback)",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /api/health",
+          "s": 0.0,
+          "limit_s": 0.5,
+          "slow": false
+        },
+        {
+          "step": "GET /api/users",
+          "s": 0.002,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /api/samples",
+          "s": 0.001,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /api/skills",
+          "s": 0.002,
+          "limit_s": 1.0,
+          "slow": false
+        },
+        {
+          "step": "GET /api/exchange/listings",
+          "s": 0.002,
+          "limit_s": 1.0,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_1_landing_and_navigation"
+    },
+    {
+      "test": "test_2_sample_process_ready",
+      "flow": 2,
+      "outcome": "passed",
+      "seconds": 81.19,
+      "error": null,
+      "timings": [
+        {
+          "step": "create skill from sample",
+          "s": 0.007,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "process (clip 44 s)",
+          "s": 81.01,
+          "limit_s": 180.0,
+          "slow": false
+        },
+        {
+          "step": "stage decode",
+          "s": 2.65,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage perceive",
+          "s": 59.54,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage steps",
+          "s": 0.04,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage write",
+          "s": 14.33,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage verify",
+          "s": 3.94,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage twin",
+          "s": 0.43,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage narrate",
+          "s": 0.02,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage ready",
+          "s": 0.01,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "GET tracks",
+          "s": 0.011,
+          "limit_s": 2.0,
+          "slow": false
+        },
+        {
+          "step": "GET twin",
+          "s": 0.004,
+          "limit_s": 2.0,
+          "slow": false
+        },
+        {
+          "step": "all narration voiced (after ready)",
+          "s": 0.006,
+          "limit_s": 120,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_vase",
+          "s": 0.004,
+          "limit_s": 60,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_jars",
+          "s": 0.002,
+          "limit_s": 60,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_fake",
+          "s": 0.002,
+          "limit_s": 60,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "skill sk_c1cc1209 from sample smp_vase",
+        "verification verified score 0.90",
+        "quiz answer indexes: this skill [1, 1, 1]; 51 questions on the box",
+        "served from the cache of earlier TT results: ['S2 Pro']",
+        "445 analysed frames, 430 with hands",
+        "sample smp_vase (real): verified 0.90",
+        "sample smp_jars (real): verified 0.97",
+        "sample smp_fake (ai-generated): suspect 0.23"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_2_sample_process_ready"
+    },
+    {
+      "test": "test_3_live_capture_coach_and_answer",
+      "flow": 3,
+      "outcome": "passed",
+      "seconds": 192.0,
+      "error": null,
+      "timings": [
+        {
+          "step": "tts: make the test's spoken answer (setup, S2 Pro)",
+          "s": 0.007,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "create live skill",
+          "s": 0.005,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "coach question text after the step closed",
+          "s": 0.0,
+          "limit_s": 6,
+          "slow": false
+        },
+        {
+          "step": "coach question voice after the text",
+          "s": 0.0,
+          "limit_s": 10,
+          "slow": false
+        },
+        {
+          "step": "answer transcript after sending the voice answer",
+          "s": 0.77,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "saved after stop",
+          "s": 0.923,
+          "limit_s": 10,
+          "slow": false
+        },
+        {
+          "step": "analysis latency p50 (frame sent -> analysis back)",
+          "s": 0.162,
+          "limit_s": 0.5,
+          "slow": false
+        },
+        {
+          "step": "process the live capture",
+          "s": 165.862,
+          "limit_s": 180,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "capture video vase.mp4, 445 frames; answer wav 5.4 s",
+        "capture: {\"analysis\": 183, \"events\": 23, \"steps\": 1, \"coach\": 1, \"coach_audio\": 0, \"transcript\": 1, \"errors\": 0, \"saved\": {\"type\": \"saved\", \"skill_id\": \"sk_7cb944e6\", \"job_id\": \"job_db67ee9a\"}, \"analysis_latency_s\": {\"n\": 183, \"p50\": 0.162, \"p90\": 0.457}, \"frames_sent\": 227, \"seconds\": 23.8}"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_3_live_capture_coach_and_answer"
+    },
+    {
+      "test": "test_4_learn_narration_practice_tutor",
+      "flow": 4,
+      "outcome": "passed",
+      "seconds": 121.9,
+      "error": null,
+      "timings": [
+        {
+          "step": "GET /api/learn/lessons",
+          "s": 0.011,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "GET lesson",
+          "s": 0.001,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "fetch the first narration clip",
+          "s": 0.007,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "lesson in Spanish (first request translates)",
+          "s": 6.945,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "POST /api/learn/sessions",
+          "s": 0.026,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "first practice feedback",
+          "s": 0.237,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): first text",
+          "s": 0.833,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): answer text complete",
+          "s": 1.218,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "tutor (text): first spoken sentence",
+          "s": 17.091,
+          "limit_s": 8,
+          "slow": true
+        },
+        {
+          "step": "tutor (text): last sentence spoken (stream end)",
+          "s": 57.425,
+          "limit_s": 45,
+          "slow": true
+        },
+        {
+          "step": "tutor (voice): question transcribed",
+          "s": 0.456,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): first text",
+          "s": 1.231,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): answer text complete",
+          "s": 1.8,
+          "limit_s": 30,
+          "slow": false
+        },
+        {
+          "step": "tutor (voice): first spoken sentence",
+          "s": 24.11,
+          "limit_s": 8,
+          "slow": true
+        },
+        {
+          "step": "tutor (voice): last sentence spoken (stream end)",
+          "s": 49.957,
+          "limit_s": 45,
+          "slow": true
+        },
+        {
+          "step": "complete the lesson (quiz)",
+          "s": 0.006,
+          "limit_s": 2,
+          "slow": false
+        }
+      ],
+      "flags": [
+        "slow: tutor (text): first spoken sentence took 17.1 s (limit 8 s)",
+        "slow: tutor (text): last sentence spoken (stream end) took 57.4 s (limit 45 s)",
+        "slow: tutor (voice): first spoken sentence took 24.1 s (limit 8 s)",
+        "slow: tutor (voice): last sentence spoken (stream end) took 50.0 s (limit 45 s)"
+      ],
+      "notes": [
+        "es step 1: Inserta el tallo en el jarrón a tu derecha.",
+        "practice: 54 feedback messages, best score 0.96, hints ['Hold the stem steady while inserting.', 'Keep the stem upright as you insert.', 'Maintain a consistent insertion depth.']"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_4_learn_narration_practice_tutor"
+    },
+    {
+      "test": "test_5_robot_lab_train_evaluate_run",
+      "flow": 5,
+      "outcome": "passed",
+      "seconds": 92.06,
+      "error": null,
+      "timings": [
+        {
+          "step": "GET robot",
+          "s": 0.001,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "GET robot scene",
+          "s": 0.029,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "train (200 demos, 30 epochs)",
+          "s": 55.149,
+          "limit_s": 300,
+          "slow": false
+        },
+        {
+          "step": "evaluate (20 trials)",
+          "s": 6.022,
+          "limit_s": 180,
+          "slow": false
+        },
+        {
+          "step": "start policy run",
+          "s": 0.001,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "policy run: first message",
+          "s": 0.04,
+          "limit_s": 3,
+          "slow": false
+        },
+        {
+          "step": "start GR00T run",
+          "s": 0.001,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "GR00T inference p50 (ms -> s)",
+          "s": 0.067,
+          "limit_s": 0.5,
+          "slow": false
+        },
+        {
+          "step": "GR00T run: first camera frame",
+          "s": 0.21,
+          "limit_s": 10,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "program: [{'op': 'pick', 'object': 'stem'}, {'op': 'place', 'target': 'vase'}]",
+        "evaluation: 100% over 20 trials; failures []",
+        "policy run: 322 states at 30.1 Hz, success True",
+        "GR00T run: 601 states, cameras {'exterior': {'n': 100, 'bytes': 8972}, 'wrist': {'n': 100, 'bytes': 7164}}, 38 queries, p50 67 ms, done {'type': 'done', 'success': False, 'steps': 600, 'reason': 'timed out during pick stem', 'seconds': 20.0, 'regrasps': 0, 'tasks_done': 0, 'gr00t': {'calls': 38, 'p50_ms': 66.7, 'max_ms': 100.3}}, timeout False"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_5_robot_lab_train_evaluate_run"
+    },
+    {
+      "test": "test_6_exchange_list_license_pack_earnings",
+      "flow": 6,
+      "outcome": "passed",
+      "seconds": 0.66,
+      "error": null,
+      "timings": [
+        {
+          "step": "publish listing",
+          "s": 0.004,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "browse verified listings",
+          "s": 0.001,
+          "limit_s": 1,
+          "slow": false
+        },
+        {
+          "step": "open listing",
+          "s": 0.001,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "license (robot_deploy)",
+          "s": 0.003,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "download pack.zip",
+          "s": 0.637,
+          "limit_s": 10,
+          "slow": false
+        },
+        {
+          "step": "earnings",
+          "s": 0.002,
+          "limit_s": 1,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "pack: 24.3 MB, 208 files",
+        "pack has policy: True, demonstrations: True"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_6_exchange_list_license_pack_earnings"
+    },
+    {
+      "test": "test_7_box_nine_models_four_chips",
+      "flow": 7,
+      "outcome": "passed",
+      "seconds": 0.04,
+      "error": null,
+      "timings": [
+        {
+          "step": "GET /api/box",
+          "s": 0.043,
+          "limit_s": 1.0,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "box: {'models': 9, 'healthy': 9, 'chips': 4}; {0: ('tacit-vision', 'ok', {'HaMeR': True, 'Gaze-LLE': True, 'RF-DETR': True, 'VGGT-1B': True}), 1: ('cohost-speech', 'ok', {'Whisper large-v3': True, 'S2 Pro': True, 'MiniMax Music 3': True}), 2: ('gpt-oss-20b-fast', 'ok', {'gpt-oss-20b': True}), 3: ('gr00t', 'ok', {'GR00T N1.7': True})}",
+        "speech queue: {'live_sessions': 0, 'listen': 0, 'interactive': 0, 'batch': 0, 'busy': False}",
+        "GR00T on the Box: 54 calls, p50 68.3 ms",
+        "no latency yet (no calls since start): ['MiniMax Music 3']"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/20261027T223818Z-api/test_7_box_nine_models_four_chips"
+    }
+  ],
+  "cleanup": [
+    "listing lst_54ba0970: 200",
+    "skill sk_c1cc1209: 200",
+    "skill sk_7cb944e6: 200"
+  ]
+}
