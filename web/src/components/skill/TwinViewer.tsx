@@ -1,10 +1,11 @@
-import { useMemo, useRef, type MutableRefObject } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, type MutableRefObject } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Twin, TwinFrame, Vec3 } from '@/lib/api'
 import { nearestFrame, POSE_CONNECTIONS } from '@/lib/geometry'
 import { GhostHand } from '@/three/GhostHand'
+import { twinView, type View } from './twinView'
 import { PointCloud } from '@/three/PointCloud'
 
 export interface TwinLayers {
@@ -16,6 +17,17 @@ export interface TwinLayers {
 }
 
 export const TWIN_LAYERS: TwinLayers = { body: true, hands: true, gaze: true, objects: true, cloud: true }
+
+function CameraRig({ view }: { view: View }) {
+  const { camera } = useThree()
+  useEffect(() => {
+    camera.position.set(...view.position)
+    camera.lookAt(...view.target)
+    // set once per skill: the user orbits from here
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view.position.join(','), view.target.join(',')])
+  return null
+}
 
 function Body({ frame }: { frame: MutableRefObject<TwinFrame | undefined> }) {
   const lines = useRef<THREE.LineSegments>(null)
@@ -114,8 +126,8 @@ function Objects({ frame, highlight }: { frame: MutableRefObject<TwinFrame | und
   })
   return (
     <group ref={group}>
-      {labels.map((l) => (
-        <group key={l}>
+      {labels.map((l, i) => (
+        <group key={`${l}-${i}`}>
           <mesh>
             <octahedronGeometry args={[0.012]} />
             <meshBasicMaterial color={l === highlight ? '#ffffff' : '#7cf5c4'} toneMapped={false} />
@@ -139,8 +151,7 @@ function TwinScene({ twin, timeRef, layers, cloud, highlight }: { twin: Twin; ti
     left.current = f?.hands.left ?? null
     right.current = f?.hands.right ?? null
   })
-  const { min, max } = twin.bounds
-  const center: Vec3 = [(min[0] + max[0]) / 2, 0.12, (min[2] + max[2]) / 2]
+  const view = useMemo(() => twinView(twin), [twin])
   return (
     <>
       <color attach="background" args={['#08090b']} />
@@ -157,7 +168,8 @@ function TwinScene({ twin, timeRef, layers, cloud, highlight }: { twin: Twin; ti
       )}
       {layers.gaze && <Gaze frame={frame} />}
       {layers.objects && <Objects frame={frame} highlight={highlight} />}
-      <OrbitControls target={center} enableDamping makeDefault minDistance={0.4} maxDistance={4} />
+      <CameraRig view={view} />
+      <OrbitControls target={view.target} enableDamping makeDefault minDistance={0.3} maxDistance={5} />
     </>
   )
 }
@@ -179,21 +191,23 @@ export function TwinViewer({
 }) {
   return (
     <div className={className} data-testid="twin-viewer">
-      <Canvas camera={{ position: [0.55, 0.85, -1.35], fov: 42, near: 0.02, far: 20 }} dpr={[1, 2]}>
+      <Canvas camera={{ position: twinView(twin).position, fov: 42, near: 0.02, far: 20 }} dpr={[1, 2]}>
         <TwinScene twin={twin} timeRef={timeRef} layers={layers} cloud={cloud} highlight={highlight} />
       </Canvas>
     </div>
   )
 }
 
-export function CloudViewer({ data, className, tint, autoRotate = true }: { data: Float32Array | undefined; className?: string; tint?: string; autoRotate?: boolean }) {
+export function CloudViewer({ data, className, tint, autoRotate = true, view }: { data: Float32Array | undefined; className?: string; tint?: string; autoRotate?: boolean; view?: View }) {
+  const v = view ?? twinView(undefined)
   return (
     <div className={className} data-testid="cloud-viewer">
-      <Canvas camera={{ position: [0.9, 0.8, -1.1], fov: 40, near: 0.02, far: 20 }} dpr={[1, 2]}>
+      <Canvas camera={{ position: v.position, fov: 40, near: 0.02, far: 20 }} dpr={[1, 2]}>
         <color attach="background" args={['#08090b']} />
-        <gridHelper args={[2, 40, '#1c2a30', '#121a1e']} position={[0, -0.003, 0]} />
+        <gridHelper args={[3, 60, '#1c2a30', '#121a1e']} position={[0, Math.min(-0.003, v.target[1] - 0.5), 0]} />
         <PointCloud data={data} size={0.008} tint={tint} />
-        <OrbitControls target={[0, 0.1, 0.1]} autoRotate={autoRotate} autoRotateSpeed={0.6} enableDamping makeDefault />
+        <CameraRig view={v} />
+        <OrbitControls target={v.target} autoRotate={autoRotate} autoRotateSpeed={0.5} enableDamping makeDefault />
       </Canvas>
     </div>
   )

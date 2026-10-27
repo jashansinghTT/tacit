@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { blobToBase64, useFrameGrabber } from '@/lib/media'
-import { sockets, type AnalysisMsg, type CaptureEventMsg, type CaptureServerMsg, type ServedBy, type Step, type TacitSocket, type CaptureClientMsg } from '@/lib/api'
+import { api, sockets, type AnalysisMsg, type CaptureEventMsg, type CaptureServerMsg, type ServedBy, type Step, type TacitSocket, type CaptureClientMsg } from '@/lib/api'
 
 export type CapturePhase = 'idle' | 'connecting' | 'live' | 'stopping' | 'saved' | 'error'
 
@@ -141,9 +141,22 @@ export function useCapture() {
           setPhase((p) => (p === 'saved' ? p : 'error'))
           cleanup()
         } else if (st === 'closed') {
-          setPhase((p) => (p === 'saved' ? p : p === 'stopping' ? 'saved' : 'error'))
-          if (reason) setError(reason)
           cleanup()
+          setPhase((p) => {
+            if (p === 'stopping') {
+              // Closed after stop without a `saved` message: the skill record knows its job.
+              void api
+                .skill(id)
+                .then((sk) => {
+                  setJobId((j) => j ?? sk.job_id ?? null)
+                  setPhase('saved')
+                })
+                .catch(() => setError('The capture was stopped, but the box did not confirm it was saved.'))
+              return p
+            }
+            if (p !== 'saved' && reason) setError(reason)
+            return p === 'saved' ? p : 'error'
+          })
         }
       })
       timer.current = setInterval(async () => {

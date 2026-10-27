@@ -41,7 +41,7 @@ function buildTracks(duration: number) {
 function buildTwin(duration: number) {
   const frames = []
   for (let t = 0; t <= duration; t += 0.1) frames.push(twinAt(t % SCENE_DURATION))
-  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.4], max: [0.66, 0.8, 0.62] }, up: [0, 1, 0] }
+  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.4], max: [0.66, 0.8, 0.62] }, up: [0, 1, 0], camera: { position: [0, 0.8, -1.3], f: 808, cx: 640, cy: 360, person_depth_m: 1.6 } }
 }
 
 function newSkillFromSample(sampleId: string, kind: Skill['source']['kind']): Skill {

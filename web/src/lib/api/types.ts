@@ -274,6 +274,8 @@ export interface Twin {
   frames: TwinFrame[]
   bounds: { min: Vec3; max: Vec3 }
   up: Vec3
+  /** The recording camera in the twin frame (pinhole intrinsics in source pixels). */
+  camera?: { position: Vec3; f?: number; cx?: number; cy?: number; person_depth_m?: number }
 }
 
 // Jobs

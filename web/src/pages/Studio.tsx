@@ -117,7 +117,7 @@ export default function StudioPage() {
   })
   useEffect(() => {
     if (live) void mic.start()
-    else if (cap.phase === 'idle' || cap.phase === 'saved') mic.stop()
+    else mic.stop()
     // the mic follows the capture phase only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, cap.phase])
@@ -295,6 +295,10 @@ export default function StudioPage() {
           live || cap.phase === 'connecting' ? (
             <Button variant="danger" size="lg" icon={<Square className="size-4 fill-current" />} onClick={stopLive} data-testid="capture-stop">
               Stop and process
+            </Button>
+          ) : cap.phase === 'stopping' || cap.phase === 'saved' ? (
+            <Button variant="secondary" size="lg" loading disabled>
+              Saving the capture
             </Button>
           ) : (
             source !== 'upload' && (

@@ -3,12 +3,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Award, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { api, type Skill, type SkillSummary } from '@/lib/api'
-import { qk, usePointcloud, useSkill, useSkills, useJob } from '@/lib/api/queries'
+import { twinView } from './twinView'
+import { qk, usePointcloud, useSkill, useSkills, useJob, useTwin } from '@/lib/api/queries'
 import { fmtDate } from '@/lib/format'
 import { Badge, Button, ChipTag, Meter, Panel, ScoreRing, Skeleton, toast } from '@/components/ui'
 import { ProcessingPanel } from './ProcessingPanel'
 
 const CloudViewer = lazy(() => import('./TwinViewer').then((m) => ({ default: m.CloudViewer })))
+
 
 function Numbers({ s }: { s: Skill }) {
   const v = s.verification
@@ -34,6 +36,7 @@ function Numbers({ s }: { s: Skill }) {
 
 function CloudCard({ s, label, tone }: { s: Skill; label: string; tone: 'ok' | 'fault' | 'neutral' }) {
   const cloud = usePointcloud(s.verification.pointcloud)
+  const twin = useTwin(s.id, s.status === 'ready')
   const v = s.verification
   return (
     <Panel
@@ -51,7 +54,7 @@ function CloudCard({ s, label, tone }: { s: Skill; label: string; tone: 'ok' | '
           <Skeleton className="absolute inset-0 rounded-none" />
         ) : cloud.data ? (
           <Suspense fallback={<Skeleton className="absolute inset-0 rounded-none" />}>
-            <CloudViewer data={cloud.data.points} className="absolute inset-0" />
+            {twin.isLoading ? <Skeleton className="absolute inset-0 rounded-none" /> : <CloudViewer data={cloud.data.points} view={twinView(twin.data)} className="absolute inset-0" />}
           </Suspense>
         ) : (
           <div className="absolute inset-0 grid place-items-center text-xs text-fg-subtle">No point cloud</div>
