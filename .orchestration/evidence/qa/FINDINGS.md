@@ -110,7 +110,8 @@ it is fixed.
 
 ## QA-8 web (Studio): the processing panel stays "Failed" after a restart although the job re-ran and finished
 
-- Owner: web (tacit-web). State: open. Found 2026-10-27 20:55Z.
+- Owner: web (tacit-web). State: fixed in ca564a4 (web-e2), on main since 9b45eaf; the Studio follows the re-run
+  job and says "Restarted, continuing". Found 2026-10-27 20:55Z.
 - Seen: browser F2 on the merged web branches. The backend restarted while the sample's process job was in
   `narrate`; the backend marked it failed ("interrupted by a backend restart") and re-ran it under a new job id,
   and the skill became `ready` (5 steps, verified). The Studio still showed the old job as **Failed** with the
@@ -123,7 +124,9 @@ it is fixed.
 
 ## QA-9 web (Studio): hands-free answering never opens while the coach's voice is slow
 
-- Owner: web (tacit-web). State: open, sent to web-e2 (cc lead) 2026-10-27 21:16Z.
+- Owner: web (tacit-web). State: fixed on work/polish (web-1e, 21:40Z: hands-free arms on the question text,
+  echo guard and ducking while the voice plays, answer pinned to the open question); QA re-verifies in browser
+  F3 on the release candidate. Sent to web-1e (cc lead) 2026-10-27 21:16Z.
 - Seen (browser F3, fake camera and microphone): with S2 Pro at RTF ~8 (21:00Z), coach questions arrived at
   18.5 s, 27.7 s, 51.2 s, ... and each new one was "voice coming" before the previous one's listening window
   opened; the mic never armed in 90 s, so the expert could not answer (`findings/QA-9-handsfree-never-armed.png`).
@@ -143,7 +146,9 @@ it is fixed.
 
 ## QA-10 web: the guided tour's "Teach" stop has nothing to highlight
 
-- Owner: web (tacit-web, the tour) with web-learn (the Lesson page). State: open. Found 2026-10-27 21:22Z.
+- Owner: web (tacit-web, the tour) with web-learn (the Lesson page). State: fixed on work/polish (web-1e);
+  verified 21:44Z on a local merge with work/polish: X1 passes, the Teach stop frames the lesson stage
+  (`findings/QA-10-verified-tour-teach.png`); waits for main. Found 2026-10-27 21:22Z.
 - Seen: browser F1, release run UI #1 (`runs/20261027T211440Z-ui`): "Show me" → stop 3 (Teach) opens
   `/learn/sk_3b7c613d` (the lesson renders well) but waits in vain for `[data-tour="lesson-player"]`; no element on
   main carries it any more (only `Tour.tsx` names it), so the spotlight has no target. Screenshot
