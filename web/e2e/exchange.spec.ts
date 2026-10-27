@@ -21,6 +21,7 @@ interface SkillRow {
   listed: boolean
   expert: { id: string }
   source_kind?: string
+  test?: boolean
 }
 interface ListingRow {
   id: string
@@ -110,7 +111,7 @@ test.describe.serial('Skill Exchange: list, license, download, earn', () => {
 
   test('Maria lists a verified skill through the wizard', async ({ page, request }) => {
     const skills = await api<SkillRow[]>(request, `/api/skills?expert_id=${EXPERT}`)
-    const listable = skills.filter((s) => s.status === 'ready' && s.verification_status === 'verified' && !s.listed && !/^QA\b/.test(s.title))
+    const listable = skills.filter((s) => s.status === 'ready' && s.verification_status === 'verified' && !s.listed && !s.test && !/^QA\b/.test(s.title))
     // E2E_SKILL picks one; otherwise prefer a skill recorded from a sample clip over a live test capture.
     const candidate = process.env.E2E_SKILL
       ? listable.find((s) => s.id === process.env.E2E_SKILL)

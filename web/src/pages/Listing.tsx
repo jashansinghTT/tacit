@@ -109,8 +109,8 @@ function OnTheBox({ l }: { l: ExListingDetail }) {
   return (
     <Panel eyebrow="Processed on the box" title="The models that made this skill, inside the plant" data-testid="listing-models">
       <ul className="flex flex-wrap gap-1.5">
-        {used.map((m) => (
-          <li key={m.model} className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-1.5 py-1 text-[11px] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
+        {used.map((m, i) => (
+          <li key={`${m.model}-${m.backend}-${i}`} className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-1.5 py-1 text-[11px] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
             <span className="text-fg-muted">{m.model}</span>
             <ChipTag chip={m.backend === 'tt' ? m.chip : null} />
             {m.p50_ms != null && <span className="telemetry">{fmtMs(m.p50_ms)}</span>}
@@ -141,8 +141,8 @@ function OnTheBox({ l }: { l: ExListingDetail }) {
             <TriangleAlert className="size-3" /> Safety and quality notes
           </div>
           <ul className="space-y-1 text-xs text-fg-muted">
-            {l.skill.safety.map((s) => (
-              <li key={s} className="flex gap-2">
+            {l.skill.safety.map((s, i) => (
+              <li key={i} className="flex gap-2">
                 <span className="mt-1.5 size-1 shrink-0 rounded-full bg-warn" />
                 {s}
               </li>
