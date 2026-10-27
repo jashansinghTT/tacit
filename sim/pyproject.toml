@@ -1,0 +1,41 @@
+[project]
+name = "tacit-sim"
+version = "0.1.0"
+description = "Tacit Robot Lab: MuJoCo Franka Panda scene, scripted pick and place, behaviour cloning, GR00T N1.7 closed loop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mujoco>=3.2",
+    "numpy>=1.26",
+    "torch>=2.4",
+    "pyarrow>=16",
+    "pillow>=10",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# Only for exporting web assets (GLB) and writing evidence videos.
+export = ["trimesh>=4.4"]
+dev = ["pytest>=8", "trimesh>=4.4"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tacit_sim"]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: trains or evaluates a policy (tens of seconds)",
+    "gr00t: needs GR00T N1.7 serving on chip 3 (set TACIT_LIVE=1)",
+]
