@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tacit showreel</title>
+<style>
+  /* Fonts: the web app's own @fontsource packages (SIL OFL 1.1). */
+  @font-face { font-family: 'Geist'; font-weight: 100 900; font-display: block;
+    src: url('/vfonts/geist/files/geist-latin-wght-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Geist Mono'; font-weight: 100 900; font-display: block;
+    src: url('/vfonts/geist-mono/files/geist-mono-latin-wght-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Instrument Serif'; font-style: italic; font-weight: 400; font-display: block;
+    src: url('/fonts/instrument-serif/files/instrument-serif-latin-400-italic.woff2') format('woff2'); }
+  @font-face { font-family: 'Instrument Serif'; font-style: normal; font-weight: 400; font-display: block;
+    src: url('/fonts/instrument-serif/files/instrument-serif-latin-400-normal.woff2') format('woff2'); }
+
+  :root {
+    --ink: #040506; --ink-900: #08090b; --ink-800: #111316; --line: rgb(255 255 255 / 0.07);
+    --fg: #eceef1; --muted: #a3a9b2; --subtle: #6e7580;
+    --ion: #3cd7ff; --ion-strong: #14bff2; --violet: #a78bfa; --gaze: #ffc857; --part: #7cf5c4;
+    --ok: #3ddc97; --fault: #ff5d5d;
+  }
+  html, body { margin: 0; background: var(--ink); overflow: hidden; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink);
+    font-family: 'Geist', sans-serif; color: var(--fg); -webkit-font-smoothing: antialiased; }
+  .layer { position: absolute; inset: 0; display: none; }
+  .layer.on { display: block; }
+  canvas.fx { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+  .abs { position: absolute; }
+  .center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .huge { font-weight: 600; letter-spacing: -0.055em; line-height: 0.92; white-space: nowrap; }
+  .serif { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; letter-spacing: -0.02em; }
+  .ion-grad { background: linear-gradient(100deg, #8ff0ff 0%, #3cd7ff 45%, #4f8dff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mono { font-family: 'Geist Mono', monospace; text-transform: uppercase; letter-spacing: 0.22em; }
+  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.06em 0.04em 0.14em; margin: -0.06em -0.04em -0.14em; }
+  .mask > span { display: inline-block; will-change: transform; }
+  .chip { display: inline-flex; align-items: center; gap: 14px; padding: 12px 20px 12px 16px; border-radius: 10px;
+    background: rgb(8 9 11 / 0.72); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 20px 40px -20px rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(10px); font-family: 'Geist Mono', monospace; font-size: 22px; letter-spacing: 0.04em; color: var(--fg); white-space: nowrap; }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ion); box-shadow: 0 0 12px var(--ion); }
+  .chip .v { color: var(--ion); }
+  img.plate { position: absolute; display: block; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

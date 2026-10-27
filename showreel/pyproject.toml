@@ -1,0 +1,9 @@
+[project]
+name = "tacit-showreel-tools"
+version = "0.1.0"
+description = "Beat analysis, frame compositing and encoding for the Tacit showreel"
+requires-python = ">=3.12,<3.13"
+dependencies = ["numpy", "pillow", "scipy", "librosa", "soundfile", "matplotlib"]
+
+[tool.uv]
+package = false
