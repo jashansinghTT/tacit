@@ -23,7 +23,7 @@ export const TOUR: TourStep[] = [
   {
     key: 'watch', label: 'Watch', icon: Eye, route: '/studio?source=sample', persona: 'u_maria', target: '[data-tour="studio-source"]',
     title: 'Watch an expert work',
-    body: 'Maria kits a bracket set at her bench. Pick the sample (or your webcam) and press Start: her hands, gaze and the parts are tracked live, and the coach asks her why at each step.',
+    body: 'Maria kits a bracket set at the bench. Pick the sample (or your webcam) and press Start: both hands, the gaze and the parts are tracked live, and the coach asks why at each step.',
     models: 'MediaPipe · HaMeR, Gaze-LLE, RF-DETR on chip 0 · gpt-oss-20b on chip 2 · S2 Pro, Whisper on chip 1',
   },
   {
@@ -35,7 +35,7 @@ export const TOUR: TourStep[] = [
   {
     key: 'teach', label: 'Teach', icon: GraduationCap, route: '/learn/sk_sort', persona: 'u_sam', target: '[data-tour="lesson-player"]',
     title: 'Teach the next person',
-    body: 'Sam, a new hire, learns the skill: each step with Maria\'s own "why", the 3D twin doing it, narration in his language, and live practice on camera with a match score.',
+    body: 'Sam, a new hire, learns the skill: each step with Maria\'s own "why", the 3D twin doing it, narration in the trainee\'s language, and live practice on camera with a match score.',
     models: 'S2 Pro, Whisper on chip 1 · gpt-oss-20b on chip 2 · HaMeR on chip 0',
   },
   {

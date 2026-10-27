@@ -189,21 +189,25 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     job.finish_stage("twin", detail=f"{len(twin['frames'])} frames, {len(cloud) // 24} points")
 
     # narrate -------------------------------------------------------------------------------
+    # S2 Pro speaks at about half real time, so the job voices what a lesson needs to start
+    # (intro and the first two steps) and the rest is voiced in the background after "ready".
     job.start_stage("narrate", models=["S2 Pro@1"])
-    lines = [("intro", f"{skill['title']}. {skill.get('summary', '')}")] + \
-            [(st["id"], f"Step {st['index']}. {st['title']}. {st['instruction']}") for st in out_steps]
+    lines = narration_lines(skill)
+    first, rest = lines[:3], lines[3:]
     narration = {}
-    for k, (key, text) in enumerate(lines):
+    for k, (key, text) in enumerate(first):
         try:
             path, dur, sb = await speech.tts(text)
             narration[key] = {"audio": media_url(path), "duration": round(dur, 2), "text": text}
             extra_served.append(sb)
         except ModelUnavailable as e:
-            job.stage_progress((k + 1) / len(lines), f"TTS unavailable: {e}")
+            job.stage_progress((k + 1) / len(first), f"TTS unavailable: {e}")
             break
-        job.stage_progress((k + 1) / len(lines), f"{k + 1} / {len(lines)} lines")
+        job.stage_progress((k + 1) / len(first), f"{k + 1} / {len(lines)} lines")
     skill["narration"] = narration
-    job.finish_stage("narrate", detail=f"{len(narration)} lines")
+    job.finish_stage("narrate", detail=f"{len(narration)} of {len(lines)} lines now, the rest in the background")
+    if rest:
+        _background(narrate_rest(skill_id, rest))
 
     # ready ---------------------------------------------------------------------------------
     job.start_stage("ready")
@@ -212,6 +216,34 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     save_skill(skill)
     job.finish_stage("ready", detail=f"{len(out_steps)} steps, verification {skill['verification']['status']}")
     return {"skill_id": skill_id, "steps": len(out_steps), "verification": skill["verification"]["status"]}
+
+
+def narration_lines(skill: dict) -> list[tuple[str, str]]:
+    return [("intro", f"{skill['title']}. {skill.get('summary', '')}")] + \
+           [(st["id"], f"Step {st['index']}. {st['title']}. {st['instruction']}") for st in skill.get("steps", [])]
+
+
+_bg: set[asyncio.Task] = set()
+
+
+def _background(coro) -> None:
+    t = asyncio.create_task(coro)
+    _bg.add(t)
+    t.add_done_callback(_bg.discard)
+
+
+async def narrate_rest(skill_id: str, lines: list[tuple[str, str]]) -> None:
+    for key, text in lines:
+        try:
+            path, dur, _ = await speech.tts(text)
+        except ModelUnavailable:
+            log.warning("background narration stopped for %s", skill_id)
+            return
+        sk = load_skill(skill_id)
+        if not sk:
+            return
+        sk.setdefault("narration", {})[key] = {"audio": media_url(path), "duration": round(dur, 2), "text": text}
+        save_skill(sk)
 
 
 def objects_summary(frames: list[dict]) -> list[str]:

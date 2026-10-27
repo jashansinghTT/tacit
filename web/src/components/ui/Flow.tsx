@@ -125,7 +125,7 @@ export function Timeline({
   return (
     <div className={cn('relative select-none', className)} data-testid="step-timeline">
       <div
-        className={cn('relative flex h-9 gap-[3px]', onSeek && 'cursor-pointer')}
+        className={cn('relative h-9 rounded-sm bg-white/[0.015] shadow-[inset_0_0_0_1px_var(--color-line)]', onSeek && 'cursor-pointer')}
         onClick={(e) => {
           if (!onSeek) return
           const r = e.currentTarget.getBoundingClientRect()
@@ -134,16 +134,17 @@ export function Timeline({
       >
         {segments.map((s, i) => {
           const active = s.id === activeId
+          const d = Math.max(duration, 0.001)
           return (
             <div
               key={s.id}
               className={cn(
-                'relative h-full overflow-hidden rounded-sm transition-colors',
-                s.done ? 'bg-ion/[0.14]' : 'bg-white/[0.04]',
+                'absolute inset-y-0 overflow-hidden rounded-sm transition-colors',
+                s.done ? 'bg-ion/[0.14]' : 'bg-white/[0.05]',
                 active && 'bg-ion/[0.22] shadow-[inset_0_0_0_1px_rgb(60_215_255/0.6)]',
               )}
-              style={{ width: `calc(${((s.t1 - s.t0) / Math.max(duration, 0.001)) * 100}% - 3px)` }}
-              title={s.label}
+              style={{ left: `calc(${(s.t0 / d) * 100}% + 1px)`, width: `calc(${((s.t1 - s.t0) / d) * 100}% - 2px)` }}
+              title={`${i + 1}. ${s.label}`}
             >
               {s.done && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-ion" />}
               <div className="flex h-full items-center gap-1.5 px-2 text-[11px] whitespace-nowrap">

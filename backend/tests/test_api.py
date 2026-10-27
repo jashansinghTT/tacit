@@ -160,3 +160,19 @@ def test_box_and_lessons(api):
     assert [c["id"] for c in box["chips"]] == [0, 1, 2, 3]
     assert box["totals"]["models"] == 9
     assert isinstance(api.get("/api/learn/lessons", headers={"X-Tacit-User": "u_sam"}).json(), list)
+
+
+def test_restart_recovers_interrupted_jobs(api):
+    from tacit import app as appmod
+    from tacit.db import JobRow, session
+    from tacit.storage import load_skill, save_skill
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    sk = load_skill(sid)
+    sk["status"] = "processing"
+    save_skill(sk)
+    with session() as s:
+        s.add(JobRow(id="job_orphan", kind="process", skill_id=sid, status="running", payload="{}"))
+        s.commit()
+    assert appmod.recover_interrupted_jobs() == [sid]
+    assert api.get("/api/jobs/job_orphan").json()["status"] == "failed"
+    assert load_skill(sid)["status"] == "draft"
