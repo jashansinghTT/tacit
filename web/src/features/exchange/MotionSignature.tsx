@@ -8,6 +8,9 @@ import { useMotion } from './hooks'
 const W = 320
 const H = 180
 const PAD = 14
+// Room for the card's badges above and its step/robot labels below.
+const PAD_TOP = 34
+const PAD_BOTTOM = 26
 const L_WRIST = 15
 const R_WRIST = 16
 const BODY_JOINTS = [0, 2, 5, 7, 8, 11, 12, 13, 14, 15, 16, 23, 24]
@@ -65,9 +68,10 @@ function project(twin: Twin): Projected | null {
   const x1 = q(xs, 0.98)
   const y0 = q(ys, 0.02)
   const y1 = q(ys, 0.98)
-  const s = Math.min((W - 2 * PAD) / Math.max(x1 - x0, 1e-3), (H - 2 * PAD) / Math.max(y1 - y0, 1e-3))
+  const hAvail = H - PAD_TOP - PAD_BOTTOM
+  const s = Math.min((W - 2 * PAD) / Math.max(x1 - x0, 1e-3), hAvail / Math.max(y1 - y0, 1e-3))
   const ox = (W - (x1 - x0) * s) / 2
-  const oy = (H - (y1 - y0) * s) / 2
+  const oy = PAD_BOTTOM + (hAvail - (y1 - y0) * s) / 2
   const to = (p: Vec3): P => [ox + (p[0] - x0) * s, H - (oy + (p[1] - y0) * s)]
   const body = frames.map((f, i) => (f.body && bodyOk[i] ? f.body.map(to) : null))
   const left = frames.map((f) => (handOk(f.hands.left) ? f.hands.left!.map(to) : null))
