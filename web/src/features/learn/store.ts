@@ -18,14 +18,10 @@ interface LessonState {
   step: number
   view: LessonView
   mode: LessonMode
-  playing: boolean
-  rate: number
   narrate: boolean
   autoAdvance: boolean
   practice: Record<number, StepPractice>
   sessionId: string | null
-  /** Current time of the step video, written every animation frame (read it, do not subscribe). */
-  clock: { t: number; loops: number }
 
   reset: (skillId: string, stepCount: number) => void
   goStep: (step: number) => void
@@ -33,13 +29,13 @@ interface LessonState {
   prev: () => void
   openQuiz: () => void
   setMode: (m: LessonMode) => void
-  setPlaying: (p: boolean) => void
-  setRate: (r: number) => void
   setNarrate: (v: boolean) => void
   setAutoAdvance: (v: boolean) => void
   recordScore: (step: number, score: number) => void
   recordDone: (step: number, score: number) => void
   ensureSession: (lang: string) => Promise<string>
+  /** Forget the session (the backend restarted and no longer knows it). */
+  dropSession: () => void
 }
 
 const MAX_SCORES = 160
@@ -50,24 +46,21 @@ export const useLesson = create<LessonState>((set, get) => ({
   step: 1,
   view: 'step',
   mode: 'watch',
-  playing: true,
-  rate: 1,
   narrate: true,
   autoAdvance: true,
   practice: {},
   sessionId: null,
-  clock: { t: 0, loops: 0 },
 
   reset: (skillId, stepCount) => {
     if (get().skillId === skillId) {
       set({ stepCount })
       return
     }
-    set({ skillId, stepCount, step: 1, view: 'step', mode: 'watch', playing: true, practice: {}, sessionId: null, clock: { t: 0, loops: 0 } })
+    set({ skillId, stepCount, step: 1, view: 'step', mode: 'watch', practice: {}, sessionId: null })
   },
   goStep: (step) => {
     const n = get().stepCount
-    set({ step: Math.max(1, Math.min(n || 1, step)), view: 'step', clock: { t: 0, loops: 0 } })
+    set({ step: Math.max(1, Math.min(n || 1, step)), view: 'step' })
   },
   next: () => {
     const { step, stepCount } = get()
@@ -81,8 +74,6 @@ export const useLesson = create<LessonState>((set, get) => ({
   },
   openQuiz: () => set({ view: 'quiz' }),
   setMode: (mode) => set({ mode, view: 'step' }),
-  setPlaying: (playing) => set({ playing }),
-  setRate: (rate) => set({ rate }),
   setNarrate: (narrate) => set({ narrate }),
   setAutoAdvance: (autoAdvance) => set({ autoAdvance }),
   recordScore: (step, score) =>
@@ -96,6 +87,7 @@ export const useLesson = create<LessonState>((set, get) => ({
       const p = s.practice[step] ?? { scores: [], best: 0, done: null }
       return { practice: { ...s.practice, [step]: { ...p, best: Math.max(p.best, score), done: score } } }
     }),
+  dropSession: () => set({ sessionId: null }),
   ensureSession: async (lang) => {
     const existing = get().sessionId
     if (existing) return existing
