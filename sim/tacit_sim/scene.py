@@ -7,6 +7,7 @@ robot and the bins.
 
 from __future__ import annotations
 
+import logging
 import math
 import os
 from dataclasses import dataclass
@@ -14,6 +15,11 @@ from pathlib import Path
 
 import mujoco
 import numpy as np
+
+# MuJoCo prints solver warnings (rare "linesearch objective is not convex" on hard contacts) to
+# stdout and appends them to MUJOCO_LOG.TXT in the working directory. Route them to logging.
+_log = logging.getLogger("tacit_sim.mujoco")
+mujoco.set_mju_user_warning(lambda msg: _log.debug("mujoco: %s", msg.strip()))
 
 from .program import BIN_X, Layout, parse_program
 
