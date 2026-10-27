@@ -42,6 +42,17 @@ async function shot(page: Page, name: string, opts: { fullPage?: boolean; at?: s
   await page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png`, fullPage: opts.fullPage })
 }
 
+/** Wait for the tutor's answer text; on a transient model error, use "Try again" once. */
+async function answered(page: Page) {
+  const answer = page.getByTestId('tutor-answer').last()
+  await expect(answer).toHaveAttribute('data-status', /done|error/, { timeout: 90_000 })
+  if ((await answer.getAttribute('data-status')) === 'error') {
+    await page.getByTestId('tutor-retry').click()
+    await expect(page.getByTestId('tutor-answer').last()).toHaveAttribute('data-status', 'done', { timeout: 90_000 })
+  }
+  await expect(page.getByTestId('tutor-answer-text').last()).not.toBeEmpty()
+}
+
 async function openLesson(page: Page) {
   await page.goto(lessonUrl)
   await expect(page.getByTestId('lesson-title')).toHaveText(fx.title)
@@ -113,9 +124,7 @@ test('tutor: answers a typed question and speaks the answer', async ({ page }) =
   await page.getByTestId('tutor-input').fill('What should I watch out for in this step?')
   await page.getByTestId('tutor-send').click()
   await expect(page.getByTestId('tutor-question').first()).toContainText('watch out for')
-  const answer = page.getByTestId('tutor-answer').first()
-  await expect(answer).toHaveAttribute('data-status', 'done', { timeout: 90_000 })
-  await expect(page.getByTestId('tutor-answer-text').first()).not.toBeEmpty()
+  await answered(page)
   // Each sentence is voiced by S2 Pro and played as soon as it arrives.
   await expect(page.getByTestId('tutor-speaking').or(page.getByTestId('tutor-replay')).first()).toBeVisible({ timeout: 120_000 })
   await shot(page, 'lesson-tutor')
@@ -132,8 +141,7 @@ test('tutor: answers a spoken question with its transcript', async ({ page }) =>
   await expect(q).toContainText('you said', { timeout: 150_000 })
   const firstWords = fx.question!.split(/\s+/).slice(0, 3).join(' ').replace(/[^\w\s]/g, '')
   await expect(q).toContainText(new RegExp(firstWords, 'i'), { timeout: 60_000 })
-  await expect(page.getByTestId('tutor-answer').first()).toHaveAttribute('data-status', 'done', { timeout: 90_000 })
-  await expect(page.getByTestId('tutor-answer-text').first()).not.toBeEmpty()
+  await answered(page)
   await shot(page, 'lesson-tutor-voice')
 })
 

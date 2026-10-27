@@ -154,6 +154,18 @@ export function useTutor(skillId: string) {
     stopVoice()
   }, [stopVoice])
 
+  /** Ask a failed question again (a spoken one by its transcript). */
+  const retry = useCallback(
+    (id: string) => {
+      const t = turnsRef.current.find((x) => x.id === id)
+      if (!t?.question) return
+      setTurns((ts) => ts.filter((x) => x.id !== id))
+      turnsRef.current = turnsRef.current.filter((x) => x.id !== id)
+      void ask({ question: t.question }, t.lang)
+    },
+    [ask],
+  )
+
   const replay = useCallback((id: string) => {
     const t = turnsRef.current.find((x) => x.id === id)
     if (t?.audio.length) playParts(id, t.audio.filter(Boolean))
@@ -165,7 +177,7 @@ export function useTutor(skillId: string) {
   }, [])
 
   const busy = turns.some((t) => t.status === 'streaming')
-  return { turns, ask, cancel, replay, stopVoice, busy }
+  return { turns, ask, cancel, replay, retry, stopVoice, busy }
 }
 
 /** Sentences as the backend cuts them for speech (after ". ", "? " or "! ", at least 12 chars). */

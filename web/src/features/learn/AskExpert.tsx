@@ -35,7 +35,7 @@ function suggestionsFor(lang: string, title: string, n: number): string[] {
   return [`Why ${lowerFirst(title)}?`, `What is the most common mistake in step ${n}?`, `How do I know step ${n} is done right?`]
 }
 
-function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void; onSource: (step: number) => void }) {
+function Answer({ turn, onReplay, onRetry, onSource }: { turn: Turn; onReplay: () => void; onRetry: () => void; onSource: (step: number) => void }) {
   const { lesson } = useLessonCtx()
   const voiceQueued = (useSpeechQueue().interactive ?? 0) > 0
   const sentences = useMemo(() => splitSentences(turn.answer), [turn.answer])
@@ -57,10 +57,15 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
           )}
         </div>
         {turn.status === 'error' ? (
-          <p className="flex items-start gap-2 rounded-lg bg-fault-soft px-3 py-2 text-[13px] text-fault" role="alert">
+          <div className="flex items-start gap-2 rounded-lg bg-fault-soft px-3 py-2 text-[13px] text-fault" role="alert" data-testid="tutor-error">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-            {turn.error ?? 'The tutor did not answer.'}
-          </p>
+            <span className="min-w-0 flex-1">{turn.error ?? 'The tutor did not answer.'}</span>
+            {turn.question && (
+              <button onClick={onRetry} className="shrink-0 font-medium text-fg hover:underline" data-testid="tutor-retry">
+                Try again
+              </button>
+            )}
+          </div>
         ) : (
           <p className="text-[14px] leading-relaxed text-fg-muted" data-testid="tutor-answer-text">
             {sentences.map((s, i) => (
@@ -229,7 +234,7 @@ export function AskExpert({ className }: { className?: string }) {
           tutor.turns.map((t) => (
             <div key={t.id} className="space-y-3">
               {(t.question || t.voice) && <Question turn={t} />}
-              <Answer turn={t} onReplay={() => tutor.replay(t.id)} onSource={(n) => n && goStep(n)} />
+              <Answer turn={t} onReplay={() => tutor.replay(t.id)} onRetry={() => tutor.retry(t.id)} onSource={(n) => n && goStep(n)} />
             </div>
           ))
         )}
