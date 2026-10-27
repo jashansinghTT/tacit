@@ -1,4 +1,8 @@
-"""gpt-oss-20b on chip 2 through its OpenAI-compatible API: chat, streaming, and JSON answers."""
+"""gpt-oss-20b on chip 2 through its OpenAI-compatible API: chat, streaming, and JSON answers.
+
+Greedy decoding (temperature 0) runs about 85 tokens/s on the fused decode path; any sampling
+temperature falls back to host sampling at about 15-19 tokens/s, so every call here is greedy.
+"""
 from __future__ import annotations
 
 import json
@@ -17,7 +21,7 @@ def _body(messages: list[dict], max_tokens: int, temperature: float, effort: str
             "reasoning_effort": effort, "stream": stream}
 
 
-async def chat(messages: list[dict], max_tokens: int = 600, temperature: float = 0.4, effort: str = "low",
+async def chat(messages: list[dict], max_tokens: int = 600, temperature: float = 0.0, effort: str = "low",
                timeout: float = 120) -> tuple[str, dict]:
     ep = endpoints()["llm"]
     st = stats("llm")
@@ -37,7 +41,7 @@ async def chat(messages: list[dict], max_tokens: int = 600, temperature: float =
     return (msg.get("content") or "").strip(), served(ep, ms)
 
 
-async def chat_stream(messages: list[dict], max_tokens: int = 500, temperature: float = 0.5,
+async def chat_stream(messages: list[dict], max_tokens: int = 500, temperature: float = 0.0,
                       effort: str = "low") -> AsyncIterator[str]:
     """Yield answer text deltas (reasoning tokens are dropped)."""
     ep = endpoints()["llm"]
@@ -105,7 +109,7 @@ async def chat_json(messages: list[dict], max_tokens: int = 1500, attempts: int 
     last_err = None
     sb = None
     for _ in range(attempts):
-        text, sb = await chat(messages, max_tokens=max_tokens, temperature=0.2, effort=effort)
+        text, sb = await chat(messages, max_tokens=max_tokens, temperature=0.0, effort=effort)
         try:
             return extract_json(text), sb
         except (ValueError, json.JSONDecodeError) as e:

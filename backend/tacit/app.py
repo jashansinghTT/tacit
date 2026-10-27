@@ -56,8 +56,40 @@ async def _startup() -> None:
     init_db()
     seed.seed_users()
     seed.samples()
+    interrupted = recover_interrupted_jobs()
+    if os.environ.get("TACIT_RESUME_JOBS", "1") == "1":
+        for skill_id in interrupted:
+            jobs.run(jobs.create("process", skill_id, STAGES), lambda j, sid=skill_id: process_skill(j, sid))
     if os.environ.get("TACIT_SEED", "1") == "1":
         asyncio.create_task(seed.seed_sample_skills())
+
+
+def recover_interrupted_jobs() -> list[str]:
+    """Jobs that were running when the backend stopped are marked failed; their skills go back to draft.
+    Returns the skills whose processing should be started again."""
+    from .db import JobRow, now
+    resume = []
+    with session() as s:
+        for row in s.exec(select(JobRow).where(JobRow.status.in_(("queued", "running")))).all():
+            row.status, row.error, row.finished_at = "failed", "interrupted by a backend restart", now()
+            payload = json.loads(row.payload or "{}")
+            payload.update(status="failed", error=row.error)
+            row.payload = json.dumps(payload)
+            s.add(row)
+            if row.kind == "process" and row.skill_id:
+                resume.append(row.skill_id)
+        s.commit()
+    for skill_id in resume:
+        sk = load_skill(skill_id)
+        if sk and sk.get("status") == "processing":
+            sk["status"] = "draft"
+            save_skill(sk)
+    for skill_id in [r for r in resume]:
+        if not load_skill(skill_id):
+            resume.remove(skill_id)
+    if resume:
+        log.warning("resuming %d interrupted processing jobs: %s", len(resume), resume)
+    return resume
 
 
 def user_id(x_tacit_user: str | None) -> str:
