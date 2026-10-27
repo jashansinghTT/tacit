@@ -215,7 +215,9 @@ it is fixed.
 
 ## QA-15 backend (tutor prompt): the tutor sometimes declines the most basic question
 
-- Owner: backend (lead). State: open (low, content quality). Found 2026-10-27 22:19Z.
+- Owner: backend (lead). State: fixed in 6585afc (final build a56321c); verified: F4 asserts the tutor does not
+  decline "Why does the first step matter?" and passed in both suites of the confirmation round
+  (`runs/20261027T223818Z-api`, `runs/20261027T223821Z-ui`). Found 2026-10-27 22:19Z.
 - Seen: browser round 3 (`runs/20261027T221420Z-ui`, F4): asked "Why does the first step matter?", the tutor
   answered "I'm not sure from this recording. It would be best to ask a supervisor for clarification." although
   step 1 has a why ("To begin arranging stems evenly.", inferred) (`findings/QA-15-tutor-declines.png`). The API
