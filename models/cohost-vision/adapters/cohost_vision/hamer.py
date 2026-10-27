@@ -14,7 +14,7 @@ from typing import Any, Dict
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, log, note, programs, unpin_l1, without_lifespan
+from .common import Rounds, StepModel, is_l1, l1_copy, log, note, programs, unpin_l1, without_lifespan
 
 
 class HamerMember(AppMember):
@@ -26,6 +26,8 @@ class HamerMember(AppMember):
     def load(self, mesh):
         import torch
 
+        from hamer import mano_head as hamer_head
+        from hamer import vit as hamer_vit
         from hamer.checkpoint import load_hamer_checkpoint
         from hamer.model import TtHamer
         from hamer.reference import Hamer, sample_input
@@ -62,9 +64,12 @@ class HamerMember(AppMember):
         self.model = SharedMeshTtHamer(ref, device_id=cfg.device_id, strict=True, use_trace=cfg.use_trace)
         if self.model._vit_params is None or self.model._head_params is None:
             raise RuntimeError("tt-nn parameters not available after the upload")
+        # the ones row of the fused residual ops: copied into L1 at each use instead of resident
         freed = sum(unpin_l1(p["fused"], "ones_l1", "ones")
                     for p in (self.model._vit_params, self.model._head_params) if p.get("fused"))
-        log.info("cohost-vision: hamer: %d resident L1 constant(s) moved to their DRAM copies", freed)
+        for mod in (hamer_vit, hamer_head):
+            mod._ones = lambda fz, residual: l1_copy(fz["ones"]) if is_l1(residual) else fz["ones"]
+        log.info("cohost-vision: hamer: %d resident L1 constant(s) freed; copied into L1 per use", freed)
         self.ref, self.cfg, self.srv = ref, cfg, srv
         self.x_a, self.x_b = sample_input(batch=1, seed=0), sample_input(batch=1, seed=1)
         srv.STATE.update(mano=mano, mano_path=str(mano_path) if mano_path else None, cfg=cfg,

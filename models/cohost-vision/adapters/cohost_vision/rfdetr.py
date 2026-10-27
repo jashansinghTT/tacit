@@ -12,7 +12,7 @@ import time
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, log, note, programs, unpin_l1, without_lifespan
+from .common import Rounds, StepModel, is_l1, l1_copy, log, note, programs, unpin_l1, without_lifespan
 
 
 class RfDetrMember(AppMember):
@@ -25,6 +25,7 @@ class RfDetrMember(AppMember):
 
         from rf_detr.reference.weights import get_preprocessor, load_rf_detr_base, resolve_weight_files
         from rf_detr.server import app as srv
+        from rf_detr.tt.ttnn_backbone import TtDinoBackbone
         from rf_detr.tt.ttnn_rf_detr import TtRfDetr
 
         srv._setup_logging()
@@ -40,8 +41,10 @@ class RfDetrMember(AppMember):
         model = TtRfDetr(ref, mesh)
         if not model.use_trace:
             raise RuntimeError("the co-host adapter serves RF-DETR's traced path only (RFDETR_EAGER unset)")
+        # the layer-scale rows of the fused residual ops: copied into L1 at each use instead of resident
         freed = sum(unpin_l1(p, f"{k}_l1", k) for p in model.backbone.layers for k in ("ls1", "ls2"))
-        log.info("cohost-vision: rfdetr: %d resident L1 layer-scale row(s) moved to their DRAM copies", freed)
+        TtDinoBackbone._ls = staticmethod(lambda p, key, residual: l1_copy(p[key]) if is_l1(residual) else p[key])
+        log.info("cohost-vision: rfdetr: %d resident L1 layer-scale row(s) freed; copied into L1 per use", freed)
         self.model, self.pre, self.srv = model, pre, srv
         srv.STATE.update(
             device=mesh, pre=pre, config=cfg,

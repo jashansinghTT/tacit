@@ -65,16 +65,17 @@ class Rounds:
 
 
 def unpin_l1(params: dict, l1_key: str, dram_key: str) -> int:
-    """Use the DRAM copy of a constant where a model kept a second copy resident in L1, and free
-    that L1 copy. Returns 1 if one was freed.
+    """Free a constant a model keeps resident in L1 (``params[l1_key]``, an L1 copy of
+    ``params[dram_key]``) and leave the DRAM original in its place. Returns 1 if one was freed.
 
-    HaMeR and RF-DETR keep small constant rows (ones, layer-scale) in L1 so that the fused
-    matmul-addcmul op reads its scale row from the same buffer type as an L1 residual; HaMeR's
-    own notes call it a precaution (the op takes one accessor per tensor, so mixed placement is
-    legal), and the values are the same either way. Resident L1 is what co-hosting cannot afford:
+    HaMeR and RF-DETR keep small constant rows (ones, layer-scale) resident in L1 because the
+    fused matmul-addcmul kernel of this tree needs its scale row in the same buffer type as an L1
+    residual (mixed placement fails to compile). Resident L1 is what co-hosting cannot afford:
     every interleaved L1 buffer holds the same address range on every core, and VGGT's camera
     layer norm needs nearly the whole L1 of core (0,0). Worse, a trace replay does not re-check
-    circular buffers, so a replay can silently overwrite another member's resident L1."""
+    circular buffers, so a replay can silently overwrite another member's resident L1. The
+    adapter pairs this with :func:`l1_copy`, which the model's own selector then returns: the
+    same values, copied into L1 right before the op that reads them and freed right after."""
     import ttnn
 
     old = params.get(l1_key)
@@ -86,6 +87,19 @@ def unpin_l1(params: dict, l1_key: str, dram_key: str) -> int:
     params[l1_key] = new
     ttnn.deallocate(old)
     return 1
+
+
+def l1_copy(row):
+    """A transient L1 copy of a DRAM constant row, as the model built its resident one."""
+    import ttnn
+
+    return ttnn.to_memory_config(row, ttnn.L1_MEMORY_CONFIG)
+
+
+def is_l1(t) -> bool:
+    import ttnn
+
+    return t.memory_config().buffer_type == ttnn.BufferType.L1
 
 
 def programs(mesh) -> int:

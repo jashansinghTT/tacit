@@ -106,7 +106,7 @@ runtime:
   # regions (HaMeR 200 MiB, Gaze-LLE 64 MiB, RF-DETR 90 MB, VGGT 1536 MiB); l1_small_size holds
   # the conv2d configs of RF-DETR (32 KiB standalone) and VGGT (64 KiB standalone).
   tt_config:
-    l1_small_size: 98304
+    l1_small_size: 65536
     trace_region_size: 1979711488
     num_command_queues: 1
 
