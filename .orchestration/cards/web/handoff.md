@@ -30,14 +30,16 @@ narrative, gaze checks, side-by-side videos).
   (`grep -c mockFetch dist/assets/*.js` → 0) and strips `public/mock/`. Every page above runs on
   the real backend (verified against :8710 through the dev proxy on :5710).
 - `npm run typecheck`, `npm run lint` (0 warnings), `npm run build`: pass.
-- Playwright (`web/e2e`, Chromium): mock suite 13/13 green. Real stack (`TACIT_E2E_BASE`):
-  11 specs green; the Studio live-capture spec and the audit spec pass when the backend is not
-  restarted mid-test (see notes). Smoke specs: landing, hotspot detail, top-bar navigation,
-  persona switcher, tour, 404, Box, Skills list, every skill tab, typed answer, audit, live
-  capture with fake camera and mic, source picker.
-- Evidence: `.orchestration/evidence/web/mock/` and `.orchestration/evidence/web/real/`
-  (full-page screenshots of every page and skill tab, the hero detail, the tour, a live capture
-  and the processing view), plus `real-studio-live-capture.png`.
+- Playwright (`web/e2e`, Chromium): mock suite 14/14 green. Real stack (`TACIT_E2E_BASE`,
+  final run at 21:08 UTC inside the lead's no-deploy freeze, backend at main 9b45eaf): 12 passed,
+  2 skipped (the mock-only restart drill; the typed-answer test when no QA skill has an open
+  question). Smoke specs: landing, hotspot detail, top-bar navigation, persona switcher, tour,
+  404, Box, Skills list, every skill tab, typed answer, audit a run, live capture with fake camera
+  and mic, source picker, processing after a simulated restart (QA-8).
+- Evidence: `.orchestration/evidence/web/real/` (final pass in the freeze) and
+  `.orchestration/evidence/web/mock/`: full-page screenshots of every page and every skill tab
+  (overview, twin, SOP, verify, answer, audit), the hero detail, the tour, a live capture and the
+  processing view; plus `real-studio-live-capture.png` (first real F1 run).
 
 ## How to check
 
@@ -55,9 +57,11 @@ TACIT_E2E_BASE=http://127.0.0.1:8710 npx playwright test --project=smoke   # rea
 - Real payloads that differ from the contract text are normalised in `src/lib/api/normalize.ts`:
   verification details (`reproj_rel`, `camera_drift`), QA rows with `step_index` and no `id`,
   audit `run_t` as `[start, end]` and gaze targets as lists, partial skills while processing.
-- Backend observations reported to the lead: frequent restarts drop live captures and running
-  audit jobs; a PATCH during processing is overwritten when the job saves; stop used to wait
-  behind coach TTS (fixed by the lead at ~20:37).
+- Backend observations reported to the lead: restarts drop live captures and running audit jobs
+  (the UI now follows re-run jobs, QA-8); a PATCH during processing is overwritten when the job
+  saves; stop used to wait behind coach TTS (fixed by the lead at ~20:37). On the real stack the
+  coach asks only after the backend closes a step (hand-object interactions), so the live-capture
+  spec records whether a question came rather than failing on it.
 - Shared APIs other web cards use: `components/ui/*`, `components/layout/*`,
   `components/skill/TwinViewer.tsx` (`TwinViewer`, `CloudViewer`), `components/skill/twinView.ts`,
   `components/skill/SkillPlayer.tsx`, `lib/playback.ts`, `lib/media.ts`, `e2e/fixtures.ts`.

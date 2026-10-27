@@ -1,7 +1,7 @@
 # Status: web
 
-State: running (merge gate met except the final real-mode evidence run, scheduled in the lead's freeze)
-Updated: 2026-10-27T20:58:00+00:00
+State: review
+Updated: 2026-10-27T21:15:00+00:00
 
 ## Scope
 Landing, design system and shared components, app shell, Studio, Skills, Skill detail
@@ -20,11 +20,13 @@ pages → web-exchange; Robot Lab → web-robot.
   /answer; Audit a run (use case 5).
 - Box (F7): chip board map, p50 history, memory, speech_queue. Tour and landing links use live ids.
 - typecheck, lint (0 warnings), build: pass; mock code absent from the real build.
-- Playwright: mock 13/13; real stack 12 passed, 1 skipped (20:50, backend steady).
-- Evidence: .orchestration/evidence/web/{mock,real}/ (real set being refreshed in the freeze).
+- Playwright: mock 14/14; real stack 12 passed, 2 skipped (21:08, inside the freeze, main 9b45eaf).
+- Evidence: .orchestration/evidence/web/real/ (final pass in the freeze) and .../mock/.
+- QA-8 (stale "Failed" after a backend restart) fixed with a regression test (ca564a4, merged).
 
 ## Next
-Final real-mode screenshot run inside the lead's no-deploy freeze, then State: review.
+Merge gate met; handoff.md written. Waiting for the lead's review. Follow-ups welcome via status
+or SendMessage (tacit-web).
 
 ## Notes
 - web-exchange's session ended before I could reply. Their three points were all handled:

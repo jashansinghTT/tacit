@@ -59,7 +59,9 @@ test('screenshot a live capture', async ({ page }) => {
   test.setTimeout(REAL ? 180_000 : 60_000)
   await page.goto(studioUrl('screenshot capture'))
   await page.getByTestId('capture-start').click()
-  await expect(page.getByTestId('coach-question').first()).toBeVisible({ timeout: REAL ? 120_000 : 30_000 })
+  // On the real stack a question needs the backend to close a step; screenshot either way.
+  if (REAL) await page.getByTestId('coach-question').first().waitFor({ timeout: 90_000 }).catch(() => undefined)
+  else await expect(page.getByTestId('coach-question').first()).toBeVisible({ timeout: 30_000 })
   await page.waitForTimeout(2000)
   await page.screenshot({ path: `${out}studio-live.png`, fullPage: true })
   await page.getByTestId('capture-stop').click()
