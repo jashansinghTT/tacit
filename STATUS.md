@@ -1,39 +1,40 @@
 # Tacit status
 
-Updated: 2026-10-27 20:18 UTC by the lead (session tt-model-manager-4d)
+Updated: 2026-10-27 21:45 UTC by the lead (session tt-model-manager-4d)
 
 **Open it:** http://127.0.0.1:8710 on this box (from a laptop: forward port 8710). Demo script: docs/DEMO.md.
-**State:** most of the product works end to end on the real hardware. Merged and live: backend, vision
-co-host, robot sim, landing, Studio, Skills, Verify, Audit, Box, and the whole Skill Exchange (sell →
-license → pack → royalty passed twice on real data). In progress: Learn/Lesson/Team (working, polishing),
-Robot Lab page, better step detection on real footage, QA's two clean runs, a showreel first cut.
+**State:** release candidate. Every page and flow is merged and live on the real hardware. Last step now:
+the live-capture speed-up (chip 0 image swap, about 22:10 UTC), then QA's two clean release runs (API +
+browser, about 90 min). After that come the polish pass on web/dist and a showreel first cut for your review.
 
 ## Works end to end on the real stack
 - Nine models, four Blackhole chips, all healthy (chip 0 vision co-host: HaMeR, Gaze-LLE, RF-DETR, VGGT,
   bit-identical to standalone; chip 1 Whisper + S2 Pro + Music 3; chip 2 gpt-oss-20b; chip 3 GR00T N1.7).
-- Video → skill in about real time for perception; gpt-oss-20b at 85 tokens/s (greedy); lesson in 9 languages.
-- Check: real footage 0.90 / 0.97 verified, AI-made 0.24 suspect (VGGT).
-- Live capture: the coach asks why out loud about 1 s after a step ends; Whisper transcribes the answer.
-- Robot: policy trained from 200 sim variations (~1-3 min), 20/20 on the sample programs; GR00T drives the sim.
-- Quality audit of a worker's run against the expert (new use case); Reflex glove export and virtual glove.
-- Backend tests 20/20, sim tests 37/37, web smoke 12/12 and Exchange e2e green on the real stack.
+- Watch: video → skill (steps, the why, SOP, quiz, safety, robot program), lesson voiced by S2 Pro, 9 languages.
+- Check: real footage 0.90 / 0.97 verified, AI-made 0.23 suspect (VGGT geometry).
+- Teach: live capture with the coach asking why out loud after each step; Whisper transcribes the answer.
+- Do: trainee practice with live feedback, tutor Q&A by voice, quality audit of a worker's run vs the expert.
+- Robot: policy trained from 200 sim variations, 20/20 on the sample programs; GR00T N1.7 drives the sim.
+- Earn: Skill Exchange sell → license → motion-only pack → royalty ledger; Reflex glove export.
+- QA API release run #1: 6/7 flows green; the 7th (listing page) was QA-12, fixed and deployed 21:31 UTC.
+- Tests: backend 44/44, sim 37/37 (+2 live GR00T), web smoke/learn/exchange/robot suites green.
 
-## Recently fixed (from QA and the workers)
-Restart recovery of jobs; the coach's voice no longer waits behind narration (one-slot speech gate,
-transcription first); buyers see motion-only previews, never video frames; renames during processing
-stick; train/evaluate use the same robot program; handedness from pose wrists (in review).
+## Fixed today from QA (all with regression tests)
+QA-1..8 (restart recovery, program mismatch, speech priority, teardown, Studio re-runs, CPU priority);
+QA-11 quiz could come out empty → validated, retried, filled in the background;
+QA-12 listing page 500 for trained skills; QA-13 the writer could fold five repetitions into one step →
+every observed step survives; QA-14 GR00T calls now show on the Box; quiz answers no longer always first.
 
 ## Team (headless Claude sessions, tmux `tacit-team`)
 | card | owner | state |
 |---|---|---|
 | backend, deploy, integration | lead | running |
-| perception quality (vase P 1.00 R 0.83, jars P 0.67 R 0.80 so far) | tacit-vision | running |
-| sim + policy + GR00T | tacit-sim | handoff in progress |
-| web: landing, Studio, Skills, Audit, Box | tacit-web | running |
-| web: Learn, Lesson, Team, Reflex glove | tacit-web-learn | running |
-| web: Exchange | tacit-web-exchange | merged |
-| web: Robot Lab | tacit-web-robot | running |
-| QA: end-to-end suite | tacit-qa | running |
+| liveperf: 5.8 → 10 fps live analysis (camera-capped), outputs identical | tacit-vision | chip 0 swap now |
+| perception quality (vase P 1.00 R 0.83, jars P 0.80 R 0.80) | tacit-vision | merged |
+| sim + policy + GR00T | tacit-sim | merged |
+| web: landing, Studio, Skills, Audit, Box, Learn, Exchange, Robot Lab | tacit-web* | merged |
+| polish: whole-app consistency, tour, performance, a11y | tacit-web | running |
+| QA: release runs | tacit-qa | paused for the chip 0 swap |
 | showreel (first cut only) | tacit-showreel | running |
 
 ## Needs you
@@ -41,9 +42,10 @@ stick; train/evaluate use the same robot program; handedness from pose wrists (i
   glove, start Reflex yourself (`MOCK=1 ./application/dev.sh`); Tacit finds it at :8000 (or REFLEX_URL).
 - MotionSites is on the free plan (3 prompts used): https://motionsites.ai/unlimited
 - The showreel is a first cut for your review; no final render without you.
+- Optional: add user `jashan` to the `render` group for GPU rendering in the sim (system change, not done).
 
 <!-- runtime:start -->
-### Runtime (watchdog, 2026-10-27T20:13:26+00:00)
+### Runtime (watchdog, 2026-10-27T21:35:57+00:00)
 
 | service | state | check |
 |---|---|---|

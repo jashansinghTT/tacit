@@ -475,3 +475,11 @@ def test_gr00t_calls_from_the_sim_count_on_the_box():
     note_gr00t({"type": "gr00t", "ms": 112.5})
     note_gr00t({"type": "state", "ms": 3})
     assert stats("gr00t").calls == before + 1 and stats("gr00t").latencies[-1] == 112.5
+
+
+def test_quiz_choices_are_shuffled_with_the_answer():
+    from tacit.pipeline.writer import valid_quiz
+    qs = valid_quiz([{"q": f"Why {i}?", "choices": ["right", "wrong a", "wrong b"], "answer": 0} for i in range(6)])
+    assert all(q["choices"][q["answer"]] == "right" for q in qs)
+    assert any(q["answer"] != 0 for q in qs)
+    assert valid_quiz([{"q": "Why 1?", "choices": ["right", "wrong a", "wrong b"], "answer": 0}])[0] == qs[1]   # stable
