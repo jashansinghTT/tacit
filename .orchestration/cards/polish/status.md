@@ -1,7 +1,7 @@
 # Status: polish
 
 State: running (gate met except the real-stack Learn suite, waiting for a quiet chip-0 window)
-Updated: 2026-10-27T22:20:00+00:00
+Updated: 2026-10-27T22:32:00+00:00
 
 ## Done (work/polish; details in handoff.md)
 - QA-9, QA-10 fixed (regression test for QA-9); plain-language error states (QA-12 mitigation).
@@ -15,6 +15,12 @@ Updated: 2026-10-27T22:20:00+00:00
 - Checks: typecheck, lint pass; mock smoke 23/23; real Exchange suite 3/3; DEMO.md walk on the
   release backend as each persona at 1440 (with live capture) and 1920.
 - Evidence: .orchestration/evidence/polish/{before,after,walk-1440,walk-1920}.
+- Exchange e2e no longer lists or licenses demo data: only Maria's "QA" test skills, opened by id,
+  teardown deletes its listing (with licence and ledger entry). Real stack 3/3, public listings
+  unchanged.
+- Busy models (models[].busy) shown amber "busy" on the Box page; pill tooltip names busy/down.
+- Note for the lead: the Learn suite practises and certifies as Sam on a seeded lesson, so it
+  touches demo-visible progress (idempotent for the certificate).
 
 ## Next
 Run the real-stack Learn suite when the lead gives a window after QA's timing runs, then State: review.
