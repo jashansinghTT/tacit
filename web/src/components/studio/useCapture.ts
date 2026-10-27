@@ -13,6 +13,8 @@ export interface ChatLine {
   pendingAudio?: boolean
   questionId?: string | null
   ms?: number
+  /** performance.now() when an answer was sent (placeholder lines only). */
+  sentAt?: number
 }
 
 const FPS = 10
@@ -218,7 +220,7 @@ export function useCapture() {
 
   const answer = useCallback(async (wav: Blob, questionId: string | null) => {
     const t = (performance.now() - started.current) / 1000
-    setChat((c) => [...c, { id: `p-${Date.now()}`, who: 'expert', text: '', t, questionId }])
+    setChat((c) => [...c, { id: `p-${Date.now()}`, who: 'expert', text: '', t, questionId, sentAt: performance.now() }])
     sock.current?.send({ type: 'answer', t, wav: await blobToBase64(wav), ...(questionId ? { question_id: questionId } : {}) })
   }, [])
 

@@ -301,6 +301,10 @@ export function useSpeaker() {
     audio.current?.pause()
     setPlaying(false)
   }, [])
+  /** Lower the voice while someone is talking over it, and bring it back after. */
+  const duck = useCallback((on: boolean) => {
+    if (audio.current) audio.current.volume = on ? 0.15 : 1
+  }, [])
   useEffect(() => () => audio.current?.pause(), [])
-  return { say, stop, current, playing }
+  return { say, stop, duck, current, playing }
 }

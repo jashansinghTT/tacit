@@ -66,6 +66,7 @@ export function normalizeSummary(raw: Partial<SkillSummary> & { id: string }): S
     steps_count: raw.steps_count ?? 0,
     verification_status: raw.verification_status ?? 'pending',
     listed: raw.listed ?? false,
+    source_kind: raw.source_kind,
   }
 }
 
