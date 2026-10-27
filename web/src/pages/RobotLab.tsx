@@ -15,7 +15,7 @@ import { clearRun, emptyPose, startRun, useRunUi } from '@/features/robot/runStr
 import { buildGhost } from '@/features/robot/retarget'
 import { JointTelemetry, PlaybackBar } from '@/features/robot/Live'
 import { LAB_MODES, MODE_META, ModeTabs, type LabMode, type ModeState } from '@/features/robot/ModeList'
-import { EvaluatePanel, Gr00tPanel, PolicyPanel, ReplayPanel, TrainPanel } from '@/features/robot/ModePanels'
+import { EvaluatePanel, Gr00tFeeds, Gr00tPanel, PolicyPanel, ReplayPanel, TrainPanel } from '@/features/robot/ModePanels'
 import { ExplainerStrip, uniqueTasks } from '@/features/robot/Explainer'
 import { useLabJobs } from '@/features/robot/useLabJobs'
 
@@ -50,15 +50,16 @@ function RunStatusChip() {
         {label} · stream error
       </Badge>
     )
+  const expected = !ui.done?.success && ui.mode === 'gr00t'
   return (
     <Badge
-      tone={ui.done?.success ? 'ok' : 'fault'}
+      tone={ui.done?.success ? 'ok' : expected ? 'warn' : 'fault'}
       icon={ui.done?.success ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
       className="bg-ink-950/70 backdrop-blur"
       data-testid="run-status"
       data-status="done"
     >
-      {label} · {ui.done?.success ? 'success' : 'failed'}
+      {label} · {ui.done?.success ? 'success' : expected ? 'did not finish' : 'failed'}
     </Badge>
   )
 }
@@ -311,7 +312,7 @@ export default function RobotLabPage() {
           />
 
           <div className="mt-5 grid gap-5 xl:grid-cols-12">
-            <div className="min-w-0 xl:col-span-8">
+            <div className="flex min-w-0 flex-col gap-5 xl:col-span-8">
               <div className="panel overflow-hidden p-1.5">
                 {scene.data ? (
                   <SimViewer
@@ -371,6 +372,7 @@ export default function RobotLabPage() {
                   {scene.data && <JointTelemetry robot={scene.data.robot} pose={pose} />}
                 </div>
               </div>
+              {(mode === 'gr00t' || runMode === 'gr00t') && <Gr00tFeeds />}
             </div>
 
             <div className="flex min-w-0 flex-col gap-3 xl:col-span-4">

@@ -5,7 +5,7 @@ import type { RobotStatus, RunMode } from '@/lib/api/robot'
 import { useBox } from '@/lib/api/queries'
 import { cn } from '@/lib/cn'
 import { fmtAgo, fmtMs, fmtPct } from '@/lib/format'
-import { Badge, Button, ChipTag, Meter, ScoreRing, Segmented, Sparkline, Stat, StatusDot, Switch } from '@/components/ui'
+import { Badge, Button, ChipTag, Meter, Panel, ScoreRing, Segmented, Sparkline, Stat, StatusDot, Switch } from '@/components/ui'
 import { CameraFeed } from './Live'
 import { LossChart } from './LossChart'
 import { FailureReasons, TrialGrid } from './TrialGrid'
@@ -65,15 +65,18 @@ function RunOutcome({ modes }: { modes: RunMode[] }) {
       </div>
     )
   const d = ui.done
+  // GR00T is the off-distribution baseline: not finishing is the expected result, not a fault.
+  const expected = !d.success && ui.mode === 'gr00t'
+  const tone = d.success ? 'ok' : expected ? 'warn' : 'fault'
   return (
     <div
-      className={cn('rounded-md px-3 py-2.5 shadow-[inset_0_0_0_1px_currentColor]', d.success ? 'bg-ok-soft text-ok/40' : 'bg-fault-soft text-fault/40')}
+      className={cn('rounded-md px-3 py-2.5 shadow-[inset_0_0_0_1px_currentColor]', { ok: 'bg-ok-soft text-ok/40', warn: 'bg-warn-soft text-warn/40', fault: 'bg-fault-soft text-fault/40' }[tone])}
       data-testid="run-outcome"
       data-success={d.success}
     >
-      <div className={cn('flex items-center gap-2 text-[13px] font-medium', d.success ? 'text-ok' : 'text-fault')}>
+      <div className={cn('flex items-center gap-2 text-[13px] font-medium', { ok: 'text-ok', warn: 'text-warn', fault: 'text-fault' }[tone])}>
         {d.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-        {d.success ? 'Success' : 'Did not succeed'}
+        {d.success ? 'Success' : expected ? 'Did not finish (expected for the baseline)' : 'Did not succeed'}
         {ui.seed !== null && <span className="telemetry ml-auto text-[11px] font-normal text-fg-subtle">seed {ui.seed}</span>}
       </div>
       {d.reason && <div className="mt-1 text-[12px] text-fg-muted">{d.reason}</div>}
@@ -396,10 +399,6 @@ export function Gr00tPanel({ onRun }: { onRun: () => void }) {
           <div className="text-[13px] text-fg">&ldquo;{instruction}&rdquo;</div>
         </div>
       )}
-      <div className="grid gap-2">
-        <CameraFeed name="exterior" label="exterior_image_1_left" />
-        <CameraFeed name="wrist" label="wrist_image_left" />
-      </div>
       <Section title="Latency per call" aside={g.calls > 0 && <span className="telemetry text-[11px] text-fg-subtle">{g.calls} calls</span>}>
         <div className="grid grid-cols-3 gap-3" data-testid="gr00t-latency">
           <Stat size="sm" label="Last" value={g.last ? fmtMs(g.last.ms) : '–'} />
@@ -409,5 +408,29 @@ export function Gr00tPanel({ onRun }: { onRun: () => void }) {
         <div className="mt-3 h-10">{g.recent.length > 1 ? <Sparkline data={g.recent} width={380} height={40} className="h-10 w-full" /> : <div className="h-10 rounded-sm dot-bg" />}</div>
       </Section>
     </div>
+  )
+}
+
+/** GR00T's two inputs side by side, under the viewer: what the foundation model actually sees. */
+export function Gr00tFeeds() {
+  const g = useRunUi((s) => s.gr00t)
+  return (
+    <Panel
+      eyebrow="Inputs, 320×180 at 5 Hz"
+      title="What GR00T sees"
+      actions={
+        g.calls > 0 && (
+          <span className="telemetry text-[11px] text-fg-subtle">
+            {g.calls} calls · p50 {g.p50 != null ? fmtMs(g.p50) : '–'}
+          </span>
+        )
+      }
+      data-testid="gr00t-feeds"
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <CameraFeed name="exterior" label="exterior_image_1_left" />
+        <CameraFeed name="wrist" label="wrist_image_left" />
+      </div>
+    </Panel>
   )
 }
