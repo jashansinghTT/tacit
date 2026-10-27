@@ -1,1 +1,1 @@
-FREEZE until 2026-10-27T23:40:00+00:00 (QA release runs on the 21:49:50Z deploy, main 27010cd; extended for one retry): no backend restarts, no web/dist rebuilds, no model restarts
+HOLD for the final deploy: QA rounds 3 and 4 on RC 27010cd are green (release verified). web-1e runs the real-stack Learn suite on chip 0 now; the lead then merges polish and deploys. No other backend, model or web/dist changes.

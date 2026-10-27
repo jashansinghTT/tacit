@@ -1,11 +1,12 @@
 # Tacit status
 
-Updated: 2026-10-27 21:55 UTC by the lead (session tt-model-manager-4d)
+Updated: 2026-10-27 22:30 UTC by the lead (session tt-model-manager-4d)
 
 **Open it:** http://127.0.0.1:8710 on this box (from a laptop: forward port 8710). Demo script: docs/DEMO.md.
-**State:** release candidate deployed 21:49 UTC with every card merged, including the live-capture
-speed-up (10 fps live analysis on chip 0, outputs identical). QA's two release runs (API + browser on the
-real deployment) go until about 23:20 UTC. After them: the polish pass on web/dist and a showreel first cut.
+**State:** release verified. QA's two consecutive release rounds on build 27010cd are green in both
+suites (API 7/7 and browser 7/7 against the real deployment, rounds 3 and 4, 22:14 and 22:19 UTC). Last
+step: the final deploy with the polish pass and small backend fixes (faster tutor voice, busy models shown
+as busy), then one final QA round on it.
 
 ## Works end to end on the real stack
 - Nine models, four Blackhole chips, all healthy (chip 0 vision co-host: HaMeR, Gaze-LLE, RF-DETR, VGGT,
@@ -16,7 +17,7 @@ real deployment) go until about 23:20 UTC. After them: the polish pass on web/di
 - Do: trainee practice with live feedback, tutor Q&A by voice, quality audit of a worker's run vs the expert.
 - Robot: policy trained from 200 sim variations, 20/20 on the sample programs; GR00T N1.7 drives the sim.
 - Earn: Skill Exchange sell → license → motion-only pack → royalty ledger; Reflex glove export.
-- QA API release run #1: 6/7 flows green; the 7th (listing page) was QA-12, fixed and deployed 21:31 UTC.
+- QA release rounds 3 and 4: API 7/7 + browser 7/7, twice in a row (evidence: ~/tacit-wt/qa/.orchestration/evidence/qa/RESULTS.md).
 - Tests: backend 51/51, sim 37/37 (+2 live GR00T), web mock suites 23/23 on main.
 
 ## Fixed today from QA (all with regression tests)
@@ -34,7 +35,7 @@ every observed step survives; QA-14 GR00T calls now show on the Box; quiz answer
 | sim + policy + GR00T | tacit-sim | merged |
 | web: landing, Studio, Skills, Audit, Box, Learn, Exchange, Robot Lab | tacit-web* | merged |
 | polish: whole-app consistency, tour, performance, a11y | tacit-web | running |
-| QA: release runs | tacit-qa | running (to ~23:20 UTC) |
+| QA: release runs | tacit-qa | gate met on 27010cd; final round after the last deploy |
 | showreel (first cut only) | tacit-showreel | running |
 
 ## Needs you
@@ -45,7 +46,7 @@ every observed step survives; QA-14 GR00T calls now show on the Box; quiz answer
 - Optional: add user `jashan` to the `render` group for GPU rendering in the sim (system change, not done).
 
 <!-- runtime:start -->
-### Runtime (watchdog, 2026-10-27T21:50:58+00:00)
+### Runtime (watchdog, 2026-10-27T22:23:55+00:00)
 
 | service | state | check |
 |---|---|---|

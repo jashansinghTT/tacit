@@ -69,7 +69,7 @@
       "id": "qa",
       "title": "E2E suite on the real stack (SPEC section 9) and fix loop",
       "owner": "tacit-qa",
-      "state": "running: final release runs on the 21:49:50Z deploy (freeze to 23:20Z)",
+      "state": "gate met: rounds 3+4 green on 27010cd (API 7/7, browser 7/7); final round after the last deploy",
       "branch": "work/qa",
       "worktree": "~/tacit-wt/qa",
       "acceptance": [
@@ -174,5 +174,5 @@
       "handoff": ".orchestration/cards/showreel/handoff.md"
     }
   ],
-  "updated": "2026-10-27T21:55Z"
+  "updated": "2026-10-27T22:30Z"
 }
