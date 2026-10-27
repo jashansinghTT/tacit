@@ -13,6 +13,7 @@ from __future__ import annotations
 import base64
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 import numpy as np
@@ -87,7 +88,7 @@ class Gr00tController:
     """Steps a SimEnv under GR00T. Call `step(env)` once per control step."""
 
     def __init__(self, env: SimEnv, client: Gr00tClient, cameras: Cameras, requery: int = 8,
-                 seed: int = 42, instruction_fn=None):
+                 seed: int = 42, instruction_fn=None, asynchronous: bool = False):
         self.env = env
         self.client = client
         self.cameras = cameras
@@ -100,6 +101,9 @@ class Gr00tController:
         self.query_step = 0
         self.calls: list[dict] = []          # per query: ms (round trip), server_ms, step
         self.last_query: dict | None = None
+        self.asynchronous = asynchronous
+        self._pool = ThreadPoolExecutor(1, thread_name_prefix="gr00t") if asynchronous else None
+        self._pending = None                 # (future, observation step, instruction)
 
     @staticmethod
     def start_pose(env: SimEnv) -> None:
@@ -126,35 +130,62 @@ class Gr00tController:
                 del self.frames[k]
         return f
 
-    def _query(self, step: int) -> None:
+    def _request(self, step: int) -> tuple[dict, dict, str]:
         now = self.frame(step)
         past_step = max([k for k in self.frames if k <= step - HISTORY_STEPS * 2], default=None)
         past = self.frames[past_step] if past_step is not None else self.frames[min(self.frames)]
         images = {key: [encode_jpeg(past[cam], 95), encode_jpeg(now[cam], 95)] for key, cam in CAMERAS.items()}
         instruction = truncate_instruction(self.instruction_fn() if self.instruction_fn else "Put the object in the bin")
+        return images, droid_state(self.env), instruction
+
+    def _call(self, images, state, instruction) -> tuple[dict, float]:
         t0 = time.perf_counter()
-        resp = self.client.predict(images, droid_state(self.env), instruction, seed=self.seed)
-        ms = (time.perf_counter() - t0) * 1000
-        acts = resp["actions"]
-        self.actions = {k: np.asarray(v, dtype=float) for k, v in acts.items()}
-        self.query_step = step
-        info = {"step": step, "ms": round(ms, 1),
+        resp = self.client.predict(images, state, instruction, seed=self.seed)
+        return resp, (time.perf_counter() - t0) * 1000
+
+    def _accept(self, resp: dict, ms: float, obs_step: int, instruction: str) -> dict:
+        self.actions = {k: np.asarray(v, dtype=float) for k, v in resp["actions"].items()}
+        self.query_step = obs_step
+        info = {"step": obs_step, "applied_at": self.env.steps, "ms": round(ms, 1),
                 "server_ms": resp.get("timing_ms", {}).get("total"),
                 "device_ms": resp.get("timing_ms", {}).get("device"),
                 "instruction": instruction}
         self.calls.append(info)
         self.last_query = info
+        return info
 
     def step(self) -> dict | None:
-        """Advance one control step. Returns the query info if GR00T was called this step."""
+        """Advance one control step. Returns the query info if a new chunk took over this step.
+
+        Synchronous mode waits for every query (deterministic; used for evaluation). Asynchronous
+        mode (realtime streaming) keeps executing the current 40-step chunk while the next query
+        is in flight, then joins the new chunk at the step matching its observation time.
+        """
         env = self.env
         step = env.steps
-        queried = None
+        info = None
         if self._need_frame(step):
             self.frame(step)
-        if self.actions is None or step - self.query_step >= self.period:
-            self._query(step)
-            queried = self.last_query
+        due = self.actions is None or step - self.query_step >= self.period
+        if not self.asynchronous:
+            if due:
+                images, state, instruction = self._request(step)
+                resp, ms = self._call(images, state, instruction)
+                info = self._accept(resp, ms, step, instruction)
+        else:
+            if self._pending is not None and (self._pending[0].done() or self.actions is None):
+                fut, obs_step, instruction = self._pending
+                self._pending = None
+                resp, ms = fut.result()          # raises Gr00tError on failure
+                info = self._accept(resp, ms, obs_step, instruction)
+            if due and self._pending is None and info is None:
+                images, state, instruction = self._request(step)
+                self._pending = (self._pool.submit(self._call, images, state, instruction), step, instruction)
+                if self.actions is None:         # nothing to execute yet: wait for the first chunk
+                    fut, obs_step, instruction = self._pending
+                    self._pending = None
+                    resp, ms = fut.result()
+                    info = self._accept(resp, ms, obs_step, instruction)
         j = step - self.query_step
         i, frac = divmod(j, 2)
         q = self.actions["joint_position"]
@@ -164,4 +195,9 @@ class Gr00tController:
         target = a + (b - a) * (frac / 2.0)
         g = float(self.actions["gripper_position"][min(i, n - 1)][0])
         env.step_joints(target, float(np.clip(g, 0.0, 1.0)))
-        return queried
+        return info
+
+    def close(self) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=True, cancel_futures=True)
+            self._pool = None

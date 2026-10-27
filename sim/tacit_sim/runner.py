@@ -165,6 +165,7 @@ class Runner:
                 client = Gr00tClient(self.gr00t_url)
                 Gr00tController.start_pose(env)
                 gr = Gr00tController(env, client, cams, requery=self.gr00t_requery, seed=42,
+                                     asynchronous=realtime,
                                      instruction_fn=lambda: instruction(layout, env.monitor.index)
                                      if env.monitor.task is not None else "Go back to the start")
                 secs = self.max_seconds or GR00T_SECONDS_PER_TASK * max(1, len(layout.tasks))
@@ -277,6 +278,8 @@ class Runner:
             if stream:
                 yield {"type": "done", **self.result}
         finally:
+            if gr is not None:
+                gr.close()
             if cams is not None:
                 cams.close()
             if client is not None:

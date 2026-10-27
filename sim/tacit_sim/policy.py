@@ -22,6 +22,17 @@ from .features import ACT_DIM, CHUNK, OBS_DIM, chunk_labels, observe
 
 FORMAT = "tacit-bc-chunk-mlp/1"
 
+# Torch threads for training and inference. The model is small, so 2 threads lose little on a
+# quiet host and win big on a busy one: at load average 50 on this 16-core box, 8 threads took
+# 68 s per epoch (OpenMP threads spin waiting for cores) and 2 threads 5.5 s.
+TORCH_THREADS = int(os.environ.get("TACIT_SIM_TORCH_THREADS", "2"))
+
+
+def _set_threads(n: int | None) -> None:
+    n = max(1, n or TORCH_THREADS)
+    if torch.get_num_threads() != n:
+        torch.set_num_threads(n)
+
 
 class ChunkMLP(nn.Module):
     def __init__(self, obs_dim: int = OBS_DIM, chunk: int = CHUNK, act_dim: int = ACT_DIM,
@@ -70,9 +81,7 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
     t0 = time.time()
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
-    if threads is None:
-        threads = max(1, min(8, (os.cpu_count() or 2) // 2))
-    torch.set_num_threads(threads)
+    _set_threads(threads)
 
     obs, labels, n_eps = _load_demos(demos_path)
     n = len(obs)
@@ -185,6 +194,7 @@ class PolicyController:
     """Runs a trained policy in a SimEnv: one query per control step, temporally ensembled."""
 
     def __init__(self, policy_path: str | os.PathLike, ensemble: float = 0.25):
+        _set_threads(None)
         ck = torch.load(policy_path, map_location="cpu", weights_only=False)
         if ck.get("format") != FORMAT:
             raise ValueError(f"{policy_path}: not a {FORMAT} checkpoint")
