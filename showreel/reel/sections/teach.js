@@ -65,9 +65,11 @@ export default function teach(T) {
     const push = prog(t, b18 - PUSH, PUSH, inQuint)
     cam.style.transform = 'none'
     if (push > 0) {
+      // Zoom into the hand and carry it to the centre, where Do picks up her ghost hands.
       const r = marker.getBoundingClientRect()
+      const e = inCubic(push)
       cam.style.transformOrigin = `${r.left}px ${r.top}px`
-      cam.style.transform = `scale(${mix(1, 7, inCubic(push))})`
+      cam.style.transform = `translate(${(960 - r.left) * e}px, ${(540 - r.top) * e}px) scale(${mix(1, 7, e)})`
     }
     rise(word.words[0], prog(t, b16 + 0.05, 0.65, outExpo))
     rise(sub.words[0], prog(t, b17 + 0.05, 0.65, outExpo))

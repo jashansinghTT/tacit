@@ -26,39 +26,43 @@ Spine: *Experts retire. Their hands know things.* → Watch → Check → Teach 
   UI shots are captured from the running app with Playwright at 2× on a virtual clock.
 - Cuts land on bar lines of the soundtrack (MiniMax Music 3 on chip 1); hits land on detected onsets.
 
-## Sections
+## Sections (as built)
 
-Bars assume about 120 BPM (2 s a bar); the cut is fitted to the detected beat grid of the chosen take.
+Soundtrack: Music 3 take seed 11 (99.85 BPM, 2.40 s a bar after the drop), chosen over seed 23 because
+it opens sparse, falls silent for a bar before the drop and lifts again near the end. The cut follows
+its bars; times below are in the first cut.
 
-| # | Section | Bars | On screen (words) | Technique | Picture |
+| # | Section | Time (bars) | On screen | Technique | Picture |
 |---|---|---|---|---|---|
-| 1 | Cold open | 2 | **Experts retire.** (2) | Masked word rise; "retire." then defocuses and drifts away | Black, faint grid, film breath |
-| 2 | Hands | 2 | **Their hands *know* things.** (4) | Light draw-on: a 3D hand skeleton drawn bone by bone, joints popping on springs | Maria's real right hand from the vase skill's tracks, slow orbit |
-| 3 | Title | 1 | **tacit** (1) | Scale settle with a specular light sweep; skeleton joints collapse into the mark | Wordmark on black, ion glow |
-| 4 | Watch | 4 | **Watch.** then `HaMeR 15 ms` · `Gaze-LLE 10 ms` · `RF-DETR 13 ms` | Scanline reveal: a light beam sweeps the frame and lays the overlays on behind it; slow push-in on the hands | Real vase clip; both hand skeletons, the gaze ray, part boxes |
-| 5 | Check | 4 | **Check.** then `VERIFIED 0.90` / `SUSPECT 0.24` | Particle dissolve into the VGGT point cloud, orbit, then split screen with stamp slams; RGB-split glitch on the fake | Real scene rebuilt by VGGT vs the AI-made clip's cloud |
-| 6 | Teach | 4 | **Teach.** then *In her own words.* | Z-space: app panes float in 3D with parallax and depth fade | Lesson page, the 3D twin, the expert's "why" |
-| 7 | Do | 4 | **Do.** then `GR00T N1.7 · chip 3` | Match cut (hand to gripper), then a mosaic of trial tiles flipping on the beat | Robot Lab: the Franka following her wrist path; trial grid |
-| 8 | Earn | 3 | **Earn.** then **70%** *to the expert* | Whip pan with motion blur, counter roll | Exchange listing, royalty bar, ledger |
-| 9 | Box | 2 | **Nine models. Four chips.** | Beat strobe: one chip lights per beat with its models | Chip map 0 to 3, model names in mono |
-| 10 | Tagline | 3 | **Teach a robot by *showing* it.** (6) | Rack focus from the type to the scene | Landing hero: the Franka mirroring the ghost hands |
-| 11 | End card | 3 | **tacit** · nine models · four Tenstorrent chips · one box | Lockup with tracking-in type; fine print fades in | Credits: MiniMax-Music3 (machine-generated on chip 1), footage credits |
+| 1 | Cold open | 0.0–8.0 (0–3) | **Experts retire.** | Masked word rise; "retire." comes apart letter by letter, defocusing | Her real hands at the bench, slowing into a freeze, graded low |
+| 2 | Hands | 8.0–22.4 (3–9) | **Their hands *know* things.** | Light draw-on of the tracked skeletons on the frozen frame; lift into 3D and orbit; dissolve to the index finger, which becomes the mark in the silence | The skill's own tracks; the 3D hand is her left hand's world landmarks |
+| 3 | Title | 22.4–24.8 (9–10) | **tacit** | On the drop: spring settle, fingertip shockwave, wordmark wipe, specular sweep; push-out into the cut | The app's mark |
+| 4 | Watch | 24.8–32.1 (10–13) | **Watch.** · `HaMeR 16 ms` `Gaze-LLE 10 ms` `RF-DETR 12 ms` | Scan beam reveal, slow push-in, chips on the beats with their subjects flaring | Original footage: she sets a stem in the vase, eyes on it; skeletons, gaze ray, vase boxes from the tracks |
+| 5 | Check | 32.1–39.3 (13–16) | **Check.** · `VERIFIED 0.90` / `SUSPECT 0.24` | Particle dissolve into VGGT's rebuild, orbit; split screen, stamp slams, RGB-split glitch on the fake | VGGT clouds of the real and the AI-made clip |
+| 6 | Teach | 39.3–44.1 (16–18) | **Teach.** *in nine languages.* | Z-space panes with parallax and depth fade; zoom-through into the twin's hand | Lesson page in English and Spanish, and its 3D twin |
+| 7 | Do | 44.1–51.3 (18–21) | **Do.** · **20/20** `scenes it never saw` · `GR00T N1.7 chip 3 baseline` | Zoom-out match cut, mosaic of trial tiles flipping on the beat, hard cut to GR00T's camera | Robot Lab replay of her wrist path; the 20 evaluated trials; GR00T's exterior camera |
+| 8 | Earn | 51.3–56.1 (21–23) | **Earn.** **70%** *to the expert.* | Whip pan with motion blur, counter roll | Skill Exchange and Earnings pages |
+| 9 | Box | 56.1–60.9 (23–25) | **9** models · **4** Tenstorrent chips · **1** box | One chip per beat with its models, counters stepping; one outline closes around all four on the breakdown | Drawn from `/api/box` |
+| 10 | Tagline | 60.9–68.1 (25–28) | **Teach a robot by *showing* it.** | Words on the beats, rack focus to the scene, slow push | The landing page's 3D hero |
+| 11 | End card | 68.1–74.3 (28–end) | tacit · Nine models · four Tenstorrent chips · one box | Lockup, tracking-in line, glint on the last hit, credits, fade | Credits incl. MiniMax-Music3, machine-generated |
 
-Total about 32 to 35 bars, 64 to 72 s.
+Changed from the plan: Teach no longer says "In her own words": both showcase skills' "why" notes are
+still inferred from the video, not answered by the expert, so the line would not be true. GR00T is
+named as the baseline (it does not finish the task in this sim; the skill-trained policy does).
 
-## Transitions
+## Transitions (as built)
 
-- 2→3: the skeleton's 21 joints fly to the centre and become the dot of the wordmark (hit on the downbeat).
-- 3→4: hard cut on the downbeat to the vase clip, beam already moving.
-- **4→5 (preview)**: the scan beam passes once more and the video frame breaks into its own VGGT
-  point cloud (same scene, same colours), which tilts away into 3D.
-- 5→6: the split screen's divider sweeps across and becomes the edge of the first floating pane.
-- **6→7 (preview)**: match cut on the hand: the twin's hand skeleton in the lesson becomes the ghost
-  hand in the Robot Lab, and the Franka's gripper takes its place.
-- 7→8: whip pan right (motion blur) onto the Exchange.
-- 8→9: the royalty bar fills and becomes the chip map's first lit chip.
-- 9→10: the chip map recedes into the landing scene's grid floor.
-- 10→11: the type stays, the scene falls away to black, the lockup builds.
+- 1→2: the cold open slows into a freeze; the skeletons light up on exactly those hands.
+- 2→3: the index finger's four joints become the mark and hold through the silence; the drop snaps
+  it into the lockup.
+- 3→4: push-out with motion blur into a cut on the downbeat; the beam is already moving.
+- **4→5 (preview)**: the beam passes again and the frame turns into points (each with its pixel's
+  colour) that fly into VGGT's rebuild of the same clip.
+- 5→6: the split screen's divider sweeps off to the right.
+- **6→7 (preview)**: zoom-through into the twin's hand, zoom-out from her ghost hands in the Robot Lab.
+- 7→8: whip pan.
+- 8→9, 9→10: cuts on the downbeat (the breakdown, then the final lift).
+- 10→11: the scene falls to black, the lockup builds.
 
 ## Review gates (this card)
 

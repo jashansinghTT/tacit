@@ -9,11 +9,11 @@ import { line, rise } from '../lib/type.js'
 import { inQuint, mix, outCubic, outExpo, prog, spring } from '../lib/ease.js'
 
 // Where her ghost hands are in the robot capture (CSS px), for the zoom-out from the twin's hand.
-export const GHOST = [1080, 880]
+export const GHOST = [1114, 883]
 
 export default function act(T) {
   const s = { id: 'do', z: 7 }
-  let robot, plate, word, grid, cells, count, countSub, chip, eval_
+  let robot, plate, gcam, gplate, word, grid, cells, count, countSub, chip, eval_
   const b18 = T.bar(18), b19 = T.bar(19), b20 = T.bar(20), b21 = T.bar(21)
   const beat = T.beat
   const tGrid = b19 + 2 * beat
@@ -24,6 +24,10 @@ export default function act(T) {
     plate = R.el('div', 'abs', root)
     plate.style.cssText = 'inset:0'
     robot = sequence(plate, { dir: '/data/captures/robot/frames', count: 80, fps: 30 })
+    // GR00T's own view: the over-the-shoulder camera it is fed (rendered in the browser).
+    gplate = R.el('div', 'abs', root)
+    gplate.style.cssText = 'inset:0'
+    gcam = sequence(gplate, { dir: '/data/captures/gr00tcam/frames', count: 45, fps: 30 })
     const wbox = R.el('div', 'abs', root)
     wbox.style.cssText = 'left:104px;bottom:70px'
     word = line(wbox, ['Do.'], { size: 290, style: 'text-shadow:0 10px 60px rgba(0,0,0,0.6)' })
@@ -45,7 +49,7 @@ export default function act(T) {
     countSub = R.el('div', 'mono', cbox, 'scenes it never saw')
     countSub.style.cssText += ';font-size:30px;color:#a3a9b2'
     chip = R.el('div', 'chip abs', root, '<span class="dot"></span>GR00T N1.7<span class="v">chip 3</span><span style="color:#a3a9b2">baseline</span>')
-    chip.style.cssText += ';left:110px;top:110px;font-size:30px;padding:16px 26px 16px 20px'
+    chip.style.cssText += ';left:104px;bottom:96px;font-size:40px;padding:20px 32px 20px 24px;gap:18px'
   }
   s.render = (t) => {
     // Robot plate: zooms out from her ghost hands (matching the push into the twin's hand), then
@@ -54,8 +58,10 @@ export default function act(T) {
     robot.set(st)
     const z = prog(t, b18, 0.85, outExpo)
     const drift = prog(t, b18, b21 - b18, (x) => x)
-    const k = mix(5, 1.12, z) - 0.06 * drift
-    robot.camera(mix(GHOST[0], 960, z), mix(GHOST[1], 560, z), k)
+    // Never wider than 1.25x around (900, 600): keeps the viewer's leftover chrome (a corner tag
+    // and an empty control frame) out of the picture.
+    const k = mix(5, 1.32, z) - 0.06 * drift
+    robot.camera(mix(GHOST[0], 900, z), mix(GHOST[1], 600, z), k)
     const gridOn = prog(t, tGrid - 0.1, 0.5, outCubic)
     const back = prog(t, tGr00t, 0.5, outCubic)
     plate.style.filter = `brightness(${mix(1, 0.22, gridOn * (1 - back) + back * 0.55)}) blur(${(gridOn * (1 - back)) * 6}px)`
@@ -79,7 +85,14 @@ export default function act(T) {
     const ks = prog(t, tGrid + 0.95, 0.6, outExpo)
     countSub.style.opacity = String(ks * (1 - out))
 
-    // GR00T, named as the baseline, over the arm.
+    // GR00T, named as the baseline, over its own camera view (a hard cut on the beat).
+    const gOn = t >= tGr00t
+    gplate.style.display = gOn ? 'block' : 'none'
+    if (gOn) {
+      gcam.set(Math.max(0, t - tGr00t))
+      gcam.camera(960, 540, mix(1.05, 1.14, prog(t, tGr00t, b21 - tGr00t)))
+      gplate.style.filter = `brightness(${0.8 + 0.6 * Math.exp(-(t - tGr00t) * 7)})`
+    }
     const kg = spring(t, tGr00t + 0.1, { zeta: 0.6, omega: 15 })
     const gout = prog(t, b21 - 0.3, 0.3, inQuint)
     chip.style.opacity = String(Math.min(1, Math.max(0, kg)) * (1 - gout))

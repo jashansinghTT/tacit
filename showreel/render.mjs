@@ -7,7 +7,7 @@
 // seeked and screenshotted; where a section asks for motion blur, N sub-frames spread over the
 // shutter (a fraction of the frame interval, centred) are written as f_00012_s0..sN-1.jpg and
 // averaged later by tools/encode.py.
-import { readFileSync, existsSync, mkdirSync, statSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync, statSync, readdirSync, unlinkSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { launch, DATA } from './lib/browser.mjs'
@@ -60,6 +60,11 @@ async function shoot(page, t, path, quality) {
 }
 
 async function worker(a, frames, id) {
+  const stale = new Map()
+  for (const f of readdirSync(a.out)) {
+    const m = f.match(/^(f_\d{5})(?:_s\d+)?\.jpg$/)
+    if (m) stale.set(m[1], [...(stale.get(m[1]) ?? []), f])
+  }
   const browser = await launch()
   const { page } = await openReel(browser, a.dpr)
   const t0 = Date.now()
@@ -68,6 +73,8 @@ async function worker(a, frames, id) {
     const t = a.still ? a.still[i] : a.from + i / a.fps
     const name = a.still ? `still_${String(t.toFixed(2)).replace('.', '_')}` : `f_${String(i).padStart(5, '0')}`
     const samples = a.still ? 1 : await page.evaluate((t) => window.reel.blurSamples(t), t)
+    // A re-render must not leave stale sub-frames (or a stale plain frame) next to this one.
+    for (const f of stale.get(name) ?? []) unlinkSync(join(a.out, f))
     if (samples <= 1) {
       await shoot(page, t, join(a.out, `${name}.jpg`), a.quality)
     } else {
