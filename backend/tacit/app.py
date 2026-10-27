@@ -131,8 +131,9 @@ async def health_():
 
 @app.get("/api/box")
 async def box_():
+    from .models import vision
     from .models.speech import GATE
-    return {**(await box_status()), "speech_queue": GATE.waiting()}
+    return {**(await box_status()), "speech_queue": GATE.waiting(), "vision_queue": vision.GATE.snapshot()}
 
 
 @app.get("/api/users")

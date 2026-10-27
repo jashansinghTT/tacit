@@ -6,14 +6,20 @@ import io
 
 import numpy as np
 
-from .base import post_json, served
+from .base import PriorityGate, post_json, served
 from ..config import endpoints
 
+LIVE, BATCH, SLOW = 0, 1, 2
+# Chip 0 serves one request at a time; two in flight keeps it busy while letting a live frame jump
+# ahead of offline work, and VGGT (0.4 to 3 s per call) never sits in front of a live frame.
+GATE = PriorityGate(capacity=2)
 
-async def rfdetr(image_b64: str, scale: float, threshold: float = 0.45, max_detections: int = 30) -> tuple[list[dict], dict]:
+
+async def rfdetr(image_b64: str, scale: float, threshold: float = 0.45, max_detections: int = 30,
+                 priority: int = BATCH) -> tuple[list[dict], dict]:
     """Objects in the frame. Boxes are returned in source-frame pixels (`scale` undone)."""
     res, ms = await post_json("rfdetr", "/predict", {"image": image_b64, "threshold": threshold,
-                                                      "max_detections": max_detections}, timeout=15)
+                                                      "max_detections": max_detections}, timeout=15, gate=GATE, priority=priority)
     out = []
     for d in res.get("detections", []):
         x1, y1, x2, y2 = (v / scale for v in d["box"])
@@ -21,11 +27,11 @@ async def rfdetr(image_b64: str, scale: float, threshold: float = 0.45, max_dete
     return out, served(endpoints()["rfdetr"], ms)
 
 
-async def gaze(image_b64: str, scale: float, head_boxes: list[list[float]]) -> tuple[list[dict], dict]:
+async def gaze(image_b64: str, scale: float, head_boxes: list[list[float]], priority: int = BATCH) -> tuple[list[dict], dict]:
     """Gaze target per head box (source-frame pixels in and out)."""
     boxes = [[v * scale for v in b] for b in head_boxes]
     res, ms = await post_json("gaze", "/predict", {"image": image_b64, "bboxes": boxes, "bbox_format": "pixels",
-                                                    "heatmap_format": "none"}, timeout=15)
+                                                    "heatmap_format": "none"}, timeout=15, gate=GATE, priority=priority)
     out = []
     for p in res.get("predictions", []):
         gt = p.get("gaze_target", {})
@@ -34,11 +40,11 @@ async def gaze(image_b64: str, scale: float, head_boxes: list[list[float]]) -> t
     return out, served(endpoints()["gaze"], ms)
 
 
-async def hamer(image_b64: str, scale: float, bbox: list[float], is_right: bool) -> tuple[dict, dict]:
+async def hamer(image_b64: str, scale: float, bbox: list[float], is_right: bool, priority: int = BATCH) -> tuple[dict, dict]:
     """3D hand for one box: MANO rotations, shape and camera-space translation."""
     b = [v * scale for v in bbox]
     res, ms = await post_json("hamer", "/predict", {"image": image_b64, "bbox": b, "is_right": is_right,
-                                                     "return_vertices": False}, timeout=15)
+                                                     "return_vertices": False}, timeout=15, gate=GATE, priority=priority)
     out = {"cam_t": [round(float(v), 4) for v in res.get("cam_t_full", [0, 0, 0])],
            "rotmats": res.get("rotmats"), "betas": res.get("betas"),
            "focal": float(res.get("focal_length") or 0.0), "image_size": res.get("image_size"), "scale": scale}
@@ -49,7 +55,7 @@ async def vggt(images_b64: list[str], outputs: tuple[str, ...] = ("depth", "dept
                timeout: float = 120.0) -> tuple[dict, dict]:
     """Multi-view reconstruction of 1 to 4 views. Dense arrays come back decoded as numpy."""
     res, ms = await post_json("vggt", "/predict", {"images": images_b64, "output_format": "npz", "dtype": "float16",
-                                                    "outputs": list(outputs)}, timeout=timeout, retries=0)
+                                                    "outputs": list(outputs)}, timeout=timeout, retries=0, gate=GATE, priority=SLOW)
     dense = {}
     blob = (res.get("dense") or {}).get("data")
     if blob:

@@ -37,7 +37,8 @@ def label_point(x: float, y: float, objects: list[dict], hands: list[dict]) -> s
     return "workbench"
 
 
-async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS) -> dict:
+async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS,
+                  priority: int = vision.BATCH) -> dict:
     """Analyse one RGB frame at time `t` (seconds). Shapes match API.md's Tracks frame plus timing and served_by."""
     t0 = time.perf_counter()
     det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
@@ -46,12 +47,12 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
 
     jobs: dict[str, asyncio.Future] = {}
     if "rfdetr" in kinds:
-        jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale))
+        jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale, priority=priority))
     if "gaze" in kinds and det["head"]:
-        jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]]))
+        jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]], priority=priority))
     if "hamer" in kinds:
         for hd in det["hands"]:
-            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right"))
+            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right", priority=priority))
     results = dict(zip(jobs, await asyncio.gather(*jobs.values(), return_exceptions=True)))
 
     served, timing, errors = [], {"mediapipe": round(t_mp, 1)}, []

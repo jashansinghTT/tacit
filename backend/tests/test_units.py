@@ -383,3 +383,24 @@ def test_normalize_program_pairs_picks_with_places():
                               {"op": "place", "target": "bowl"}, {"op": "pick", "object": "fork"}]) == [
         {"op": "pick", "object": "cup"}, {"op": "place", "target": "bowl"},
         {"op": "pick", "object": "fork"}, {"op": "place", "target": "bowl"}]
+
+
+async def test_priority_gate_lets_live_frames_jump_offline_work():
+    import asyncio
+    from tacit.models.base import PriorityGate
+    gate, order = PriorityGate(capacity=1), []
+
+    async def call(name, prio):
+        await gate.acquire(prio)
+        order.append(name)
+        await asyncio.sleep(0.01)
+        gate.release()
+
+    await gate.acquire(2)   # a VGGT call holds the chip
+    tasks = [asyncio.create_task(call("batch", 1)), asyncio.create_task(call("vggt", 2))]
+    await asyncio.sleep(0)
+    tasks.append(asyncio.create_task(call("live", 0)))
+    await asyncio.sleep(0)
+    gate.release()
+    await asyncio.gather(*tasks)
+    assert order == ["live", "batch", "vggt"] and gate.snapshot() == {"inflight": 0, "waiting": 0}
