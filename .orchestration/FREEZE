@@ -1,1 +1,1 @@
-FREEZE until 2026-10-27T23:30:00+00:00 (QA final confirmation round on the 22:32:55Z deploy, main a56321c): no backend restarts, no web/dist rebuilds, no model restarts
+No freeze: QA's release checks are done (three consecutive green rounds; the last on the 22:32:55Z deploy, main a56321c).

@@ -6,7 +6,7 @@
       "id": "backend",
       "title": "Backend orchestrator: pipeline, model clients, APIs, jobs, DB, seed data",
       "owner": "lead",
-      "state": "running",
+      "state": "final build deployed 22:32:55Z (a56321c)",
       "branch": "main",
       "worktree": "~/tacit",
       "acceptance": [
@@ -37,7 +37,7 @@
       "id": "sim",
       "title": "Robot sim, BC policy training, GR00T closed loop, web assets",
       "owner": "tacit-sim",
-      "state": "merged",
+      "state": "merged (717173c, incl. quiet-host GR00T latency 70.9 ms p50 / 58.2 ms on device)",
       "branch": "work/sim",
       "worktree": "~/tacit-wt/sim",
       "acceptance": [
@@ -69,7 +69,7 @@
       "id": "qa",
       "title": "E2E suite on the real stack (SPEC section 9) and fix loop",
       "owner": "tacit-qa",
-      "state": "gate met: rounds 3+4 green on 27010cd (API 7/7, browser 7/7); final round after the last deploy",
+      "state": "merged (332d51c): 3 consecutive green rounds, API 7/7 + browser 7/7, last on the final build",
       "branch": "work/qa",
       "worktree": "~/tacit-wt/qa",
       "acceptance": [
@@ -149,7 +149,7 @@
       "id": "polish",
       "title": "The whole app as one product",
       "owner": "tacit-web",
-      "state": "running (QA-9/QA-10 fix cherry-picked to main as bffcf3b; rest after QA's runs)",
+      "state": "merged (a56321c); follow-up: footage credits + fictional-persona note (in progress)",
       "branch": "work/polish",
       "worktree": "~/tacit-wt/web",
       "acceptance": [
@@ -174,5 +174,5 @@
       "handoff": ".orchestration/cards/showreel/handoff.md"
     }
   ],
-  "updated": "2026-10-27T22:30Z"
+  "updated": "2026-10-27T23:00Z"
 }
