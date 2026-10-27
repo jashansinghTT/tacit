@@ -7,6 +7,7 @@ API runs (pytest, tests/e2e) write `<UTC>-api/results.json`; browser runs (Playw
 """
 from __future__ import annotations
 
+import base64
 import json
 import re
 import sys
@@ -42,6 +43,14 @@ def _specs(suite: dict):
         yield from _specs(child)
 
 
+def _body(attachment: dict) -> str:
+    """Playwright's JSON reporter stores attachment bodies base64-encoded."""
+    try:
+        return base64.b64decode(attachment.get("body", "")).decode()
+    except ValueError:
+        return attachment.get("body", "")
+
+
 def ui_run(d: Path) -> dict | None:
     p = d / "results.json"
     if not p.exists():
@@ -59,14 +68,13 @@ def ui_run(d: Path) -> dict | None:
             outcome = {"passed": "passed", "failed": "failed", "timedOut": "failed", "interrupted": "failed"}.get(status, status)
             err = (last.get("error") or {}).get("message")
             atts = [a.get("path") for a in last.get("attachments", []) if a.get("path")]
-            notes = [a.get("body", "") for a in last.get("attachments", []) if a.get("name") == "note"]
+            notes = [_body(a) for a in last.get("attachments", []) if a.get("name") == "note"]
             timings = []
             for a in last.get("attachments", []):
                 if a.get("name") == "timings" and a.get("body"):
                     try:
-                        import base64
-                        timings = json.loads(base64.b64decode(a["body"]).decode())
-                    except Exception:  # noqa: BLE001
+                        timings = json.loads(_body(a))
+                    except ValueError:
                         timings = []
             flows[int(m.group(1))] = {"outcome": outcome, "seconds": round(last.get("duration", 0) / 1000, 1),
                                       "flags": [t_["step"] + " slow" for t_ in timings if t_.get("slow")], "timings": timings,
@@ -146,9 +154,10 @@ def main() -> int:
                 problems.append(f"- {label} F{n} flag: {fl}")
     if problems:
         lines += ["", "## Failures and flags in the last runs", ""] + problems
-    notes = [f"- F{n}: {x}" for n, f in sorted((la or {"flows": {}})["flows"].items()) for x in f.get("notes", [])]
-    if notes:
-        lines += ["", "## Notes from the last API run", ""] + notes
+    for label, r in (("API", la), ("UI", lu)):
+        notes = [f"- F{n}: {x}" for n, f in sorted((r or {"flows": {}})["flows"].items()) for x in f.get("notes", [])]
+        if notes:
+            lines += ["", f"## Notes from the last {label} run", ""] + notes
     lines += ["", "## History", "", "| Run | Kind | Passed | Failed |", "|---|---|---|---|"]
     for r in reversed(rs[-20:]):
         p = sum(1 for f in r["flows"].values() if f["outcome"] == "passed")
