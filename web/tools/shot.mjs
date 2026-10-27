@@ -3,7 +3,7 @@
 import { chromium } from '@playwright/test'
 
 const [path = '/', out = 'shot.png', width = '1440', wait = '2500', mode] = process.argv.slice(2)
-const base = process.env.SHOT_BASE ?? 'http://127.0.0.1:5712'
+const base = process.env.SHOT_BASE ?? 'http://127.0.0.1:5719'
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'] })
 const page = await browser.newPage({ viewport: { width: Number(width), height: 900 }, deviceScaleFactor: 1 })
 const errors = []

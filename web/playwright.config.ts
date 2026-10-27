@@ -3,12 +3,12 @@ import { fileURLToPath } from 'node:url'
 
 /**
  * Smoke and screenshot suites. By default they run against the in-app mock backend
- * (VITE_TACIT_MOCK=1 dev server on 5712). Set TACIT_E2E_BASE (for example http://127.0.0.1:8710
+ * (VITE_TACIT_MOCK=1 dev server on 5719). Set TACIT_E2E_BASE (for example http://127.0.0.1:8710
  * for the built app on the real stack, or http://127.0.0.1:5710 for the dev server) to run the
  * same tests against the real backend.
  */
 const real = process.env.TACIT_E2E_BASE
-const base = real ?? 'http://127.0.0.1:5712'
+const base = real ?? 'http://127.0.0.1:5719'
 const media = fileURLToPath(new URL('./e2e/.media/', import.meta.url))
 
 export default defineConfig({
@@ -43,9 +43,9 @@ export default defineConfig({
   webServer: real
     ? undefined
     : {
-        command: 'npx vite --port 5712 --strictPort',
+        command: 'npx vite --port 5719 --strictPort',
         env: { VITE_TACIT_MOCK: '1' },
-        url: 'http://127.0.0.1:5712',
+        url: 'http://127.0.0.1:5719',
         reuseExistingServer: true,
         timeout: 60_000,
       },
