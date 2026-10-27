@@ -25,7 +25,11 @@ export function normalizeSkill(raw: Partial<Skill> & { id: string }): Skill {
     },
     consent: raw.consent ?? { motion: false, gaze: false, voice_text: false, raw_video: false, signed_by: null, signed_at: null },
     steps: steps.map((s) => ({ ...s, objects: s.objects ?? [], tips: s.tips ?? [], why: s.why ?? '', why_source: s.why_source ?? 'inferred' })),
-    qa: raw.qa ?? [],
+    // QA rows may carry step_index instead of step_id, and no id of their own.
+    qa: (raw.qa ?? []).map((q, i) => {
+      const qq = q as typeof q & { step_index?: number }
+      return { ...q, id: q.id ?? `qa${i + 1}`, step_id: q.step_id ?? steps.find((s) => s.index === qq.step_index)?.id ?? '' }
+    }),
     sop_markdown: raw.sop_markdown ?? '',
     quiz: raw.quiz ?? [],
     safety: raw.safety ?? [],
