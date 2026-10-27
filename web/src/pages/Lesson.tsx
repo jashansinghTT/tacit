@@ -290,7 +290,7 @@ export default function LessonPage() {
           The skill is still being processed. Its lesson appears when the steps are written.
         </EmptyState>
       ) : lesson.data ? (
-        <LessonPlayer lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} savedDone={saved?.steps_done ?? 0} translating={translating} />
+        <LessonPlayer key={lesson.data.skill_id} lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} savedDone={saved?.steps_done ?? 0} translating={translating} />
       ) : null}
     </Page>
   )
