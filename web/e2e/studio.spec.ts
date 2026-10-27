@@ -1,11 +1,11 @@
-import { test, expect, REAL, capturedSkillId, markTestSkill } from './fixtures'
+import { test, expect, REAL, studioUrl } from './fixtures'
 
 // SPEC section 9, test 3 (UI half): live capture with the fake camera, coach question, answer,
 // then processing. The mic is Chromium's fake audio file (a tone, then silence).
 
 test('live capture with the fake camera reaches the coach and processing', async ({ page }) => {
   test.setTimeout(REAL ? 240_000 : 90_000)
-  await page.goto('/studio')
+  await page.goto(studioUrl('live capture'))
   await expect(page.getByTestId('page-studio')).toBeVisible()
   await page.getByTestId('capture-start').click()
   await expect(page.getByTestId('capture-stop')).toBeVisible({ timeout: 20_000 })
@@ -22,7 +22,6 @@ test('live capture with the fake camera reaches the coach and processing', async
   await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 60_000 })
   await expect(page.getByTestId('pipeline-stepper')).toBeVisible()
   await expect(page.getByTestId('open-skill')).toBeVisible()
-  await markTestSkill(page, await capturedSkillId(page), 'live capture')
 })
 
 test('the source picker offers webcam, sample and upload', async ({ page }) => {

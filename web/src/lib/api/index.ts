@@ -27,7 +27,7 @@ export const api = {
   skills: (filter: { status?: string; expert_id?: string } = {}) =>
     request<T.SkillSummary[]>(`/api/skills${qs(filter)}`).then((l) => l.map(normalizeSummary)),
   skill: (id: string) => request<T.Skill>(`/api/skills/${id}`).then(normalizeSkill),
-  createSkill: (body: { source: 'sample'; sample_id: string } | { source: 'live'; title?: string }) =>
+  createSkill: (body: { source: 'sample'; sample_id: string; title?: string } | { source: 'live'; title?: string }) =>
     request<{ skill_id: string; status: T.SkillStatus }>('/api/skills', { method: 'POST', body }),
   uploadSkill: (file: File, title?: string) => {
     const form = new FormData()
