@@ -67,18 +67,21 @@ await page.keyboard.press('Escape')
 beat = '2 watch'
 await go('/studio?source=sample&title=' + encodeURIComponent('QA demo walk (tacit-web)'), 2500)
 await shot('studio-sample-picker')
-await check('start sample capture', async () => {
+if (process.env.SKIP_CAPTURE) issues.push('2 watch: live capture skipped (SKIP_CAPTURE)')
+else await check('start sample capture', async () => {
   await page.getByTestId('capture-start').click()
   await page.getByTestId('capture-stop').waitFor({ timeout: 20000 })
 })
-await page.waitForTimeout(11000)
-await shot('studio-live-overlays')
-await check('stop -> processing', async () => {
+if (!process.env.SKIP_CAPTURE) await page.waitForTimeout(11000)
+if (!process.env.SKIP_CAPTURE) await shot('studio-live-overlays')
+if (!process.env.SKIP_CAPTURE) await check('stop -> processing', async () => {
   await page.getByTestId('capture-stop').click()
   await page.getByTestId('processing-panel').waitFor({ timeout: 60000 })
 })
-await page.waitForTimeout(4000)
-await shot('studio-processing')
+if (!process.env.SKIP_CAPTURE) {
+  await page.waitForTimeout(4000)
+  await shot('studio-processing')
+}
 
 // 3. Check: Skill → Verify (real vs AI-made)
 beat = '3 check'
@@ -104,12 +107,12 @@ await check('lesson 3D view', async () => {
 })
 await shot('lesson-3d')
 await check('lesson practise tab', async () => {
-  await page.getByRole('button', { name: /^Practise$/ }).first().click({ timeout: 5000 })
+  await page.getByRole('radio', { name: /Practise/ }).or(page.getByRole('button', { name: /^Practise$/ })).first().click({ timeout: 5000 })
   await page.waitForTimeout(3000)
 })
 await shot('lesson-practise')
 await check('lesson guide my hand tab', async () => {
-  await page.getByRole('button', { name: /Guide my hand/ }).first().click({ timeout: 5000 })
+  await page.getByRole('radio', { name: /Guide my hand/ }).or(page.getByRole('button', { name: /Guide my hand/ })).first().click({ timeout: 5000 })
   await page.waitForTimeout(3000)
 })
 await shot('lesson-reflex')
