@@ -729,3 +729,25 @@ async def test_a_busy_model_is_up_and_a_refused_one_is_down():
         assert await base.health(key) is False                             # refused: down at once
         base.stats(key).ok_at -= base.BUSY_GRACE_S + 1
         assert await base.health(key) is False                             # only timeouts for too long: down
+
+
+def test_the_first_spoken_piece_of_an_answer_is_a_clause():
+    from tacit.app import _sentence_cuts
+
+    def pieces(text, clause):
+        out = []
+        for n in _sentence_cuts(text, clause):
+            out.append(text[:n].strip())
+            text = text[n:]
+        return out
+    text = "First, lift the stem gently by its base, then push it in. Check it stands straight. "
+    assert pieces(text, True) == ["First, lift the stem gently by its base,", "then push it in.", "Check it stands straight."]
+    assert pieces(text, False) == ["First, lift the stem gently by its base, then push it in.", "Check it stands straight."]
+
+
+def test_the_tutor_uses_an_inferred_why_without_crediting_the_expert():
+    from tacit.pipeline.writer import tutor_messages
+    skill = {"title": "Vase", "expert": {"name": "Maria Lopez"},
+             "steps": [{"index": 1, "title": "Insert stem", "why": "So it stands upright.", "why_source": "inferred"}]}
+    sys = tutor_messages(skill, "Why does the first step matter?")[0]["content"]
+    assert "So it stands upright." in sys and "use it to answer why questions" in sys and "without crediting Maria" in sys

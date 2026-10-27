@@ -706,7 +706,7 @@ async def tutor_ask(skill_id: str, request: Request):
             async for delta in llm.chat_stream(msgs, max_tokens=400):
                 text += delta
                 pending += delta
-                for cut in _sentence_cuts(pending):
+                for cut in _sentence_cuts(pending, clause=not voices):
                     speak(pending[:cut])
                     pending = pending[cut:]
                 yield f"event: delta\ndata: {json.dumps({'text': delta})}\n\n"
@@ -731,11 +731,15 @@ async def tutor_ask(skill_id: str, request: Request):
     return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-def _sentence_cuts(s: str) -> list[int]:
-    """End offsets of complete sentences in a streaming buffer (cut after '. ', '? ', '! ')."""
+def _sentence_cuts(s: str, clause: bool = False) -> list[int]:
+    """Lengths of the complete sentences at the start of a streaming buffer (cut after '. ', '? ', '! ').
+    With `clause`, the first piece may end at ', ', '; ' or ': ' once it is 24 characters long, so the
+    first audio of an answer comes sooner (S2 Pro takes about twice a sentence's length to speak it)."""
     cuts, last = [], 0
     for i in range(1, len(s)):
-        if s[i - 1] in ".?!" and s[i] == " " and i - last > 12:
+        if s[i] != " ":
+            continue
+        if (s[i - 1] in ".?!" and i - last > 12) or (clause and not cuts and s[i - 1] in ",;:" and i - last >= 24):
             cuts.append(i - last)
             last = i
     return cuts
