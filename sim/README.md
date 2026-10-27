@@ -8,7 +8,7 @@ policy trained on CPU, a streaming runner for the web viewer, and GR00T N1.7 (ch
 
 ```bash
 uv pip install -e sim                 # into the backend's environment (torch resolves to the CPU wheel)
-uv run --project sim pytest sim/tests # 36 tests, about 12 s; GR00T live test: TACIT_LIVE=1
+uv run --project sim pytest sim/tests # 39 tests, about 15 s; the 2 GR00T tests need TACIT_LIVE=1
 uv run --project sim python -m tacit_sim.export        # rewrite web/public/sim (needs trimesh)
 uv run --project sim python sim/scripts/make_evidence.py  # rewrite .orchestration/evidence/sim
 ```
@@ -20,23 +20,28 @@ software renderer because the user is not in the `render` group; 320x180 frames 
 
 ```python
 from tacit_sim import (scene_description, generate_demos, train_policy, evaluate_policy,
-                       Runner, run_episode, retarget_wrist_path)
+                       Runner, run_episode, retarget_wrist_path, policy_info)
 
 program = [{"op": "pick", "object": "bracket"}, {"op": "place", "target": "left bin"},
            {"op": "pick", "object": "bolt"}, {"op": "place", "target": "right bin"}]
 
 scene_description(program)                       # GET /api/robot/scene
 ds = generate_demos(program, n=200, seed=0, out_dir="data/skills/sk_x/robot/demos",
-                    on_episode=lambda i, n, ok: ...)            # ~20 s, 8 processes
+                    on_episode=lambda i, n, ok: ...)            # 10 to 30 s, 8 processes
 tr = train_policy(ds.path, "data/skills/sk_x/robot/policy.pt", epochs=30,
-                  on_epoch=lambda epoch, loss: ...)             # ~40 s, CPU
+                  on_epoch=lambda epoch, loss: ...)             # 50 to 90 s, 2 CPU threads
 ev = evaluate_policy(program, tr["policy_path"], trials=20, seed=0,
                      on_trial=lambda i, n, row: ...)            # {success_rate, trials}
 for msg in Runner(program, "policy", seed=3, policy_path=tr["policy_path"]).frames(realtime=True):
     ...                                                         # WS /ws/robot/{run_id}
 run_episode(program, "scripted", seed=3)                        # {success, steps, reason, ...}
 path = retarget_wrist_path(wrist_cam_xyz, times, grip)         # Runner(..., "replay", human_path=path)
+policy_info(tr["policy_path"])["program"]                       # what the policy was trained on
 ```
+
+A policy only runs on the program it was trained on: `evaluate_policy` and policy runs raise
+`ProgramMismatch` (a `ValueError`) otherwise. Training and inference use 2 torch threads
+(`TACIT_SIM_TORCH_THREADS`); an epoch is a random sample of at most 60k frames.
 
 - **Programs** are free text from the LLM: `pick` pairs with the next `place`; a pick with no
   place puts the part back down; other ops are kept in `ignored_ops`. Up to 6 parts and 5 bins.
