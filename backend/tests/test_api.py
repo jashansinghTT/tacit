@@ -150,8 +150,9 @@ def test_tutor_streams_text_and_sentence_audio(api):
     with api.stream("POST", f"/api/tutor/{sid}/ask", json={"question": "How do I hold it?"}) as r:
         body = "".join(r.iter_text())
     events = [line.split(": ", 1)[1] for line in body.splitlines() if line.startswith("event: ")]
-    assert events[0] == "delta" and "audio" in events and events[-1] == "done"
-    done = json.loads(body.strip().splitlines()[-1].split("data: ", 1)[1])
+    assert events[0] == "delta" and "audio" in events and "done" in events and events[-1] == "end"
+    done_line = next(l for l in body.splitlines() if l.startswith("data: ") and '"audio_parts"' in l)
+    done = json.loads(done_line.split("data: ", 1)[1])
     assert done["text"].startswith("Maria says")
 
 
@@ -176,3 +177,13 @@ def test_restart_recovers_interrupted_jobs(api):
     assert appmod.recover_interrupted_jobs() == [sid]
     assert api.get("/api/jobs/job_orphan").json()["status"] == "failed"
     assert load_skill(sid)["status"] == "draft"
+
+
+def test_listing_preview_never_shows_video_pixels(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    sk = api.get(f"/api/skills/{sid}").json()
+    assert sk["motion_thumb"].endswith("/motion.jpg") and sk["thumb"].endswith("/thumb.jpg")
+    lst = api.post("/api/exchange/listings", json={"skill_id": sid, "consent": {"expert_confirmed": True}}, headers=H).json()
+    assert lst["thumb"] == sk["motion_thumb"]
+    assert all(l["thumb"] != sk["thumb"] for l in api.get("/api/exchange/listings").json())

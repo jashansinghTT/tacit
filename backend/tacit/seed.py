@@ -61,13 +61,13 @@ def samples() -> list[dict]:
     return items
 
 
-def create_skill_from_sample(sample: dict, expert_id: str = "u_maria") -> dict:
+def create_skill_from_sample(sample: dict, expert_id: str = "u_maria", title: str | None = None) -> dict:
     name = os.path.basename(sample["video"])
     sid = new_id("sk")
     with session() as s:
         u = s.get(User, expert_id)
-    skill = {"id": sid, "title": sample.get("title", "Sample skill"), "title_hint": sample.get("title"), "summary": "",
-             "status": "draft", "created_at": now(),
+    skill = {"id": sid, "title": title or sample.get("title", "Sample skill"), "title_hint": title or sample.get("title"), "summary": "",
+             "status": "draft", "created_at": now(), "test": bool(title and title.startswith("QA ")),
              "expert": {"id": expert_id, "name": u.name if u else expert_id, "title": u.title if u else ""},
              "source": {"kind": "sample", "sample_id": sample["id"], "raw_path": str(SAMPLES / name)},
              "consent": {"motion": True, "gaze": True, "voice_text": True, "raw_video": False, "signed_by": expert_id, "signed_at": now()},

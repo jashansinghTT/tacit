@@ -43,6 +43,8 @@ export const useBox = (live = true) =>
   useQuery({ queryKey: qk.box, queryFn: api.box, refetchInterval: live ? 3000 : false, staleTime: 2000 })
 export const useUsers = () => useQuery({ queryKey: qk.users, queryFn: api.users, staleTime: Infinity })
 export const useSamples = () => useQuery({ queryKey: qk.samples, queryFn: api.samples, staleTime: 60_000 })
+export const useSampleVerify = (id: string | undefined) =>
+  useQuery({ queryKey: ['sample-verify', id], queryFn: () => api.sampleVerify(id!), enabled: Boolean(id), staleTime: Infinity, retry: 1 })
 export const useSkills = (f: { status?: string; expert_id?: string } = {}) =>
   useQuery({ queryKey: qk.skills(f), queryFn: () => api.skills(f) })
 export const useSkill = (id: string | undefined, poll = false) =>

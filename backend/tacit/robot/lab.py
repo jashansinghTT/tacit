@@ -62,7 +62,7 @@ def wrist_path(skill_id: str) -> tuple[list[list[float]], list[float], list[floa
             if (fr.get("hands") or {}).get(side):
                 counts[side] += 1
     side = max(counts, key=counts.get)
-    curls = {row[0]: row[1:] for row in reflex.finger_track(skill_id, hand=side)["frames"]}
+    curls = {row[0]: row[1:] for row in reflex.finger_track(skill_id, side=side)["frames"]}
     pts, ts, grip = [], [], []
     for fr in twin["frames"]:
         h = (fr.get("hands") or {}).get(side)
@@ -128,11 +128,13 @@ async def evaluate(job: jobs.Job, skill_id: str, trials: int, seed: int) -> dict
 
     def on_trial(i: int, n: int, r: dict) -> None:
         done.append(r)
+        job.result = {"trials": list(done)}
         loop.call_soon_threadsafe(job.stage_progress, (i + 1) / trials, f"{sum(1 for x in done if x.get('success'))}/{len(done)} succeeded")
 
     res = await asyncio.to_thread(ts.evaluate_policy, program_for(skill), pol["policy_path"], trials, seed, on_trial)
     skill = load_skill(skill_id)
-    skill["robot"]["policy"].update({"success_rate": res["success_rate"], "trials": trials, "evaluated_at": now()})
+    skill["robot"]["policy"].update({"success_rate": res["success_rate"], "trials": trials, "evaluated_at": now(),
+                                     "last_eval": res.get("trials", [])})
     save_skill(skill)
     job.finish_stage("evaluate", detail=f"success {res['success_rate']:.0%}")
     return res

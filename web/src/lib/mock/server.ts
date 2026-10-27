@@ -38,10 +38,32 @@ function buildTracks(duration: number) {
   return { fps: 10, width: 1280, height: 720, frames }
 }
 
+// The real twin and clouds use a frame where the camera looks down -z; the mock scene's camera
+// looks down +z, so turn the mock world half a turn about y.
+const flip = (p: [number, number, number]): [number, number, number] => [-p[0], p[1], -p[2]]
+
 function buildTwin(duration: number) {
   const frames = []
-  for (let t = 0; t <= duration; t += 0.1) frames.push(twinAt(t % SCENE_DURATION))
-  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.4], max: [0.66, 0.8, 0.62] }, up: [0, 1, 0] }
+  for (let t = 0; t <= duration; t += 0.1) {
+    const f = twinAt(t % SCENE_DURATION)
+    frames.push({
+      ...f,
+      body: f.body?.map(flip) ?? null,
+      hands: { left: f.hands.left?.map(flip) ?? null, right: f.hands.right?.map(flip) ?? null },
+      gaze: f.gaze ? { origin: flip(f.gaze.origin), target: flip(f.gaze.target) } : null,
+      objects: f.objects.map((o) => ({ ...o, pos: flip(o.pos) })),
+    })
+  }
+  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.62], max: [0.66, 0.8, 0.4] }, up: [0, 1, 0], camera: { position: [0, 0.8, 1.3], f: 808, cx: 640, cy: 360, person_depth_m: 1.75 } }
+}
+
+function flippedCloud(fake: boolean) {
+  const pts = pointCloud(24000, fake)
+  for (let i = 0; i < pts.length; i += 6) {
+    pts[i] = -pts[i]
+    pts[i + 2] = -pts[i + 2]
+  }
+  return pts
 }
 
 function newSkillFromSample(sampleId: string, kind: Skill['source']['kind']): Skill {
@@ -73,7 +95,7 @@ function finishProcessing(id: string) {
     ...s.verification,
     status: fake ? 'suspect' : 'verified',
     score: fake ? 0.29 : 0.93,
-    details: fake ? { views: 4, reproj_px: 10.4, depth_stability: 0.38 } : { views: 4, reproj_px: 1.7, depth_stability: 0.95 },
+    details: fake ? { views: 4, reproj_rel: 0.121, depth_stability: 0.93, camera_drift: 0.18 } : { views: 4, reproj_rel: 0.015, depth_stability: 0.994, camera_drift: 0.0012 },
     checked_at: new Date().toISOString(),
   }
   if (s.title === 'Live capture') s.title = 'Kit an M6 bracket set (live)'
@@ -125,6 +147,20 @@ const routes: [string, RegExp, Handler][] = [
   }],
   ['GET', /^\/api\/users$/, () => users],
   ['GET', /^\/api\/samples$/, () => samples],
+  ['GET', /^\/api\/samples\/([\w-]+)\/verify$/, ({ m }) => {
+    const smp = samples.find((x) => x.id === m[1])
+    if (!smp) throw notFound(`sample ${m[1]}`)
+    const fake = smp.kind === 'ai-generated'
+    return {
+      sample_id: smp.id, kind: smp.kind, status: fake ? 'suspect' : 'verified', score: fake ? 0.235 : 0.904, method: 'VGGT multi-view consistency',
+      details: fake ? { views: 4, reproj_rel: 0.132, depth_stability: 0.95, camera_drift: 0.206, static_pixels: 152292 } : { views: 4, reproj_rel: 0.013, depth_stability: 0.991, camera_drift: 0.0008, static_pixels: 91490 },
+      times: [0.4, 1.8, 3.2, 4.7], pointcloud: `/media/samples/${smp.id}.pointcloud.bin`, points: 24000, served_by: served('VGGT-1B', 0, 3610),
+    }
+  }],
+  ['GET', /^\/media\/samples\/([\w-]+)\.pointcloud\.bin$/, ({ m }) => {
+    const pts = flippedCloud(m[1] === 'smp_fake')
+    return new Response(pts.buffer as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'X-Points': String(pts.length / 6) } })
+  }],
 
   ['GET', /^\/api\/skills$/, ({ url }) => {
     const status = url.searchParams.get('status')
@@ -205,7 +241,7 @@ const routes: [string, RegExp, Handler][] = [
   ['GET', /^\/api\/skills\/([\w-]+)\/twin$/, ({ m }) => buildTwin(skillOr404(m[1]).source.duration)],
   ['GET', /^\/api\/skills\/([\w-]+)\/pointcloud$/, ({ m }) => {
     const s = skillOr404(m[1])
-    const pts = pointCloud(24000, s.verification.status === 'suspect')
+    const pts = flippedCloud(s.verification.status === 'suspect')
     return new Response(pts.buffer as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'X-Points': String(pts.length / 6) } })
   }],
   ['POST', /^\/api\/skills\/([\w-]+)\/process$/, ({ m }) => {

@@ -4,4 +4,4 @@ set -euo pipefail
 cd "$HOME/tacit"
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
 exec "$HOME/tacit/.venv/bin/uvicorn" tacit.app:app --app-dir "$HOME/tacit/backend" \
-  --host "${TACIT_HOST:-127.0.0.1}" --port "${TACIT_PORT:-8710}" --ws-max-size 16777216 --log-level info
+  --host "${TACIT_HOST:-127.0.0.1}" --port "${TACIT_PORT:-8710}" --ws-max-size 16777216 --timeout-graceful-shutdown 5 --log-level info

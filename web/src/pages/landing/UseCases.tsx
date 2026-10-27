@@ -193,7 +193,7 @@ export function UseCases() {
           </Tile>
         </div>
         <p className="mt-4 flex items-center gap-1.5 text-xs text-fg-faint">
-          <Sparkles className="size-3.5" /> Examples use the seeded demo skills.
+          <Sparkles className="size-3.5" /> Tiles are illustrations; the numbers in the box section above are live.
         </p>
       </div>
     </section>
