@@ -50,7 +50,9 @@ flow's key states, failure artifacts). `X1` (the guided tour) is reported beside
 
 Skills the suite creates are titled `QA …` (test skills: hidden from the demo's lists unless `include_test=1`).
 At the end of a run, listings it made are deleted with their licenses and ledger entries, and its skills are
-deleted if the run passed (kept for the owners to inspect if not). `QA_KEEP=1` keeps everything. Environment knobs (iteration only; a release run uses none):
+deleted if the run passed (kept for the owners to inspect if not). `QA_KEEP=1` keeps everything.
+
+Environment knobs (iteration only; a release run uses none):
 `TACIT_URL`, `QA_SAMPLE`, `QA_SKILL_ID` (reuse a processed skill), `QA_UPLOAD_VIDEO` (process an upload
 instead of a sample), `QA_CAPTURE_VIDEO`, `QA_CAPTURE_SECONDS`, `QA_DEMOS`, `QA_EPOCHS`, `QA_RUN_ID`,
 `QA_NO_REPORT`.
