@@ -1,25 +1,25 @@
 # Status: sim
 
-State: running
-Updated: 2026-10-27T20:05Z
+State: review
+Updated: 2026-10-27T21:20Z
 
-## Works (on work/sim, last commit a5d3049; f953b6d and 0e984a3 merged by the lead)
-- Public API as in the card; the backend's Robot Lab is wired to it (lead).
-- Tests: `uv run --project sim pytest sim/tests`: 36 pass, 1 live GR00T test skipped by default
-  (passes with TACIT_LIVE=1). Accepted by the lead as the gate command.
-- Policy: 20/20 on sort2 (and 100/100 on seeds 1000-1099); 20/20 on a three-part kit program.
-  Demos ~20 s, training ~40 s on CPU.
-- Scripted expert: 40/40 on sort2, kit3, an odd LLM-style program, 20/20 on five parts.
-- GR00T N1.7 on chip 3 (port 21030): full 40 s episode, 75 queries, ~68 ms p50 round trip.
-- Web assets in web/public/sim (5 MB): per-link GLBs, panda.glb, scene.json; FK recipe tested.
-- Replay: retarget affine exposed (`transform`) and `meta.human` for web-robot's ghost hands.
+Merge gate met; see `handoff.md` in this folder.
 
-## Now
-- Regenerating evidence with the final code (videos, success table, GR00T latency), then handoff.
+## Works
+- `tacit_sim` public API (backend wired to it by the lead), plus `policy_info` and
+  `ProgramMismatch` (QA-2 root cause: train/evaluate program mismatch, fixed both sides).
+- Tests: `uv run --project sim pytest sim/tests`: 37 pass + 2 live GR00T tests (39/39 with
+  TACIT_LIVE=1).
+- Policy: 20/20 on sort2 (gate), 100/100 on extra seeds; 19-20/20 on six other program shapes.
+- GR00T N1.7 closed loop on chip 3 (port 21030, left running): full 40 s episodes; latency
+  67.6 ms p50 quiet, much higher when the host is CPU-starved (history in evidence).
+- Web assets in web/public/sim; evidence in .orchestration/evidence/sim.
 
-## Decisions (details in handoff.md when written)
-- DROID conventions recovered from GR00T's own /demo request (`tacit_sim/droid.py`).
-- Software EGL rendering (user not in `render` group; system groups left alone).
-- Torque limits 3x the real Panda's: the real limits caused a frozen-arm limit cycle near the
-  shoulder singularity.
-- GR00T stays running on chip 3 for the stack.
+## For the lead
+- Merge efbc734, c21cd23, 6f55cde and the handoff commit (all after 87fc566).
+- Re-measure GR00T latency on a quiet host:
+  `uv run --project sim python sim/scripts/make_evidence.py --gr00t-latency-only`.
+- Optional: add user `jashan` to the `render` group for GPU EGL rendering (not done; system change).
+
+## Blockers
+None.
