@@ -1,12 +1,16 @@
 # Status: vision
 
 State: running
-Updated: 2026-10-27T18:54:28+00:00
+Updated: 2026-10-27T19:03:33+00:00
 
 ## Now
-Step 3: building the cohost image (adapters + Dockerfile + build script).
+Step 4/5: first (cold) boot of the cohost group on chip 0, started 19:02:25Z. Image
+tt-model/cohost-vision:8b3e885e476b, staged manifest ~/tacit/build/cohost-vision/.
 
 ## Works
+- Step 3/4/7 code committed (6853be8, 5904dbc): adapters models/cohost-vision/adapters/cohost_vision/,
+  Dockerfile, build.sh, render_manifest.py, tt-model.yaml (kind cohost), deploy/vision-up.sh, vision-down.sh.
+  Image builds in seconds from the four local images (no network).
 - Step 1 done. Fixtures for all four members committed on work/vision (a612436, 6e75d2d):
   `backend/tests/fixtures/{hamer,gaze,rfdetr,vggt}/` + README. Standalone on chip 0, warm, 20 requests,
   client wall p50 / model p50: HaMeR 15.2 / 13.1 ms, Gaze-LLE (3 heads) 9.6 / 6.3 ms,
@@ -34,7 +38,8 @@ Step 3: building the cohost image (adapters + Dockerfile + build script).
   trace exists.
 
 ## Next
-- Adapters, image, staged manifest, first boot on chip 0.
+- Validate on hardware: outputs vs standalone, latency, all four at once, status port, boot times.
+- README with measured numbers, handoff.
 
 ## Blockers
 - None.
