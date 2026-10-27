@@ -3,9 +3,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, CameraOff, Check, Lightbulb, Loader2, Lock, Square } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { fmtMs } from '@/lib/format'
-import { Badge, Button, Meter, ScoreRing, ServedByList, Sparkline } from '@/components/ui'
+import { Badge, Button, Meter, ScoreRing, Sparkline } from '@/components/ui'
 import { useLessonCtx } from './context'
 import { coverFit, drawHands, fitCanvas } from './overlay'
+import { ServedByRow } from './ServedBy'
 import { StepVideo } from './StepVideo'
 import { useLesson } from './store'
 import { usePractice, type LiveHands } from './usePractice'
@@ -209,7 +210,7 @@ export function PracticeStage() {
               )}
             </div>
           </div>
-          {p.servedBy.length > 0 && <ServedByList served={p.servedBy} />}
+          {p.servedBy.length > 0 && <ServedByRow served={p.servedBy} />}
         </div>
         <ScoreHistory />
       </div>
