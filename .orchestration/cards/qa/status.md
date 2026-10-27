@@ -1,28 +1,26 @@
 # Status: qa
 
-State: running (release runs on RC 27010cd, deployed 21:49:50Z, freeze to 23:20Z)
-Updated: 2026-10-27T21:58Z
+State: running (merge gate met on RC 27010cd; one confirmation round on the final build after the lead's ~23:00Z deploy)
+Updated: 2026-10-27T22:35Z
+
+## Merge gate
+- Met on RC 27010cd (deployed 21:49:50Z, deploy freeze in force): two consecutive green rounds in both suites.
+  - Round 3: API `20261027T221417Z-api` 7/7, browser `20261027T221420Z-ui` 7/7 + X1 (guided tour).
+  - Round 4: API `20261027T221939Z-api` 7/7, browser `20261027T221941Z-ui` 7/7 + X1.
+  - `RESULTS.md`: API streak 2, UI streak 2. Browser runs went straight against :8710 (main has every web branch).
+- Earlier runs on this RC failed only on test-side checks, all fixed (quiz-index check, keep-alive reset,
+  cached TT narration, looping fake microphone, a new transcript placeholder); listed in RESULTS history.
 
 ## Works
-- API suite `tests/e2e/` and browser suite `web/e2e/flows.spec.ts` cover all 7 SPEC 9 flows on the real stack,
-  with timings, evidence per run, `RESULTS.md` (via `scripts/e2e/report.py`) and teardown of what each run makes
-  (listings with their licenses and ledger entries always; skills when the run passed).
-- Browser runs use a local merge of main + work/web, web-learn, web-exchange, web-robot (`scripts/e2e/ui.sh`,
-  `~/tacit-wt/qa-ui`, vite preview on :5790 proxied to 8710); web-robot is not on main yet.
-- Seen passing on the real stack (dev runs): API F1, F3, F7; browser F1 (incl. the guided tour), F3, F6, F7.
+- `tests/e2e/` (API, ~5 min), `web/e2e/flows.spec.ts` (browser, ~4 min), `scripts/e2e/{ui.sh, make_media.sh,
+  report.py, teardown.py, playwright.config.ts}`, `RESULTS.md`, `FINDINGS.md`, evidence per run.
+- Teardown leaves no QA data in the demo (earnings unchanged by QA runs).
 
-## Release runs
-- Pre-RC runs (do not count): API `20261027T210713Z-api` 6/7 (F6: QA-12), UI `20261027T211440Z-ui` 3/7 (QA-10,
-  QA-13, a 21:31Z restart, two test fixes). Fixes deployed in the RC.
-- Round 1 on the RC, started 21:56Z in parallel: API `20261027T215559Z-api`, UI `20261027T215602Z-ui` (against
-  :8710 directly; main now has every web branch and the QA-9/QA-10 fix).
-
-## Findings (record: `.orchestration/evidence/qa/FINDINGS.md`)
-- Fixed: QA-1 (jobs after restart), QA-2 (train/evaluate program), QA-3 (TTS priority), QA-4 (policy after
-  restart), QA-6 (teardown endpoints), QA-8 (Studio follows re-run jobs). Mitigated: QA-5 (training under load),
-  QA-7 (S2 Pro CPU priority).
-- Open: QA-9 web (hands-free answering never arms while the coach's voice is slow; sent to web-1e); STT still
-  7 to 13 s behind the S2 Pro request in flight (told the lead). Watch item: one live capture closed no step in 2 min.
+## Findings (`.orchestration/evidence/qa/FINDINGS.md`)
+- 15 filed. Fixed and verified on the stack: QA-1, 2, 3, 4, 6, 8, 9, 10, 11, 12, 13, 14. Mitigated: QA-5, QA-7.
+  Fixed on main for the final deploy: QA-15 (tutor declining; F4 now asserts it does not).
 
 ## Next
-Two consecutive green release runs (API and UI), then handoff.
+1. After the lead's final deploy (~23:00Z: polish UI, QA-15, keep-alive 30 s, narration hold after tutor use,
+   busy-not-down health): one final round (API + browser) and one solo API F4 on a quiet box.
+2. handoff.md, State: review.
