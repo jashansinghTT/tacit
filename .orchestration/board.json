@@ -1,6 +1,6 @@
 {
   "project": "tacit",
-  "updated_at": "2026-10-27T20:00:53+00:00",
+  "updated_at": "2026-10-27T20:18:29+00:00",
   "cards": [
     {
       "id": "backend",
@@ -109,7 +109,7 @@
       "id": "web-exchange",
       "title": "Exchange, Listing, Sell, Library, Earnings",
       "owner": "tacit-web-exchange",
-      "state": "running",
+      "state": "merged",
       "branch": "work/web-exchange",
       "worktree": "~/tacit-wt/web-exchange",
       "acceptance": [
