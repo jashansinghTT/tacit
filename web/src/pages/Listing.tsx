@@ -196,7 +196,16 @@ export default function ListingPage() {
               It may have been licensed exclusively or removed by its expert.
             </EmptyState>
           ) : (
-            <ErrorState error={q.error} onRetry={() => q.refetch()} />
+            <ErrorState
+              error={q.error}
+              title="This listing could not be loaded"
+              onRetry={() => q.refetch()}
+              action={
+                <ButtonLink to="/exchange" variant="secondary" size="sm">
+                  Browse the Exchange
+                </ButtonLink>
+              }
+            />
           )}
         </Panel>
       ) : !l ? (

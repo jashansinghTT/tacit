@@ -185,19 +185,38 @@ export function EmptyState({ icon, title, children, action, className }: { icon?
   )
 }
 
-export function ErrorState({ error, onRetry, className }: { error: unknown; onRetry?: () => void; className?: string }) {
-  const msg = error instanceof Error ? error.message : String(error)
+/** Plain-language wording for an API failure; the raw message stays available underneath. */
+function describeError(error: unknown): { title: string; body: string; detail: string | null } {
+  const e = error as { status?: number; code?: string; message?: string }
+  const msg = error instanceof Error ? error.message : String(error ?? '')
+  if (e?.code === 'network' || e?.status === 0)
+    return { title: 'The Tacit box is not answering', body: 'It may be restarting. The top bar turns green when it is back; then try again.', detail: null }
+  if (e?.code === 'model_unavailable' || e?.status === 503)
+    return { title: 'A model on the box is not available', body: msg || 'One of the models this page needs is not answering right now.', detail: null }
+  if (e?.status && e.status >= 500)
+    return { title: 'The box hit an error loading this', body: 'Nothing is lost. Try again in a moment; if it keeps happening, the rest of the app still works.', detail: msg.startsWith(String(e.status)) ? msg : `${e.status} · ${msg}` }
+  return { title: 'Something did not load', body: msg, detail: null }
+}
+
+export function ErrorState({ error, onRetry, className, title, action }: { error: unknown; onRetry?: () => void; className?: string; title?: ReactNode; action?: ReactNode }) {
+  const d = describeError(error)
   return (
-    <div role="alert" className={cn('flex flex-col items-center gap-3 px-6 py-12 text-center', className)}>
+    <div role="alert" className={cn('flex flex-col items-center gap-3 px-6 py-12 text-center', className)} data-testid="error-state">
       <div className="grid size-11 place-items-center rounded-lg bg-fault-soft text-fault">
         <AlertTriangle className="size-5" />
       </div>
-      <div className="text-sm font-medium text-fg">Something did not load</div>
-      <div className="max-w-md text-[13px] text-fg-subtle">{msg}</div>
-      {onRetry && (
-        <button onClick={onRetry} className="text-[13px] font-medium text-ion hover:underline">
-          Try again
-        </button>
+      <div className="text-sm font-medium text-fg">{title ?? d.title}</div>
+      <div className="max-w-md text-[13px] text-fg-subtle">{d.body}</div>
+      {d.detail && <div className="telemetry max-w-md text-[11px] text-fg-faint">{d.detail}</div>}
+      {(onRetry || action) && (
+        <div className="mt-1 flex items-center gap-3">
+          {onRetry && (
+            <button onClick={onRetry} className="text-[13px] font-medium text-ion hover:underline">
+              Try again
+            </button>
+          )}
+          {action}
+        </div>
       )}
     </div>
   )

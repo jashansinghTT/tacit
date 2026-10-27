@@ -70,13 +70,13 @@ function BySkill({ data, listings }: { data: ExEarnings; listings: ExListing[] }
   const rows = useMemo(() => {
     const m = new Map<string, { id: string; title: string; amount: number; count: number }>()
     for (const e of data.entries) {
-      const r = m.get(e.listing_id) ?? { id: e.listing_id, title: e.skill_title, amount: 0, count: 0 }
+      const r = m.get(e.listing_id) ?? { id: e.listing_id, title: listings.find((x) => x.id === e.listing_id)?.title ?? e.skill_title, amount: 0, count: 0 }
       r.amount += e.amount
       r.count++
       m.set(e.listing_id, r)
     }
     return [...m.values()].sort((a, b) => b.amount - a.amount)
-  }, [data.entries])
+  }, [data.entries, listings])
   const max = Math.max(1, ...rows.map((r) => r.amount))
   return (
     <ul className="space-y-3">
@@ -104,8 +104,10 @@ function BySkill({ data, listings }: { data: ExEarnings; listings: ExListing[] }
   )
 }
 
-function Ledger({ data }: { data: ExEarnings }) {
+/** Ledger rows keep the title from when the licence was issued; show the skill's current title. */
+function Ledger({ data, listings }: { data: ExEarnings; listings: ExListing[] }) {
   const avatarOf = useAvatarOf()
+  const titleOf = (e: ExEarnings['entries'][number]) => listings.find((l) => l.id === e.listing_id)?.title ?? e.skill_title
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-[13px]" data-testid="earnings-ledger">
@@ -126,7 +128,7 @@ function Ledger({ data }: { data: ExEarnings }) {
                 <td className="telemetry py-3 pr-4 pl-4 whitespace-nowrap text-fg-subtle">{fmtDate(e.at, true)}</td>
                 <td className="py-3 pr-4">
                   <Link to={`/exchange/${e.listing_id}`} className="text-fg hover:text-ion">
-                    {e.skill_title}
+                    {titleOf(e)}
                   </Link>
                 </td>
                 <td className="py-3 pr-4 text-fg-muted">
@@ -242,7 +244,7 @@ export default function EarningsPage() {
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <Panel eyebrow="Ledger" title="Every license, newest first" pad={false}>
-              <Ledger data={d} />
+              <Ledger data={d} listings={listings.data ?? []} />
             </Panel>
             <div className="space-y-4">
               <Panel eyebrow="By skill" title="What earns">
