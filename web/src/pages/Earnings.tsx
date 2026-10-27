@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useReducedMotion } from 'framer-motion'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { ArrowUpRight, Coins, HandCoins, Plus, Store } from 'lucide-react'
 import type { ExEarnings, ExListing } from '@/lib/api/exchange'
@@ -42,6 +43,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: { payload: 
 }
 
 function MonthChart({ data }: { data: ExEarnings }) {
+  const reduce = useReducedMotion()
   const rows = useMemo(() => lastMonths(data.by_month), [data.by_month])
   return (
     <div className="h-56" data-testid="earnings-chart">
@@ -57,7 +59,7 @@ function MonthChart({ data }: { data: ExEarnings }) {
           <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#6e7580', fontSize: 11 }} />
           <YAxis tickLine={false} axisLine={false} width={56} tick={{ fill: '#6e7580', fontSize: 11, fontFamily: 'Geist Mono Variable, monospace' }} tickFormatter={(v: number) => fmtMoney(v)} />
           <Tooltip content={<ChartTip />} cursor={{ fill: 'rgb(255 255 255 / 0.04)' }} />
-          <Bar dataKey="amount" fill="url(#earn-bar)" radius={[4, 4, 0, 0]} maxBarSize={48} />
+          <Bar dataKey="amount" fill="url(#earn-bar)" radius={[4, 4, 0, 0]} maxBarSize={48} isAnimationActive={!reduce} animationDuration={700} />
         </BarChart>
       </ResponsiveContainer>
     </div>

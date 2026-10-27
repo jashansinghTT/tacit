@@ -78,6 +78,28 @@ function ProvenanceStrip() {
   )
 }
 
+/** Fills a sparse grid honestly: no made-up listings, just where the next ones come from. */
+function NextListing({ role, onList }: { role: string; onList: () => void }) {
+  return (
+    <div className="flex min-h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-line-strong p-6 text-center" data-testid="exchange-next">
+      <div className="grid size-11 place-items-center rounded-lg bg-white/[0.03] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <Plus className="size-5" />
+      </div>
+      <div className="mt-3 text-[13px] font-medium text-fg">{role === 'buyer' ? 'More skills on the way' : 'Your skill could be next'}</div>
+      <p className="mt-1 max-w-64 text-xs leading-relaxed text-fg-subtle">
+        {role === 'buyer'
+          ? 'New skills appear here as plants record them, verify them and their experts sign off.'
+          : 'Any ready skill that passed the real-camera check can be listed in a couple of minutes.'}
+      </p>
+      {role !== 'buyer' && (
+        <Button variant="secondary" size="sm" className="mt-4" icon={<Plus className="size-4" />} onClick={onList}>
+          List a skill
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export default function ExchangePage() {
   const persona = useApp((s) => s.persona)
   const role = personaOf(persona).role
@@ -280,6 +302,7 @@ export default function ExchangePage() {
             {list.map((l) => (
               <ListingCard key={l.id} l={l} />
             ))}
+            {!filtering && list.length < 3 && <NextListing role={role} onList={() => setPicker(true)} />}
           </div>
         </>
       )}

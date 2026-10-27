@@ -60,7 +60,7 @@ function Steps({ l }: { l: ExListingDetail }) {
                     <Hand className="size-3" /> {s.hand} hand
                   </span>
                 )}
-                {s.gaze_target && (
+                {s.gaze_target && s.gaze_target !== 'person' && (
                   <span className="flex items-center gap-1">
                     <Eye className="size-3 text-data-gaze" /> looks at {s.gaze_target}
                   </span>

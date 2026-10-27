@@ -247,8 +247,8 @@ function Scene({ twin, timeRef }: { twin: Twin; timeRef: MutableRefObject<number
       </mesh>
       <Trails twin={twin} stats={stats} cursor={cursor} />
       <Body cursor={cursor} />
-      <GhostHand points={left} color="#3cd7ff" jointScale={1.7} />
-      <GhostHand points={right} color="#a78bfa" jointScale={1.7} />
+      <GhostHand points={left} color="#3cd7ff" jointScale={1.3} />
+      <GhostHand points={right} color="#a78bfa" jointScale={1.3} />
       <Gaze cursor={cursor} />
       <Parts cursor={cursor} />
       <OrbitControls

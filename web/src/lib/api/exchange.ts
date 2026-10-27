@@ -117,9 +117,28 @@ function qs(f: ListingFilter) {
   return s ? `?${s}` : ''
 }
 
+/** Listed skills are ready, but older records can miss fields; give every list a default. */
+function normalizeDetail(d: ExListingDetail): ExListingDetail {
+  const sk = (d.skill ?? {}) as Partial<PublicSkill>
+  const steps = [...(sk.steps ?? [])].sort((a, b) => a.t_start - b.t_start)
+  return {
+    ...d,
+    contents: d.contents ?? { episodes: 0, hours_of_motion: 0, formats: ['tacit-json'] },
+    skill: {
+      ...(sk as PublicSkill),
+      steps: steps.map((s) => ({ ...s, objects: s.objects ?? [], tips: s.tips ?? [], why: s.why ?? '', why_source: s.why_source ?? 'inferred' })),
+      qa: sk.qa ?? [],
+      safety: sk.safety ?? [],
+      models_used: sk.models_used ?? [],
+      robot: { program: sk.robot?.program ?? [], policy: sk.robot?.policy ?? { status: 'untrained', success_rate: null, trials: null, trained_at: null }, gr00t: sk.robot?.gr00t ?? { last_run: null } },
+      verification: sk.verification ?? { status: 'pending', score: null, method: 'VGGT multi-view consistency', details: { views: 0, reproj_px: NaN, depth_stability: NaN }, checked_at: null, pointcloud: null },
+    },
+  }
+}
+
 export const exchangeApi = {
   listings: (f: ListingFilter = {}) => request<ExListing[]>(`/api/exchange/listings${qs(f)}`),
-  listing: (id: string) => request<ExListingDetail>(`/api/exchange/listings/${id}`),
+  listing: (id: string) => request<ExListingDetail>(`/api/exchange/listings/${id}`).then(normalizeDetail),
   create: (body: CreateListingBody) => request<ExListing>('/api/exchange/listings', { method: 'POST', body }),
   license: (listingId: string, licenseType: LicenseType) =>
     request<LicenseResult>(`/api/exchange/listings/${listingId}/license`, { method: 'POST', body: { license_type: licenseType } }),

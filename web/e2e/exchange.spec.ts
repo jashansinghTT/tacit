@@ -20,6 +20,7 @@ interface SkillRow {
   verification_status: string
   listed: boolean
   expert: { id: string }
+  source_kind?: string
 }
 interface ListingRow {
   id: string
@@ -97,13 +98,23 @@ function zipRead(buf: Buffer, suffix: string): string | null {
 
 test.describe.serial('Skill Exchange: list, license, download, earn', () => {
   test.beforeAll(async ({ request }) => {
-    const health = await request.get('/api/health')
-    test.skip(!health.ok() || !(health.headers()['content-type'] ?? '').includes('json'), 'needs the real Tacit backend behind the base URL')
+    // A dev or preview server that just started can fail its first proxied request: retry briefly.
+    let real = false
+    for (let i = 0; i < 10 && !real; i++) {
+      const health = await request.get('/api/health').catch(() => null)
+      real = Boolean(health?.ok() && (health.headers()['content-type'] ?? '').includes('json'))
+      if (!real) await new Promise((r) => setTimeout(r, 1000))
+    }
+    test.skip(!real, 'needs the real Tacit backend behind the base URL')
   })
 
   test('Maria lists a verified skill through the wizard', async ({ page, request }) => {
     const skills = await api<SkillRow[]>(request, `/api/skills?expert_id=${EXPERT}`)
-    const candidate = skills.find((s) => s.status === 'ready' && s.verification_status === 'verified' && !s.listed && !/^QA\b/.test(s.title))
+    const listable = skills.filter((s) => s.status === 'ready' && s.verification_status === 'verified' && !s.listed && !/^QA\b/.test(s.title))
+    // E2E_SKILL picks one; otherwise prefer a skill recorded from a sample clip over a live test capture.
+    const candidate = process.env.E2E_SKILL
+      ? listable.find((s) => s.id === process.env.E2E_SKILL)
+      : (listable.find((s) => s.source_kind === 'sample') ?? listable[0])
     const listings = await api<ListingRow[]>(request, '/api/exchange/listings')
     state.earnedBefore = (await api<{ total: number }>(request, '/api/earnings')).total
 
