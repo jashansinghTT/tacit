@@ -176,6 +176,21 @@ test.describe('with the capture camera', () => {
     await page.goto('/')
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(wide, `landing scrolls horizontally at 1280 px by ${wide}px`).toBeLessThanOrEqual(1)
+    // The guided demo ("Show me", SPEC 8): Watch, Check, Teach, Do, Earn, Box, each on its own page and target.
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.getByTestId('tour-start').first().click()
+    await expect(page.getByTestId('tour')).toBeVisible()
+    const targets = ['studio-source', 'verify-panel', 'lesson-player', 'robot-modes', 'license-panel', 'chip-map']
+    for (const [i, t] of targets.entries()) {
+      await run.time(`tour stop ${i + 1}: ${t}`, 5, async () => {
+        await expect(page.locator(`[data-tour="${t}"]`).first(), `tour stop ${i + 1} has no ${t} on ${page.url()}`).toBeVisible({ timeout: 20_000 })
+      })
+      await page.waitForTimeout(600)
+      await run.shot(`tour-${i + 1}-${t}`)
+      if (i < targets.length - 1) await page.getByTestId('tour-next').click()
+    }
+    await page.getByTestId('tour-close').click()
+    await expect(page.getByTestId('tour')).toBeHidden()
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
   })
