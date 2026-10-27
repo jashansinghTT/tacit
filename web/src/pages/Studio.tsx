@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Camera, CircleDot, Film, Hand, Loader2, Play, RotateCcw, Sparkles, Square, Upload, Video } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { api, type Sample } from '@/lib/api'
-import { qk, useJob, useSamples } from '@/lib/api/queries'
+import { qk, useSamples, useSkillJob } from '@/lib/api/queries'
 import { useCamera, useMicrophone, useSpeaker } from '@/lib/media'
 import { fmtClock, fmtDuration } from '@/lib/format'
 import { Page, PageHeader } from '@/components/layout/Page'
@@ -197,12 +197,13 @@ export default function StudioPage() {
 
   const finishedJob = cap.phase === 'saved' ? cap.jobId : offlineJob?.jobId ?? null
   const finishedSkill = cap.phase === 'saved' ? cap.skillId : offlineJob?.skillId ?? null
-  const job = useJob(finishedJob, (j) => {
+  const { job, state: jobState } = useSkillJob(finishedSkill, finishedJob, (st, j) => {
     void qc.invalidateQueries({ queryKey: ['skills'] })
     if (finishedSkill) void qc.invalidateQueries({ queryKey: qk.skill(finishedSkill) })
-    if (j.status === 'done') toast.ok('Skill ready', 'Open it to see the steps, twin, SOP and verification.')
-    else if (j.status === 'failed') toast.error('Processing failed', j.error ?? undefined)
+    if (st === 'done') toast.ok('Skill ready', 'Open it to see the steps, twin, SOP and verification.')
+    else toast.error('Processing failed', j?.error ?? undefined)
   })
+  const ready = jobState === 'done'
 
   const latest = cap.latest
   const srcW = () => latest.current?.width ?? cap.sentSize.current.w
@@ -213,9 +214,9 @@ export default function StudioPage() {
   if (finishedJob && finishedSkill) {
     return (
       <Page testId="page-studio" wide>
-        <PageHeader eyebrow="Studio" title={job?.status === 'done' ? 'Your skill is ready' : 'Turning the capture into a skill'} description="Every stage runs on the box. Each one says which model and chip did the work." />
+        <PageHeader eyebrow="Studio" title={ready ? 'Your skill is ready' : 'Turning the capture into a skill'} description="Every stage runs on the box. Each one says which model and chip did the work." />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-          <ProcessingPanel job={job} />
+          <ProcessingPanel job={job} state={jobState} />
           <div className="space-y-4">
             <Panel title="What you captured">
               <dl className="grid grid-cols-3 gap-3">
@@ -250,8 +251,8 @@ export default function StudioPage() {
             )}
             <Panel>
               <div className="flex flex-col gap-3">
-                <ButtonLink to={`/skills/${finishedSkill}`} variant={job?.status === 'done' ? 'primary' : 'secondary'} iconRight={<ArrowRight className="size-4" />} data-testid="open-skill">
-                  {job?.status === 'done' ? 'Open the skill' : 'Open the skill page (fills in as it goes)'}
+                <ButtonLink to={`/skills/${finishedSkill}`} variant={ready ? 'primary' : 'secondary'} iconRight={<ArrowRight className="size-4" />} data-testid="open-skill">
+                  {ready ? 'Open the skill' : 'Open the skill page (fills in as it goes)'}
                 </ButtonLink>
                 <Button
                   variant="ghost"

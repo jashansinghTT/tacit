@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 /** Standard app page container (everything except the landing page). */
 export function Page({ children, className, wide, testId }: { children: ReactNode; className?: string; wide?: boolean; testId?: string }) {
   return (
-    <main id="main" data-testid={testId} className={cn('mx-auto w-full px-4 pt-6 pb-24 lg:px-6', wide ? 'max-w-[1680px]' : 'max-w-[1440px]', className)}>
+    <main id="main" data-testid={testId} className={cn('mx-auto w-full max-w-[1680px] px-4 pt-6 pb-24 lg:px-6', wide && 'wide', className)}>
       {children}
     </main>
   )

@@ -138,3 +138,68 @@ export function useJob<R = Record<string, unknown>>(jobId: string | null | undef
   }, [jobId])
   return job
 }
+
+export type SkillJobState = 'running' | 'done' | 'rerunning' | 'failed'
+
+/**
+ * Follows the job that turns a skill into something usable, across backend restarts: when the
+ * job fails, the box may re-run it under a new job id (for example "interrupted by a backend
+ * restart"), so watch the skill record and switch to the new job, or report done once the skill
+ * is ready. Only a failed skill (or no re-run within ten minutes) is a final failure.
+ */
+export function useSkillJob(skillId: string | null | undefined, jobId: string | null | undefined, onFinish?: (state: 'done' | 'failed', job: Job | null) => void) {
+  const [current, setCurrent] = useState<string | null>(jobId ?? null)
+  const [state, setState] = useState<SkillJobState>('running')
+  const finishRef = useRef(onFinish)
+  useEffect(() => {
+    finishRef.current = onFinish
+  })
+  useEffect(() => {
+    setCurrent(jobId ?? null)
+    setState('running')
+  }, [jobId])
+  const job = useJob(current, (j) => {
+    if (j.status === 'done') {
+      setState('done')
+      finishRef.current?.('done', j)
+    } else {
+      setState('rerunning')
+    }
+  })
+  useEffect(() => {
+    if (state !== 'rerunning' || !skillId) return
+    let tries = 0
+    let stopped = false
+    const check = async () => {
+      tries++
+      try {
+        const sk = await api.skill(skillId)
+        if (stopped) return
+        if (sk.job_id && sk.job_id !== current) {
+          setCurrent(sk.job_id)
+          setState('running')
+          return
+        }
+        if (sk.status === 'ready') {
+          setState('done')
+          finishRef.current?.('done', null)
+          return
+        }
+        if (sk.status === 'failed' || tries > 150) {
+          setState('failed')
+          finishRef.current?.('failed', null)
+          return
+        }
+      } catch {
+        /* the box may still be restarting */
+      }
+      if (!stopped) timer = setTimeout(check, 4000)
+    }
+    let timer = setTimeout(check, 1500)
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+    }
+  }, [state, skillId, current])
+  return { job, state }
+}

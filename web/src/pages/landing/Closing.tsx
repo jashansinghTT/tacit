@@ -11,7 +11,7 @@ export function ExchangePreview() {
   const items = (listings.data ?? []).slice(0, 3)
   return (
     <section className="relative px-4 py-16 lg:px-6" data-testid="landing-exchange">
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto max-w-[1680px]">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <div className="eyebrow">Skill Exchange</div>
@@ -74,7 +74,7 @@ const FOOT = [
 export function Footer() {
   return (
     <footer className="relative border-t border-line px-4 pt-16 pb-10 lg:px-6" data-testid="landing-footer">
-      <div className="mx-auto grid max-w-[1440px] gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <div className="mx-auto grid max-w-[1680px] gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-[13px] text-fg-subtle">Teach a robot by showing it. Runs on one box inside the plant; raw video never leaves it.</p>
@@ -94,7 +94,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="mx-auto mt-14 flex max-w-[1440px] flex-col gap-2 border-t border-line pt-6 text-xs text-fg-faint sm:flex-row sm:justify-between">
+      <div className="mx-auto mt-14 flex max-w-[1680px] flex-col gap-2 border-t border-line pt-6 text-xs text-fg-faint sm:flex-row sm:justify-between">
         <span>© 2026 Tacit. A demo on Tenstorrent Blackhole.</span>
         <span>No payments are taken anywhere in this demo.</span>
       </div>

@@ -19,7 +19,7 @@ export function Moat() {
         <img className="pointer-events-none absolute inset-0 size-full object-cover opacity-35" src="/bg/mesh.jpg" alt="" aria-hidden />
       )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink-900 via-ink-900/40 to-ink-900" aria-hidden />
-      <div className="relative mx-auto grid max-w-[1440px] gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="relative mx-auto grid max-w-[1680px] gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <div className="eyebrow">Why it is hard to copy</div>
           <h2 className="mt-4 text-[clamp(2.2rem,4vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.035em] text-fg">

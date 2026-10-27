@@ -132,7 +132,7 @@ export function Hero() {
     <section className="relative -mt-[var(--header-h)] overflow-hidden pt-[calc(var(--header-h)+2rem)]" data-testid="landing-hero">
       <div className="pointer-events-none absolute inset-0 grid-bg fade-mask-b opacity-60" aria-hidden />
       <div className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[1100px] -translate-x-1/2 rounded-full bg-ion/10 blur-[120px]" aria-hidden />
-      <div className="relative mx-auto max-w-[1440px] px-4 lg:px-6">
+      <div className="relative mx-auto max-w-[1680px] px-4 lg:px-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="eyebrow mb-5 flex items-center gap-2">

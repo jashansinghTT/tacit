@@ -18,7 +18,7 @@ export function BoxSection() {
   const calls = data?.chips.flatMap((c) => c.models).reduce((s, m) => s + m.calls, 0) ?? 0
   return (
     <section className="relative px-4 py-16 lg:px-6" data-testid="landing-box">
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto max-w-[1680px]">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-end">
           <div>
             <div className="eyebrow">The box</div>

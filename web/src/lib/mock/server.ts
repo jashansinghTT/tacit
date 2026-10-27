@@ -99,6 +99,7 @@ function finishProcessing(id: string) {
     checked_at: new Date().toISOString(),
   }
   if (s.title === 'Live capture') s.title = 'Kit an M6 bracket set (live)'
+  s.job_id = null
 }
 
 function mockAudit(s: Skill, id: string, worker: string, daysAgo = 0) {
@@ -215,6 +216,8 @@ const routes: [string, RegExp, Handler][] = [
     }
     if (b.source === 'live') {
       const s = newSkillFromSample('smp_sort', 'live')
+      const title = (body as { title?: string }).title
+      if (title) s.title = title
       return { skill_id: s.id, status: s.status }
     }
     throw new HttpError(400, 'bad_request', 'source must be sample, live or a file')

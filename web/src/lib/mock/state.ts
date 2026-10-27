@@ -80,14 +80,16 @@ interface MockJob {
   started: number
   onDone?: () => void
   doneFired: boolean
+  /** Simulate a backend restart: fail at this stage, then re-run under a new job id. */
   failAt?: string
+  onFail?: () => void
 }
 
 const jobs = new Map<string, MockJob>()
 
-export function startJob(kind: string, skillId: string, onDone?: () => void): string {
+export function startJob(kind: string, skillId: string, onDone?: () => void, interrupt?: { failAt: string; onFail: () => void }): string {
   const id = rid('job')
-  jobs.set(id, { id, kind, skill_id: skillId, started: performance.now(), onDone, doneFired: false })
+  jobs.set(id, { id, kind, skill_id: skillId, started: performance.now(), onDone, doneFired: false, failAt: interrupt?.failAt, onFail: interrupt?.onFail })
   return id
 }
 
@@ -128,6 +130,18 @@ export function getJob(id: string): Job | null {
       stages.push({ name: p.name, status: 'pending', detail: null, models: p.models })
     }
     acc += p.secs
+  }
+  // A simulated restart: the job stops at failAt and is marked failed.
+  if (j.failAt) {
+    const at = stages.findIndex((x) => x.name === j.failAt)
+    if (at >= 0 && stages[at].status !== 'pending') {
+      const failedStages = stages.map((x, i) => (i < at ? x : i === at ? { ...x, status: 'failed' as const, progress: null } : { ...x, status: 'pending' as const }))
+      if (!j.doneFired) {
+        j.doneFired = true
+        j.onFail?.()
+      }
+      return { id: j.id, kind: j.kind, skill_id: j.skill_id, status: 'failed', progress: at / plan.length, stage: j.failAt, stages: failedStages, error: 'interrupted by a backend restart', result: null }
+    }
   }
   el = Math.min(el, total)
   const done = el >= total

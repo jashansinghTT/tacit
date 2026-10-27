@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Bot, Box as BoxIcon, ClipboardCheck, FileText, GraduationCap, LayoutList, MessageCircleQuestion, ShieldCheck, Store, UserCheck } from 'lucide-react'
-import { useJob, useSkill, useTracks, useTwin, qk } from '@/lib/api/queries'
+import { useSkill, useSkillJob, useTracks, useTwin, qk } from '@/lib/api/queries'
 import { fmtDate } from '@/lib/format'
 import { usePlayback } from '@/lib/playback'
 import { Page, PageHeader } from '@/components/layout/Page'
@@ -30,7 +30,7 @@ export default function SkillDetailPage() {
   const tracks = useTracks(id, ready && (tab === 'overview' || tab === 'twin'))
   const twin = useTwin(id, ready && tab === 'twin')
   const pb = usePlayback(s?.source.duration ?? 1)
-  const job = useJob(s?.status === 'processing' ? s.job_id : null, () => {
+  const { job, state: jobState } = useSkillJob(id, s?.status === 'processing' ? s.job_id : null, () => {
     void qc.invalidateQueries({ queryKey: qk.skill(id ?? '') })
     void qc.invalidateQueries({ queryKey: ['skills'] })
   })
@@ -122,7 +122,7 @@ export default function SkillDetailPage() {
 
       {s.status === 'processing' ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <ProcessingPanel job={job} />
+          <ProcessingPanel job={job} state={jobState} />
           <div className="space-y-4">
             <Panel title={s.steps.length ? 'Steps found so far' : 'What happens next'} eyebrow={s.steps.length ? 'the skill fills in stage by stage' : undefined} pad={!s.steps.length}>
               {s.steps.length ? (
