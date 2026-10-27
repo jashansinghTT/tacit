@@ -1,6 +1,6 @@
 // The backend fills skills in stage by stage, so a skill that is still processing (or an older
 // record) can miss fields. Normalise once here so every page can rely on the full shape.
-import type { BoxStatus, Skill, SkillSummary } from './types'
+import type { Audit, AuditStep, BoxStatus, Skill, SkillSummary } from './types'
 
 export function normalizeSkill(raw: Partial<Skill> & { id: string }): Skill {
   const v = (raw.verification ?? {}) as Partial<Skill['verification']>
@@ -82,5 +82,30 @@ export function normalizeBox(raw: BoxStatus): BoxStatus {
       })),
     })),
     totals: raw.totals ?? { models: 0, healthy: 0, chips: raw.chips?.length ?? 0 },
+  }
+}
+
+const asList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : typeof v === 'string' && v ? [v] : [])
+
+export function normalizeAudit(raw: Audit): Audit {
+  return {
+    ...raw,
+    narrative: raw.narrative ?? null,
+    summary: raw.summary ?? null,
+    steps: (raw.steps ?? []).map((st) => {
+      const r = st as AuditStep & { run_t?: number | number[] | null; gaze_check?: { expert_looked_at?: unknown; worker_looked_at?: unknown; ok?: boolean | null } | null }
+      const rt = Array.isArray(r.run_t) ? r.run_t : r.run_t != null ? [r.run_t] : []
+      return {
+        ...st,
+        score: st.score ?? null,
+        expert_seconds: st.expert_seconds ?? null,
+        run_seconds: st.run_seconds ?? null,
+        run_t: rt[0] ?? null,
+        run_t_end: rt[1] ?? null,
+        gaze_check: r.gaze_check
+          ? { expert_looked_at: asList(r.gaze_check.expert_looked_at), worker_looked_at: asList(r.gaze_check.worker_looked_at), ok: r.gaze_check.ok ?? null }
+          : null,
+      }
+    }),
   }
 }

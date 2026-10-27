@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, Check, Eye, FileText, Quote, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { ScoreRing, Sparkline, Spotlight } from '@/components/ui'
+import { useFeatured } from '@/lib/featured'
 
 function Tile({ className, eyebrow, title, body, to, children }: { className?: string; eyebrow: string; title: string; body: string; to: string; children: ReactNode }) {
   return (
@@ -148,6 +149,7 @@ function LangMini() {
 }
 
 export function UseCases() {
+  const { links } = useFeatured()
   return (
     <section className="relative px-4 py-16 lg:px-6" id="use-cases" data-testid="landing-usecases">
       <div className="mx-auto max-w-[1440px]">
@@ -164,16 +166,16 @@ export function UseCases() {
           <Tile className="md:col-span-2" eyebrow="Selling skill data" title="Verified skills, licensed to robot makers" body="Consented motion, gaze and text, with a certificate. The expert earns on every licence." to="/exchange">
             <EarningsMini />
           </Tile>
-          <Tile eyebrow="Robot teaching" title="Trains a policy in sim" body="Randomised demos, behaviour cloning, GR00T baseline." to="/robot/sk_sort">
+          <Tile eyebrow="Robot teaching" title="Trains a policy in sim" body="Randomised demos, behaviour cloning, GR00T baseline." to={links.robot}>
             <TrialsMini />
           </Tile>
-          <Tile eyebrow="Work instructions" title="SOPs write themselves" body="Illustrated standard work from every capture." to="/skills/sk_sort?tab=sop">
+          <Tile eyebrow="Work instructions" title="SOPs write themselves" body="Illustrated standard work from every capture." to={links.sop}>
             <SopMini />
           </Tile>
-          <Tile className="md:col-span-2" eyebrow="Quality and safety" title="Did they check before they acted?" body="Compare any run with the expert's. Gaze shows whether the gauge was read before the valve opened." to="/skills/sk_valve">
+          <Tile className="md:col-span-2" eyebrow="Quality and safety" title="Did they check before they acted?" body="Compare any run with the expert's. Gaze shows whether the gauge was read before the valve opened." to={links.skill}>
             <GazeMini />
           </Tile>
-          <Tile eyebrow="Multilingual" title="Taught in their language" body="The tutor narrates and answers in the trainee's language." to="/learn/sk_sort">
+          <Tile eyebrow="Multilingual" title="Taught in their language" body="The tutor narrates and answers in the trainee's language." to={links.learn}>
             <LangMini />
           </Tile>
           <Tile eyebrow="Retirement capture" title="Before they leave" body="Record a retiring expert's skills while they are still here." to="/studio">

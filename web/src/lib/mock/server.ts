@@ -101,6 +101,35 @@ function finishProcessing(id: string) {
   if (s.title === 'Live capture') s.title = 'Kit an M6 bracket set (live)'
 }
 
+function mockAudit(s: Skill, id: string, worker: string, daysAgo = 0) {
+  // A plausible run: one step skipped, two swapped, and the final check made without looking.
+  const steps = s.steps.map((st, i) => {
+    const missing = i === 3
+    const swapped = i === 1 || i === 2
+    const exp = Math.round((st.t_end - st.t_start) * 10) / 10
+    const run = missing ? null : Math.round(exp * (0.85 + ((i * 37) % 60) / 100) * 10) / 10
+    const looked = st.gaze_target ?? 'kit tray'
+    const gazeOk = i !== 5
+    return {
+      index: st.index, title: st.title,
+      status: (missing ? 'missing' : swapped ? 'out_of_order' : 'done') as 'missing' | 'out_of_order' | 'done',
+      score: missing ? null : Math.round((swapped ? 0.71 : 0.86 + (i % 3) * 0.04) * 100) / 100,
+      expert_seconds: exp, run_t: missing ? null : Math.round((i === 1 ? st.t_start + 6.4 : i === 2 ? st.t_start - 6 : st.t_start * 1.1) * 10) / 10, run_seconds: run,
+      gaze_check: missing ? null : { expert_looked_at: [looked], worker_looked_at: gazeOk ? [looked, 'right hand'] : ['outbound rail'], ok: gazeOk },
+    }
+  })
+  const done = steps.filter((x) => x.status === 'done').length
+  const ooo = steps.filter((x) => x.status === 'out_of_order').length
+  const missing = steps.filter((x) => x.status === 'missing').length
+  const created = new Date(Date.now() - daysAgo * 86400000).toISOString()
+  return {
+    id, skill_id: s.id, worker, video: '/mock/samples/sort.mp4', created_at: created,
+    narrative: `${worker} completed ${done + ooo} of ${steps.length} steps. Steps 2 and 3 ran out of order: the bracket was seated before it was picked from the blue bin, and the bolt pick in step 4 was skipped, which would ship a kit without bolts. At the final check ${worker.split(' ')[0]} looked at the outbound rail instead of the tray, so the missing bolts went unnoticed.`,
+    summary: { steps_total: steps.length, done, out_of_order: ooo, missing, gaze_checks_ok: steps.filter((x) => x.gaze_check?.ok).length, score: 0.68 },
+    steps,
+  }
+}
+
 // Kick off the seeded "processing" skill so the pipeline view has something live.
 const flange = db.skills.get('sk_flange')
 if (flange) flange.job_id = startJob('process', 'sk_flange', () => finishProcessing('sk_flange'))
@@ -256,6 +285,27 @@ const routes: [string, RegExp, Handler][] = [
     return { job_id: startJob('verify', s.id) }
   }],
 
+  ['POST', /^\/api\/skills\/([\w-]+)\/audit$/, ({ m, form }) => {
+    const s = skillOr404(m[1])
+    const worker = String(form?.get('worker') || 'Unnamed worker')
+    const audit_id = rid('au')
+    const job_id = startJob('audit', s.id, () => {
+      const list = db.audits.get(s.id) ?? []
+      list.unshift(mockAudit(s, audit_id, worker))
+      db.audits.set(s.id, list)
+    })
+    return { job_id, audit_id }
+  }],
+  ['GET', /^\/api\/skills\/([\w-]+)\/audits$/, ({ m }) => {
+    const s = skillOr404(m[1])
+    if (!db.audits.has(s.id) && s.id === 'sk_sort') db.audits.set(s.id, [mockAudit(s, 'au_seed1', 'Sam Okafor', 2)])
+    return (db.audits.get(s.id) ?? []).map(({ steps: _steps, skill_id: _sid, ...rest }) => rest)
+  }],
+  ['GET', /^\/api\/skills\/([\w-]+)\/audits\/([\w-]+)$/, ({ m }) => {
+    const a = (db.audits.get(m[1]) ?? []).find((x) => x.id === m[2])
+    if (!a) throw notFound(`audit ${m[2]}`)
+    return a
+  }],
   ['GET', /^\/api\/jobs\/([\w-]+)$/, ({ m }) => {
     const j = getJob(m[1])
     if (!j) throw notFound(`job ${m[1]}`)

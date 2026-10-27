@@ -398,6 +398,7 @@ export function seedBox(): BoxStatus {
     name, role, port, healthy: true, p50_ms: p50, calls, backend: 'tt' as const, dram_gib: dram,
   })
   return {
+    speech_queue: { listen: 0, interactive: 1, batch: 2, busy: true },
     host: 'tt-blackhole-01',
     updated_at: new Date().toISOString(),
     chips: [

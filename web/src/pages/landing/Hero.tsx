@@ -4,34 +4,37 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Plus } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { ButtonLink, ChipTag } from '@/components/ui'
 import type { HeroFocus, HotspotDef } from '@/three/HeroScene'
+import { useFeatured } from '@/lib/featured'
 
 const HeroCanvas = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroCanvas })))
 
 type Key = Exclude<HeroFocus, null>
 
-export const STEPS: Record<Key, { n: string; title: string; line: string; body: string; points: [string, number | null | 'cpu'][]; to: string; cta: string }> = {
+type LinkKey = 'studio' | 'verify' | 'learn' | 'robot' | 'exchange'
+
+export const STEPS: Record<Key, { n: string; title: string; line: string; body: string; points: [string, number | null | 'cpu'][]; to: LinkKey; cta: string }> = {
   watch: {
-    n: '01', title: 'Watch', line: 'Hands, gaze and parts, tracked live.', to: '/studio', cta: 'Open Studio',
+    n: '01', title: 'Watch', line: 'Hands, gaze and parts, tracked live.', to: 'studio', cta: 'Open Studio',
     body: 'A camera watches the expert at their own bench. Tacit recovers both hands in 3D, where they look, and which parts they touch, ten times a second, and asks them why at every step.',
     points: [['HaMeR: 3D hands', 0], ['Gaze-LLE: where they look', 0], ['RF-DETR: parts and tools', 0]],
   },
   check: {
-    n: '02', title: 'Check', line: 'Proof it was a real recording.', to: '/skills/sk_sort?tab=verify', cta: 'See a verification',
+    n: '02', title: 'Check', line: 'Proof it was a real recording.', to: 'verify', cta: 'See a verification',
     body: 'VGGT rebuilds the scene in 3D from several views of the clip. A real camera gives one rigid scene; an AI-made video drifts. Every skill carries the score and a certificate.',
     points: [['VGGT-1B: multi-view rebuild', 0], ['Reprojection and depth stability', null], ['Fakes flagged before they are sold', null]],
   },
   teach: {
-    n: '03', title: 'Teach', line: 'A lesson in the expert\'s own words.', to: '/learn/sk_sort', cta: 'Open the lesson',
+    n: '03', title: 'Teach', line: 'A lesson in the expert\'s own words.', to: 'learn', cta: 'Open the lesson',
     body: 'Each step becomes a lesson card with the expert\'s "why", a 3D twin doing it, and narration in the trainee\'s language. Trainees practise on camera and get one hint at a time.',
     points: [['gpt-oss-20b: steps, SOP, quiz, tutor', 2], ['S2 Pro speaks, Whisper listens', 1], ['Live match score on camera', 0]],
   },
   do: {
-    n: '04', title: 'Do', line: 'The same skill, run by a robot.', to: '/robot/sk_sort', cta: 'Open Robot Lab',
+    n: '04', title: 'Do', line: 'The same skill, run by a robot.', to: 'robot', cta: 'Open Robot Lab',
     body: 'The capture becomes a robot program. Tacit trains a policy in simulation from randomised demos, evaluates it over 20 trials, and runs GR00T on the box as the baseline.',
     points: [['Behaviour cloning in MuJoCo', 'cpu'], ['GR00T N1.7 foundation policy', 3], ['Success rate over 20 trials', null]],
   },
   earn: {
-    n: '05', title: 'Earn', line: 'Experts paid every time it is used.', to: '/exchange', cta: 'Explore the Exchange',
+    n: '05', title: 'Earn', line: 'Experts paid every time it is used.', to: 'exchange', cta: 'Explore the Exchange',
     body: 'Verified, consented skills are licensed to robot makers on the Skill Exchange. Motion, gaze and text only, never video. The expert earns 70% of every licence.',
     points: [['Consent record on every skill', null], ['Verification certificate', 0], ['Royalty ledger per licence', null]],
   },
@@ -68,6 +71,8 @@ function Hotspot({ h, active, onEnter, onLeave, onPick }: { h: HotspotDef; activ
 
 function Detail({ k, onBack }: { k: Key; onBack: () => void }) {
   const s = STEPS[k]
+  const { links } = useFeatured()
+  const to = { studio: '/studio', verify: links.verify, learn: links.learn, robot: links.robot, exchange: '/exchange' }[s.to]
   return (
     <motion.div
       key={k}
@@ -102,7 +107,7 @@ function Detail({ k, onBack }: { k: Key; onBack: () => void }) {
         ))}
       </ul>
       <div className="mt-auto pt-6">
-        <ButtonLink to={s.to} variant="primary" size="md" iconRight={<ArrowRight className="size-4" />} className="w-full">
+        <ButtonLink to={to} variant="primary" size="md" iconRight={<ArrowRight className="size-4" />} className="w-full">
           {s.cta}
         </ButtonLink>
       </div>

@@ -143,7 +143,7 @@ export function useCapture() {
           started.current = performance.now()
           setPhase('live')
         } else if (st === 'error') {
-          setError('The capture connection failed. Is the backend running?')
+          setError('The connection to the box failed. Start again when it is back; the top bar shows when it is.')
           setPhase((p) => (p === 'saved' ? p : 'error'))
           cleanup()
         } else if (st === 'closed') {
@@ -160,7 +160,7 @@ export function useCapture() {
                 .catch(() => setError('The capture was stopped, but the box did not confirm it was saved.'))
               return p
             }
-            if (p !== 'saved' && reason) setError(reason)
+            if (p !== 'saved') setError(reason || 'The connection to the box dropped. Start again when it is back; the top bar shows when it is.')
             return p === 'saved' ? p : 'error'
           })
         }
