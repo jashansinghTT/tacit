@@ -30,7 +30,27 @@ What each flow does:
 | 6 | Exchange | list (consent) → license as Atlas → library → `pack.zip` (no video) → expert earnings +349.30 |
 | 7 | Box | 9 models healthy on 4 chips, cohost memory |
 
-Skills the suite creates are titled `QA …`. Environment knobs (iteration only; a release run uses none):
+## Browser suite
+
+```bash
+scripts/e2e/make_media.sh                 # once: fake camera (.y4m) and microphone (.wav) in ~/tacit/data/e2e
+scripts/e2e/ui.sh                         # merge the web branches locally, build, serve on :5790, run all flows
+scripts/e2e/ui.sh -g F3                   # one flow
+QA_WEB_URL=http://127.0.0.1:8710 scripts/e2e/ui.sh --no-merge --no-build   # the app the backend serves
+```
+
+`ui.sh` keeps a throwaway checkout at `~/tacit-wt/qa-ui` (local branch `qa/ui-merge` = main + work/web,
+web-learn, web-exchange, web-robot, plus `QA_UI_EXTRA`), never pushed. Chromium runs with
+`--use-fake-device-for-media-stream --use-fake-ui-for-media-stream` and the `.y4m`/`.wav` files: the Studio
+records `capture.y4m` and hears `answer.wav`; Learn (its own browser) sees `practice.y4m` and hears
+`question.wav`. Each run writes `.orchestration/evidence/qa/runs/<UTC>-ui/` (Playwright JSON, screenshots of every
+flow's key states, failure artifacts). `X1` (the guided tour) is reported beside the flows but does not gate.
+
+## Test data
+
+Skills the suite creates are titled `QA …` (test skills: hidden from the demo's lists unless `include_test=1`).
+At the end of a run, listings it made are deleted with their licenses and ledger entries, and its skills are
+deleted if the run passed (kept for the owners to inspect if not). `QA_KEEP=1` keeps everything. Environment knobs (iteration only; a release run uses none):
 `TACIT_URL`, `QA_SAMPLE`, `QA_SKILL_ID` (reuse a processed skill), `QA_UPLOAD_VIDEO` (process an upload
 instead of a sample), `QA_CAPTURE_VIDEO`, `QA_CAPTURE_SECONDS`, `QA_DEMOS`, `QA_EPOCHS`, `QA_RUN_ID`,
 `QA_NO_REPORT`.
