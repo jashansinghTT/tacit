@@ -9,7 +9,7 @@ export const FREEZE = 4.5 // footage time the cold open slows into and section 2
 
 export default function coldOpen(T) {
   const s = { id: 'coldopen', z: 1 }
-  let foot, words, vignette, glow
+  let foot, words, vignette, glow, typeLine
   s.build = (root) => {
     foot = footage(root, { dir: '/data/plates/vase60', fps: 60, count: 312 })
     vignette = R.el('div', 'abs', root)
@@ -19,6 +19,7 @@ export default function coldOpen(T) {
     const c = R.el('div', 'center', root)
     const l = line(c, ['Experts', { t: 'retire.', letters: true }], { size: 214, style: 'text-shadow:0 0 60px rgba(0,0,0,0.45)' })
     words = l.words
+    typeLine = l.el
   }
   s.render = (t) => {
     const b0 = T.bar(0), b1 = T.bar(1), b2 = T.bar(2), b3 = T.bar(3)
@@ -30,6 +31,8 @@ export default function coldOpen(T) {
     const fadeIn = prog(t, 0, b0 + 0.4, (x) => x * x)
     foot.grade({ brightness: 0.5 * fadeIn, saturate: 0.55, contrast: 1.3 })
 
+    // The line breathes: a slow push across the whole section.
+    typeLine.style.transform = `scale(${mix(1, 1.06, inOutSine(u))})`
     // "Experts" on the first downbeat, "retire." two beats later.
     rise(words[0], prog(t, b0, 0.7, outExpo))
     const tR = T.bar(0, 2)

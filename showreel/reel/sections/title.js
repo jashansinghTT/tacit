@@ -4,7 +4,7 @@
 import { R } from '../main.js'
 import { drawMark, chainAt } from '../lib/logo.js'
 import { inCubic, inOutCubic, inQuint, mix, outExpo, prog, spring } from '../lib/ease.js'
-import { MARK_K, SILENCE_K } from './hands.js'
+import { MARK_K, SILENCE_GROW, SILENCE_K } from './hands.js'
 
 const MARK = 24 * MARK_K
 const TEXT_PX = (15 / 22) * MARK // the app's 15 px wordmark next to a 22 px mark
@@ -49,7 +49,7 @@ export default function title(T) {
     const g = fx.g
     const sp = spring(t, b9, { zeta: 0.62, omega: 13 })
     const cx = mix(960, markCx, sp)
-    const k = mix(SILENCE_K, MARK_K, sp)
+    const k = mix(SILENCE_K * SILENCE_GROW, MARK_K, sp)
     const box = spring(t, b9 + 0.02, { zeta: 0.55, omega: 15 })
     const ring = spring(t, b9 + 0.16, { zeta: 0.5, omega: 12 })
     const pts = chainAt(cx, 540, k)
@@ -58,7 +58,7 @@ export default function title(T) {
     // Shockwave from the fingertip on the drop.
     const wave = prog(t, b9, 1.1, outExpo)
     if (wave > 0 && wave < 1) {
-      const [tx, ty] = chainAt(960, 540, SILENCE_K)[3]
+      const [tx, ty] = chainAt(960, 540, SILENCE_K * SILENCE_GROW)[3]
       g.save()
       g.globalCompositeOperation = 'lighter'
       for (const [d, a] of [[0, 0.55], [0.08, 0.25]]) {

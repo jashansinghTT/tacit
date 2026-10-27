@@ -13,6 +13,7 @@ import { FREEZE } from './coldopen.js'
 
 export const MARK_K = 15 // px per logo unit in the title lockup (a 360 px mark)
 export const SILENCE_K = 25 // the chain alone, larger, in the silence before the drop
+export const SILENCE_GROW = 1.07 // it creeps in through the silence; the title starts from here
 const INDEX = [5, 6, 7, 8]
 const INDEX_BONES = [5, 6, 7]
 const FINGER_OF = (c) => (c <= 4 ? 0 : c <= 8 ? 1 : c <= 12 ? 2 : c <= 16 ? 3 : 4)
@@ -64,7 +65,7 @@ export default function hands(T) {
     const yaw = 0.8 + 0.3 * Math.sin(0.33 * Math.max(0, t - b4)) + spin
     const pitch = -0.18 + 0.1 * noise1(t * 0.3, 3)
     const toCentre = inOutCubic(prog(t, b7 + 0.2, b8 - b7))
-    const view = { cx: mix(1290, 960, toCentre), cy: mix(548, 540, toCentre), f: 2900, dist: mix(0.6, 0.75, toCentre) }
+    const view = { cx: mix(1290, 960, toCentre), cy: mix(548, 540, toCentre), f: 2900, dist: mix(0.6, 0.52, toCentre) }
     const P3 = W.map((p) => project(rot([p[0] - c0[0], p[1] - c0[1], p[2] - c0[2]], yaw, pitch), view))
     // Nearer joints draw thicker and brighter (only once lifted into 3D).
     const depthScale = (j) => mix(1, clamp(view.dist / P3[j][2], 0.75, 1.3) ** 2, lift)
@@ -74,13 +75,16 @@ export default function hands(T) {
 
     // Dissolve to the index finger on the riser.
     const keep = (i) => INDEX_BONES.includes(i)
-    const boneAlpha = (i) => (keep(i) ? 1 : 1 - prog(t, b7 + 0.7 + fadeAt[i] * 0.9, 0.6, inCubic))
-    const jointAlpha = (j) => (INDEX.includes(j) ? 1 : 1 - prog(t, b7 + 0.9 + fadeAt[j % 21] * 0.9, 0.5, inCubic))
+    // The riser builds: the hand stays big and burns brighter, and only in the last moments before
+    // the morph does it shed every bone but the index finger.
+    const boneAlpha = (i) => (keep(i) ? 1 : 1 - prog(t, b8 - 0.75 + fadeAt[i] * 0.45, 0.35, inCubic))
+    const jointAlpha = (j) => (INDEX.includes(j) ? 1 : 1 - prog(t, b8 - 0.7 + fadeAt[j % 21] * 0.45, 0.3, inCubic))
+    const burn = prog(t, b7, b8 - b7, inCubic)
     const toMark = prog(t, b8, 1.15, inOutQuint)
     const width = mix(3.4, 4.2, lift)
 
     if (t < b8 + 1.2) {
-      drawHand(g, P, { draw: drawOn, boneAlpha, jointAlpha, depthScale, alpha: 1 - toMark, width, jointR: mix(5.5, 8, lift), glow: 1.25 })
+      drawHand(g, P, { draw: drawOn, boneAlpha, jointAlpha, depthScale, alpha: 1 - toMark, width: width * (1 + 0.35 * burn), jointR: mix(5.5, 8, lift) * (1 + 0.3 * burn), glow: 1.25 + 1.6 * burn })
     }
     if (R2) {
       const ra = 1 - prog(t, b4, 0.7, outCubic)
@@ -89,10 +93,11 @@ export default function hands(T) {
 
     // The index chain becomes the mark, centred, and holds through the silence before the drop.
     if (t >= b8) {
-      const target = chainAt(960, 540, SILENCE_K)
+      const grow = mix(1, SILENCE_GROW, prog(t, b8 + 1.15, b9 - b8 - 1.15, (x) => x))
+      const target = chainAt(960, 540, SILENCE_K * grow)
       const breathe = 1 + 0.03 * Math.sin((t - b8) * 3.2)
       const pts = INDEX.map((j, i) => [mix(P[j][0], target[i][0], toMark), mix(P[j][1], target[i][1], toMark)])
-      drawMark(g, 960, 540, SILENCE_K, { pts, box: 0, ring: 0, alpha: toMark, glow: breathe * mix(2.2, 1.2, toMark), width: mix(0.5, 1, toMark) })
+      drawMark(g, 960, 540, SILENCE_K * grow, { pts, box: 0, ring: 0, alpha: toMark, glow: breathe * mix(2.2, 1.2, toMark), width: mix(0.5, 1, toMark) })
     }
 
     // Type.
