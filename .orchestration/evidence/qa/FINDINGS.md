@@ -163,3 +163,28 @@ it is fixed.
   so (stage detail or a warning) and the quiz is retried in the background, like narration.
 - Note: the API release run's own skill got 3 questions, so this is intermittent (LLM output that does not parse,
   or the 1000-token budget running out on reasoning).
+
+## QA-12 backend: the listing page returns 500 for every skill with a trained policy
+
+- Owner: backend (lead). State: open, blocks F6 in both suites. Found 2026-10-27 21:28Z.
+- Seen: API release run #1 (`runs/20261027T210713Z-api`) F6: `GET /api/exchange/listings/{id}` returned
+  `500 Internal Server Error` (text/plain) after F5 had trained the skill. Reproduced on the seeded listing
+  `lst_49b25ff3` (`sk_3b7c613d`). Traceback (backend.log 21:20:00Z): `market._count_episodes` does
+  `int(read_json(meta).get("episodes", 0))`, but the sim's `robot/demos/meta.json` stores `episodes` as a list
+  of 200 episode records: `TypeError: int() argument must be ... not 'list'`.
+- Impact: buyers cannot open the listing of any skill whose robot policy was trained.
+- Fix: `e = read_json(meta, {}).get("episodes", 0); return len(e) if isinstance(e, list) else int(e)`, plus a
+  test with a trained skill.
+
+## QA-13 backend (writer): the same sample sometimes becomes a one-step skill
+
+- Owner: backend (lead). State: open. Found 2026-10-27 21:30Z.
+- Seen: smp_vase processed twice within minutes under the freeze, identical perception (445 frames, 430 with
+  hands, "5 steps; objects: vase" from the step stage). API run #1's skill `sk_bcba9454`: 5 steps. UI run #1's
+  skill `sk_390b7e27`: **1 step**, "Insert Stem into Vase", 6.8 to 44.4 s, so browser F2 failed (>= 3 steps).
+  The writer prompt says a repeated action stays one step per repetition, but gpt-oss merged all five, and
+  `merge_groups` accepted it. That run's robot program was also `[pick "the item", place "vase on your right"]`
+  (not detected object names). The seeded vase skill has the expected five "Insert ... stem" steps.
+- Expected: the observed steps survive writing (SPEC 9.2 asks for >= 3 steps on the sample).
+- Suggestion: when the writer returns fewer steps than observed, re-split by the observed groups (keep the
+  title with "(n of 5)") or retry; validate robot-program objects against detected labels.
