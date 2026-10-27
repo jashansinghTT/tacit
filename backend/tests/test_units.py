@@ -483,3 +483,54 @@ def test_quiz_choices_are_shuffled_with_the_answer():
     assert all(q["choices"][q["answer"]] == "right" for q in qs)
     assert any(q["answer"] != 0 for q in qs)
     assert valid_quiz([{"q": "Why 1?", "choices": ["right", "wrong a", "wrong b"], "answer": 0}])[0] == qs[1]   # stable
+
+
+# --------------------------------------------------------------------------------------------------------
+# Live speed: the chip gate, and steps at low and uneven frame rates
+# --------------------------------------------------------------------------------------------------------
+async def test_chip_gate_puts_live_first_and_caps_offline_while_live():
+    import asyncio
+    from tacit.models.vision import BATCH, LIVE, ChipGate
+    gate, order = ChipGate(batch=2, live=4, batch_live=1, live_window=1.0), []
+
+    async def use(name, prio, hold=0.05):
+        async with gate.slot(prio):
+            order.append(name)
+            await asyncio.sleep(hold)
+
+    # offline work alone may hold two slots
+    batch = [asyncio.create_task(use(f"b{k}", BATCH)) for k in range(4)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["batch_inflight"] == 2 and gate.snapshot()["waiting"] == 2
+    # a live frame's four calls go at once, past the waiting offline work
+    live = [asyncio.create_task(use(f"l{k}", LIVE)) for k in range(4)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["live_inflight"] == 4 and order[2:6] == ["l0", "l1", "l2", "l3"]
+    await asyncio.gather(*batch, *live)
+    # while live is flowing, offline work gets one slot
+    batch = [asyncio.create_task(use(f"c{k}", BATCH)) for k in range(3)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["batch_inflight"] == 1 and gate.snapshot()["batch_cap"] == 1
+    await asyncio.gather(*batch)
+
+
+def test_live_steps_survive_low_fps_and_stalls():
+    """3 fps, and no frame at all for 1.5 s while the hand travels to the vase: each insertion still closes."""
+    frames = [f for f in _frames_insert_three_times()[::3]
+              if not any(start - 1.6 <= f["t"] < start - 0.1 for start in (1.0, 6.0, 11.0))]
+    seg = LiveSegmenter()
+    steps = [e["step"] for f in frames for e in seg.update(f) if e["type"] == "step"]
+    last = seg.finish(frames[-1]["t"])
+    steps += [last] if last else []
+    assert len(steps) == 3 and all(s["action"] == "insert" and s["hand"] == "right" for s in steps)
+    assert len(segment_steps(frames)) == 3       # the offline segmentation of the same frames agrees
+
+
+def test_a_hand_not_seen_does_not_let_go_but_a_hand_seen_elsewhere_does():
+    from tacit.perception.timeline import _runs
+    times = [i / 10 for i in range(60)]
+    contact = [("vase", False, False) if t < 2.0 or t >= 3.5 else None for t in times]
+    hidden = [not (2.0 <= t < 3.5) for t in times]             # the hand is not detected in the gap
+    assert len(_runs(contact, times, hidden)) == 1
+    elsewhere = [True] * len(times)                            # seen all along, away from the vase in the gap
+    assert len(_runs(contact, times, elsewhere)) == 2
