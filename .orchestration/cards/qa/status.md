@@ -1,7 +1,7 @@
 # Status: qa
 
-State: running (release runs during the lead's deploy freeze, 21:05 to 22:35Z)
-Updated: 2026-10-27T21:20Z
+State: running (release runs on RC 27010cd, deployed 21:49:50Z, freeze to 23:20Z)
+Updated: 2026-10-27T21:58Z
 
 ## Works
 - API suite `tests/e2e/` and browser suite `web/e2e/flows.spec.ts` cover all 7 SPEC 9 flows on the real stack,
@@ -12,7 +12,10 @@ Updated: 2026-10-27T21:20Z
 - Seen passing on the real stack (dev runs): API F1, F3, F7; browser F1 (incl. the guided tour), F3, F6, F7.
 
 ## Release runs
-- API #1 `20261027T210713Z-api` and UI #1 `20261027T211440Z-ui` running.
+- Pre-RC runs (do not count): API `20261027T210713Z-api` 6/7 (F6: QA-12), UI `20261027T211440Z-ui` 3/7 (QA-10,
+  QA-13, a 21:31Z restart, two test fixes). Fixes deployed in the RC.
+- Round 1 on the RC, started 21:56Z in parallel: API `20261027T215559Z-api`, UI `20261027T215602Z-ui` (against
+  :8710 directly; main now has every web branch and the QA-9/QA-10 fix).
 
 ## Findings (record: `.orchestration/evidence/qa/FINDINGS.md`)
 - Fixed: QA-1 (jobs after restart), QA-2 (train/evaluate program), QA-3 (TTS priority), QA-4 (policy after
