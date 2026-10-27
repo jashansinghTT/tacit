@@ -150,7 +150,8 @@ export function drawHand(g, pts, { color = '#3cd7ff', width = 3, glow = 1, alpha
  * Follow two hands through [t0, t1] by continuity rather than by the tracker's left/right label
  * (which can flip from frame to frame): each analysed frame's hands are matched to the track whose
  * last wrist is nearest. Detections that collapse (bounding box under 45% of that track's median)
- * are dropped. Returns { at(id, t) -> lm2d or null, alpha(id, t) } for ids 0 and 1.
+ * are dropped, and so are duplicate detections of one hand. Returns { at(id, t) -> lm2d or null,
+ * alpha(id, t) } for ids 0 and 1.
  */
 export function followHands(tracks, t0, t1) {
   const frames = tracks.frames.filter((f) => f.t >= t0 - 0.2 && f.t <= t1 + 0.2)
@@ -161,7 +162,12 @@ export function followHands(tracks, t0, t1) {
   const last = [null, null]
   const per = frames.map((f) => {
     const out = [null, null]
-    const hs = f.hands.map((h) => h.lm2d)
+    // The tracker sometimes reports one hand twice (wrists a few px apart, one labelled left, one
+    // right); stacked, the two skeletons burn white. Keep the better-scored one.
+    const hs = []
+    for (const h of [...f.hands].sort((a, b) => b.score - a.score)) {
+      if (hs.every((k) => Math.hypot(k[0][0] - h.lm2d[0][0], k[0][1] - h.lm2d[0][1]) > 45)) hs.push(h.lm2d)
+    }
     if (hs.length === 2 && last[0] && last[1]) {
       const d = (a, b) => Math.hypot(a[0][0] - b[0][0], a[0][1] - b[0][1])
       const keep = d(hs[0], last[0]) + d(hs[1], last[1]) <= d(hs[0], last[1]) + d(hs[1], last[0])

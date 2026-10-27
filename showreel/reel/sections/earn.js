@@ -6,7 +6,7 @@ import { R } from '../main.js'
 import { line, rise } from '../lib/type.js'
 import { inOutCubic, inOutSine, inQuint, mix, outExpo, prog, spring } from '../lib/ease.js'
 
-const BAR = { x: 560, y: 720, w: 1260, h: 30 }
+const BAR = { x: 700, y: 620, w: 1120, h: 30 } // clear of the word below and the line above
 
 export default function earn(T) {
   const s = { id: 'earn', z: 8 }

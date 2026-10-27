@@ -3,7 +3,7 @@
 import { R } from '../main.js'
 import { rot } from './hand.js'
 
-export async function loadCloud(path) {
+export async function loadCloud(path, { recentre = true } = {}) {
   const f = new Float32Array(await R.bin(path))
   const n = f.length / 6
   const pos = new Float32Array(n * 3)
@@ -15,6 +15,7 @@ export async function loadCloud(path) {
       col[i * 3 + k] = f[i * 6 + 3 + k] * 255
     }
   }
+  if (!recentre) return { n, pos, col }
   // Centre on the median (robust to stray points).
   for (let k = 0; k < 3; k++) {
     const v = Array.from({ length: n }, (_, i) => pos[i * 3 + k]).sort((a, b) => a - b)

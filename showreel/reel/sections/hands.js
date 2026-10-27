@@ -47,8 +47,8 @@ export default function hands(T) {
     // The freeze dims and defocuses into a plate behind the 3D hand (depth), then leaves on the riser.
     const dim = 1 - prog(t, b3 + 0.2, b4 + 0.6 - b3, inOutCubic)
     const plateK = 1 - prog(t, b7 + 0.4, 1.2, inCubic)
-    foot.grade({ brightness: (0.5 * dim + 0.16 * (1 - dim)) * plateK + flash, saturate: 0.55 * dim + 0.3 * (1 - dim), contrast: 1.18 })
-    foot.box.style.filter += ` blur(${(1 - dim) * 26}px)`
+    foot.grade({ brightness: (0.5 * dim + 0.32 * (1 - dim)) * plateK + flash, saturate: 0.55 * dim + 0.35 * (1 - dim), contrast: 1.1 })
+    foot.box.style.filter += ` blur(${(1 - dim) * 34}px)`
     foot.box.style.opacity = plateK > 0.001 ? '1' : '0'
 
     // 2D: both hands where they were at the freeze, mapped through the same camera.
@@ -72,7 +72,7 @@ export default function hands(T) {
     const view = { cx: mix(1290, 960, toCentre), cy: mix(548, 540, toCentre), f: 2900, dist: mix(0.6, 0.52, toCentre) }
     const P3 = W.map((p) => project(rot([p[0] - c0[0], p[1] - c0[1], p[2] - c0[2]], yaw, pitch), view))
     // Nearer joints draw thicker and brighter (only once lifted into 3D).
-    const depthScale = (j) => mix(1, clamp(view.dist / P3[j][2], 0.75, 1.3) ** 2, lift)
+    const depthScale = (j) => mix(1, clamp((view.dist / P3[j][2]) ** 3, 0.45, 1.8), lift)
 
     const lift = prog(t, b4, 1.4, inOutQuint)
     const P = L2.map((p, j) => [mix(p[0], P3[j][0], lift), mix(p[1], P3[j][1], lift)])
