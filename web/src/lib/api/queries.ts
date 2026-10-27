@@ -43,6 +43,8 @@ export const useBox = (live = true) =>
   useQuery({ queryKey: qk.box, queryFn: api.box, refetchInterval: live ? 3000 : false, staleTime: 2000 })
 export const useUsers = () => useQuery({ queryKey: qk.users, queryFn: api.users, staleTime: Infinity })
 export const useSamples = () => useQuery({ queryKey: qk.samples, queryFn: api.samples, staleTime: 60_000 })
+export const useSampleVerify = (id: string | undefined) =>
+  useQuery({ queryKey: ['sample-verify', id], queryFn: () => api.sampleVerify(id!), enabled: Boolean(id), staleTime: Infinity, retry: 1 })
 export const useSkills = (f: { status?: string; expert_id?: string } = {}) =>
   useQuery({ queryKey: qk.skills(f), queryFn: () => api.skills(f) })
 export const useSkill = (id: string | undefined, poll = false) =>
@@ -56,6 +58,10 @@ export const useTracks = (id: string | undefined, enabled = true) =>
   useQuery({ queryKey: qk.tracks(id ?? ''), queryFn: () => api.tracks(id!), enabled: Boolean(id) && enabled, staleTime: Infinity })
 export const useTwin = (id: string | undefined, enabled = true) =>
   useQuery({ queryKey: qk.twin(id ?? ''), queryFn: () => api.twin(id!), enabled: Boolean(id) && enabled, staleTime: Infinity })
+export const useAudits = (skillId: string | undefined) =>
+  useQuery({ queryKey: ['audits', skillId], queryFn: () => api.audits(skillId!), enabled: Boolean(skillId) })
+export const useAudit = (skillId: string | undefined, auditId: string | null) =>
+  useQuery({ queryKey: ['audit', skillId, auditId], queryFn: () => api.audit(skillId!, auditId!), enabled: Boolean(skillId && auditId), staleTime: Infinity })
 export const usePointcloud = (url: string | null | undefined) =>
   useQuery({ queryKey: qk.pointcloud(url ?? ''), queryFn: () => api.pointcloud(url!), enabled: Boolean(url), staleTime: Infinity })
 

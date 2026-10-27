@@ -222,47 +222,69 @@ def cmd_compare(a) -> dict:
 
 
 # --------------------------------------------------------------------------- concurrency
+def exact(cmp: dict) -> bool:
+    """A comparison that found no difference at all."""
+    for k, v in cmp.items():
+        if k.endswith(("max_abs", "_px_max")) and v != 0.0:
+            return False
+        if (k == "pcc" or k.endswith("_pcc") or k.endswith("_pcc_min") or k == "iou_min") and v != 1.0:
+            return False
+        if k == "matched" and v != cmp.get("n_base"):
+            return False
+    return True
+
+
 def cmd_concurrent(a) -> None:
-    """Every member answers its main request n times, all four members at once; outputs are
-    compared against the baseline so interleaving cannot hide a wrong answer."""
+    """All four members at once, each sending its main request back to back (``--counts``);
+    every response is compared with the baseline, so interleaving cannot hide a wrong answer."""
+    counts = {m: a.n for m in MEMBERS}
+    for item in filter(None, (a.counts or "").split(",")):
+        k, _, v = item.partition("=")
+        counts[k] = int(v)
+    members = [m for m in MEMBERS if counts.get(m, 0) > 0]
     results, errors = {}, []
-    barrier = threading.Barrier(len(MEMBERS))
+    barrier = threading.Barrier(len(members))
 
     def run(member: str) -> None:
         try:
             body = next(iter(requests_for(member).values()))
             base = json.loads((Path(a.baseline) / member / "response.json").read_text()) if a.baseline else None
             barrier.wait()
-            walls, worst = [], None
+            walls, n_exact, first_diff = [], 0, None
             t0 = time.perf_counter()
-            for _ in range(a.n):
+            for _ in range(counts[member]):
                 resp, ms = post(a.base_port + PORT_OFFSET[member], body)
                 walls.append(ms)
                 if base is not None:
-                    worst = compare(member, "request", base, resp)  # keep the last; checked below
-                    results.setdefault(member + "_cmp", []).append(worst)
-            results[member] = {"n": a.n, "wall_ms_p50": round(statistics.median(walls), 1),
-                               "wall_ms_max": round(max(walls), 1),
+                    c = compare(member, "request", base, resp)
+                    if exact(c):
+                        n_exact += 1
+                    elif first_diff is None:
+                        first_diff = c
+            walls.sort()
+            results[member] = {"n": len(walls), "wall_ms_p50": round(statistics.median(walls), 1),
+                               "wall_ms_p95": round(walls[min(len(walls) - 1, int(0.95 * len(walls)))], 1),
+                               "wall_ms_max": round(walls[-1], 1),
                                "elapsed_s": round(time.perf_counter() - t0, 2)}
+            if base is not None:
+                results[member]["identical_to_baseline"] = f"{n_exact}/{len(walls)}"
+                if first_diff is not None:
+                    results[member]["first_difference"] = first_diff
         except BaseException as e:  # noqa: BLE001
             errors.append(f"{member}: {e}")
 
-    threads = [threading.Thread(target=run, args=(m,)) for m in MEMBERS]
+    threads = [threading.Thread(target=run, args=(m,)) for m in members]
     t0 = time.perf_counter()
     for t in threads:
         t.start()
     for t in threads:
         t.join()
-    summary = {m: results.get(m) for m in MEMBERS}
-    for m in MEMBERS:
-        cmps = results.get(m + "_cmp") or []
-        if cmps:
-            summary[m]["vs_baseline_last"] = cmps[-1]
-            summary[m]["vs_baseline_all_identical"] = all(c == cmps[0] for c in cmps)
+    summary = {m: results.get(m) for m in members}
     summary["wall_s"] = round(time.perf_counter() - t0, 2)
     summary["errors"] = errors
     print(json.dumps(summary, indent=1))
-    if errors:
+    bad = errors or [m for m in members if results.get(m, {}).get("first_difference")]
+    if bad:
         sys.exit(1)
 
 
@@ -284,7 +306,8 @@ def main() -> None:
     c.add_argument("--save", help="save the full new responses here")
     k = sub.add_parser("concurrent")
     k.add_argument("--base-port", type=int, default=21000)
-    k.add_argument("-n", type=int, default=10)
+    k.add_argument("-n", type=int, default=10, help="requests per member (default for --counts)")
+    k.add_argument("--counts", help="per-member request counts, e.g. hamer=200,gaze=200,rfdetr=200,vggt=5")
     k.add_argument("--baseline")
     a = ap.parse_args()
     {"fixtures": cmd_fixtures, "bench": cmd_bench, "compare": cmd_compare, "concurrent": cmd_concurrent}[a.cmd](a)

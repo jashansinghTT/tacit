@@ -16,7 +16,7 @@ from .box import box_status
 from .config import MEDIA, SAMPLES, VERSION, WEB_DIST, WEB_PUBLIC
 from .db import LessonProgress, SkillRow, User, init_db, select, session
 from .exchange import market
-from .learn import practice
+from .learn import audit, i18n, practice
 from .live import capture
 from .models import llm, speech
 from .models.base import ModelUnavailable
@@ -56,8 +56,67 @@ async def _startup() -> None:
     init_db()
     seed.seed_users()
     seed.samples()
+    interrupted = recover_interrupted_jobs()
+    if os.environ.get("TACIT_RESUME_JOBS", "1") == "1":
+        for skill_id in interrupted:
+            jobs.run(jobs.create("process", skill_id, STAGES), lambda j, sid=skill_id: process_skill(j, sid))
     if os.environ.get("TACIT_SEED", "1") == "1":
         asyncio.create_task(seed.seed_sample_skills())
+    asyncio.create_task(backfill_ready_skills())
+
+
+async def backfill_ready_skills() -> None:
+    """Finish what a restart cut short for ready skills: motion previews and background narration."""
+    from .pipeline import preview
+    from .pipeline.process import narrate_rest, narration_lines
+    from .storage import media_dir
+    with session() as s:
+        ids = [r.id for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if not r.test]
+    for sid in ids:  # previews first (CPU, fast), then narration (the speech chip, slow)
+        sk = load_skill(sid)
+        if not sk:
+            continue
+        if not sk.get("motion_thumb"):
+            frames = (read_json(tracks_path(sid)) or {}).get("frames", [])
+            mt = await asyncio.to_thread(preview.motion_thumb, frames, media_dir(sid) / "motion.jpg",
+                                         (sk.get("steps") or [{}])[0].get("t_start", 0.0) + 1.0 if sk.get("steps") else None)
+            if mt:
+                sk = load_skill(sid)
+                sk["motion_thumb"] = media_url(mt)
+                save_skill(sk)
+    for sid in ids:
+        sk = load_skill(sid)
+        missing = [(k, t) for k, t in narration_lines(sk) if k not in (sk.get("narration") or {})] if sk else []
+        if missing:
+            await narrate_rest(sid, missing)
+
+
+def recover_interrupted_jobs() -> list[str]:
+    """Jobs that were running when the backend stopped are marked failed; their skills go back to draft.
+    Returns the skills whose processing should be started again."""
+    from .db import JobRow, now
+    resume = []
+    with session() as s:
+        for row in s.exec(select(JobRow).where(JobRow.status.in_(("queued", "running")))).all():
+            row.status, row.error, row.finished_at = "failed", "interrupted by a backend restart", now()
+            payload = json.loads(row.payload or "{}")
+            payload.update(status="failed", error=row.error)
+            row.payload = json.dumps(payload)
+            s.add(row)
+            if row.kind == "process" and row.skill_id:
+                resume.append(row.skill_id)
+        s.commit()
+    for skill_id in resume:
+        sk = load_skill(skill_id)
+        if sk and sk.get("status") == "processing":
+            sk["status"] = "draft"
+            save_skill(sk)
+    for skill_id in [r for r in resume]:
+        if not load_skill(skill_id):
+            resume.remove(skill_id)
+    if resume:
+        log.warning("resuming %d interrupted processing jobs: %s", len(resume), resume)
+    return resume
 
 
 def user_id(x_tacit_user: str | None) -> str:
@@ -72,7 +131,8 @@ async def health_():
 
 @app.get("/api/box")
 async def box_():
-    return await box_status()
+    from .models.speech import GATE
+    return {**(await box_status()), "speech_queue": GATE.waiting()}
 
 
 @app.get("/api/users")
@@ -86,6 +146,42 @@ async def samples_():
     return seed.samples()
 
 
+@app.get("/api/music/intro")
+async def music_intro():
+    """An 8 s instrumental lesson intro made once by MiniMax Music 3 on chip 1 (cached: music holds the
+    speech chip for ~50 s, so it is never generated while people are talking to the coach)."""
+    p = MEDIA / "music" / "lesson-intro.wav"
+    if not p.exists():
+        return err(404, "not_found", "no intro music yet")
+    return {"audio": media_url(p), "duration": 8.0, "model": "MiniMax Music 3", "chip": 1,
+            "credit": "Music generated with MiniMax-Music3"}
+
+
+@app.get("/api/samples/{sample_id}/verify")
+async def sample_verify(sample_id: str, refresh: bool = False):
+    """VGGT verification of a sample clip (cached): the Check page compares a real recording with an AI-made one."""
+    from .pipeline import geometry
+    from .pipeline.video import probe
+    sample = next((x for x in seed.samples() if x["id"] == sample_id), None)
+    if not sample:
+        return err(404, "not_found", f"no sample {sample_id}")
+    cache = SAMPLES / f"{sample_id}.verify.json"
+    if cache.exists() and not refresh:
+        return json.loads(cache.read_text())
+    video = MEDIA / "samples" / os.path.basename(sample["video"])
+    dur = probe(video)["duration"]
+    times = geometry.pick_times(dur, 4)
+    res, imgs, sb = await geometry.reconstruct(video, times)
+    metrics = geometry.consistency(res, [], times)
+    _, cloud = geometry.build_twin([], res, times, imgs, (imgs[0].shape[1], imgs[0].shape[0]) if imgs else (1280, 720))
+    (MEDIA / "samples" / f"{sample_id}.pointcloud.bin").write_bytes(cloud)
+    out = {"sample_id": sample_id, "kind": sample.get("kind"), "status": geometry.verdict(metrics["score"]), "score": metrics["score"],
+           "method": "VGGT multi-view consistency", "details": metrics, "times": times,
+           "pointcloud": f"/media/samples/{sample_id}.pointcloud.bin", "points": len(cloud) // 24, "served_by": [sb]}
+    cache.write_text(json.dumps(out))
+    return out
+
+
 # ------------------------------------------------------------------------------------ skills
 def summary(row: SkillRow) -> dict:
     with session() as s:
@@ -93,15 +189,15 @@ def summary(row: SkillRow) -> dict:
     return {"id": row.id, "title": row.title, "summary": row.summary, "status": row.status, "created_at": row.created_at,
             "expert": {"id": row.expert_id, "name": u.name if u else row.expert_id}, "thumb": row.thumb, "duration": row.duration,
             "steps_count": row.steps_count, "verification_status": row.verification_status, "listed": bool(row.listing_id),
-            "listing_id": row.listing_id, "source_kind": row.source_kind}
+            "listing_id": row.listing_id, "source_kind": row.source_kind, "test": row.test}
 
 
 @app.get("/api/skills")
-async def skills_list(status: str | None = None, expert_id: str | None = None):
+async def skills_list(status: str | None = None, expert_id: str | None = None, include_test: bool = False):
     with session() as s:
-        q = select(SkillRow)
-        rows = s.exec(q).all()
-    out = [summary(r) for r in rows if (not status or r.status == status) and (not expert_id or r.expert_id == expert_id)]
+        rows = s.exec(select(SkillRow)).all()
+    out = [summary(r) for r in rows if (not status or r.status == status) and (not expert_id or r.expert_id == expert_id)
+           and (include_test or not r.test)]
     return sorted(out, key=lambda r: r["created_at"], reverse=True)
 
 
@@ -128,7 +224,7 @@ async def skills_create(request: Request, x_tacit_user: str | None = Header(defa
         sample = next((x for x in seed.samples() if x["id"] == body.get("sample_id")), None)
         if not sample:
             raise HTTPException(404, "no such sample")
-        skill = seed.create_skill_from_sample(sample, expert_id=expert["id"])
+        skill = seed.create_skill_from_sample(sample, expert_id=expert["id"], title=body.get("title"))
         return {"skill_id": skill["id"], "status": skill["status"]}
     if body.get("source") == "live":
         sid = new_id("sk")
@@ -140,6 +236,7 @@ async def skills_create(request: Request, x_tacit_user: str | None = Header(defa
 def _new_skill(sid: str, expert: dict, source: dict, title: str | None) -> dict:
     from .db import now
     skill = {"id": sid, "title": title or "New skill", "title_hint": title, "summary": "", "status": "draft", "created_at": now(),
+             "test": bool(title and title.startswith("QA ")),
              "expert": expert, "source": source, "steps": [], "qa": [], "verification": {"status": "pending"}, "robot": {},
              "consent": {"motion": True, "gaze": True, "voice_text": True, "raw_video": False, "signed_by": expert["id"], "signed_at": now()}}
     return save_skill(skill)
@@ -169,6 +266,10 @@ async def skills_patch(skill_id: str, body: dict):
     for k in ("title", "summary"):
         if k in body:
             sk[k] = body[k]
+    if body.get("title"):
+        sk["title_locked"] = True  # the writer will not rename it
+    if str(body.get("title", "")).startswith("QA "):
+        sk["test"] = True
     if "steps" in body:
         by_id = {s["id"]: s for s in body["steps"] if "id" in s}
         for st in sk.get("steps", []):
@@ -258,6 +359,30 @@ async def skills_verify(skill_id: str):
 
     job = jobs.run(jobs.create("verify", skill_id, ["verify"]), go)
     return {"job_id": job.id}
+
+
+@app.post("/api/skills/{skill_id}/audit")
+async def skills_audit(skill_id: str, file: UploadFile = File(...), worker: str = Form("Sam Okafor")):
+    """Quality and safety: compare a worker's recorded run with the expert's skill."""
+    sk = load_skill(skill_id)
+    if not sk or sk.get("status") != "ready":
+        return err(400, "bad_request", "audits need a ready skill")
+    aid = audit.new_audit_id()
+    raw = audit.audits_dir(skill_id) / f"{aid}{Path(file.filename or 'run.mp4').suffix or '.mp4'}"
+    raw.write_bytes(await file.read())
+    job = jobs.run(jobs.create("audit", skill_id, audit.STAGES), lambda j: audit.run_audit(j, skill_id, raw, aid, worker))
+    return {"job_id": job.id, "audit_id": aid}
+
+
+@app.get("/api/skills/{skill_id}/audits")
+async def skills_audits(skill_id: str):
+    return audit.list_audits(skill_id)
+
+
+@app.get("/api/skills/{skill_id}/audits/{audit_id}")
+async def skills_audit_get(skill_id: str, audit_id: str):
+    r = read_json(audit.audits_dir(skill_id) / f"{audit_id}.json")
+    return r if r else err(404, "not_found", f"no audit {audit_id}")
 
 
 @app.post("/api/skills/{skill_id}/answer")
@@ -350,10 +475,10 @@ async def stt_(file: UploadFile = File(...)):
 
 # ------------------------------------------------------------------------------------ learn
 @app.get("/api/learn/lessons")
-async def lessons(x_tacit_user: str | None = Header(default=None)):
+async def lessons(x_tacit_user: str | None = Header(default=None), include_test: bool = False):
     uid = user_id(x_tacit_user)
     with session() as s:
-        rows = s.exec(select(SkillRow).where(SkillRow.status == "ready")).all()
+        rows = [r for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if include_test or not r.test]
         prog = {p.skill_id: p for p in s.exec(select(LessonProgress).where(LessonProgress.trainee_id == uid)).all()}
     out = []
     for r in rows:
@@ -365,18 +490,27 @@ async def lessons(x_tacit_user: str | None = Header(default=None)):
 
 
 @app.get("/api/learn/lessons/{skill_id}")
-async def lesson(skill_id: str):
+async def lesson(skill_id: str, lang: str = "en"):
     sk = load_skill(skill_id)
     if not sk:
         return err(404, "not_found", f"no skill {skill_id}")
     nar = sk.get("narration") or {}
+    if lang != "en":
+        tr = await i18n.translate(skill_id, lang)
+        by_i = {s["index"]: s for s in tr.get("steps", [])}
+        sk = {**sk, "title": tr.get("title") or sk.get("title"), "summary": tr.get("summary") or sk.get("summary"),
+              "quiz": tr.get("quiz") or sk.get("quiz"), "safety": tr.get("safety") or sk.get("safety"),
+              "steps": [{**st, **{k: by_i.get(st["index"], {}).get(k) or st.get(k) for k in ("title", "instruction", "why", "tips")}}
+                        for st in sk.get("steps", [])]}
+        nar = tr.get("narration") or {}
     return {"skill_id": skill_id, "title": sk.get("title"), "summary": sk.get("summary"), "expert": sk.get("expert"),
             "video": (sk.get("source") or {}).get("video"), "intro_audio": (nar.get("intro") or {}).get("audio"),
             "steps": [{**{k: st.get(k) for k in ("id", "index", "title", "instruction", "why", "why_source", "keyframe", "t_start",
                                                   "t_end", "tips", "objects", "hand", "gaze_target")},
                        "narration_audio": (nar.get(st["id"]) or {}).get("audio"), "narration_text": (nar.get(st["id"]) or {}).get("text")}
                       for st in sk.get("steps", [])],
-            "quiz": sk.get("quiz", []), "safety": sk.get("safety", [])}
+            "quiz": sk.get("quiz", []), "safety": sk.get("safety", []), "lang": lang,
+            "languages": [{"code": k, "name": v} for k, v in writer.LANGS.items()]}
 
 
 @app.post("/api/learn/sessions")
@@ -516,6 +650,9 @@ async def tutor_ask(skill_id: str, request: Request):
             yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
             return
         speak(pending)
+        sources = [f"st{st['index']}" for st in sk.get("steps", []) if st.get("title") and st["title"].lower()[:12] in text.lower()]
+        # The text is final now; the remaining sentences' audio follows, then `end` closes the stream.
+        yield f"event: done\ndata: {json.dumps({'text': text.strip(), 'audio_parts': len(voices), 'sources': sources, 'question': question})}\n\n"
         for i in range(sent, len(voices)):
             try:
                 await voices[i]
@@ -523,8 +660,7 @@ async def tutor_ask(skill_id: str, request: Request):
                 pass
             for a in ready_audio():
                 yield f"event: audio\ndata: {json.dumps(a)}\n\n"
-        sources = [f"st{st['index']}" for st in sk.get("steps", []) if st.get("title") and st["title"].lower()[:12] in text.lower()]
-        yield f"event: done\ndata: {json.dumps({'text': text.strip(), 'audio_parts': len(voices), 'sources': sources, 'question': question})}\n\n"
+        yield "event: end\ndata: {}\n\n"
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
@@ -607,8 +743,8 @@ async def robot_ws(ws: WebSocket, run_id: str):
 
 # ------------------------------------------------------------------------------------ exchange
 @app.get("/api/exchange/listings")
-async def ex_list(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None):
-    return market.list_listings(q, industry, robot, verified)
+async def ex_list(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None, include_test: bool = False):
+    return market.list_listings(q, industry, robot, verified, include_test)
 
 
 @app.get("/api/exchange/listings/{listing_id}")

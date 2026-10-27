@@ -30,12 +30,14 @@ export interface Health {
 }
 
 export interface BoxModel {
+  key?: string
   name: string
   role: string
   port: number
   healthy: boolean
   p50_ms: number | null
   calls: number
+  errors?: number
   backend: Backend
   // Optional extras the backend may add (cohost status per member).
   dram_gib?: number
@@ -49,10 +51,19 @@ export interface BoxChip {
   group: string
   status: 'ok' | 'degraded' | 'down' | 'idle' | string
   models: BoxModel[]
-  memory?: { dram_gib: number; dram_total_gib: number; l1_used_kib?: number; l1_total_kib?: number }
+  memory?: {
+    dram_gib: number
+    dram_total_gib: number
+    l1_used_kib?: number
+    l1_total_kib?: number
+    members?: Record<string, number>
+    device_owner?: string | null
+  }
 }
 
 export interface BoxStatus {
+  /** The chip-1 voice gate: queued listen / interactive / batch requests. */
+  speech_queue?: { listen: number; interactive: number; batch: number; busy: boolean }
   host: string
   updated_at: string
   chips: BoxChip[]
@@ -76,6 +87,19 @@ export interface Sample {
   thumb: string
   duration: number
   kind: 'real' | 'ai-generated'
+}
+
+export interface SampleVerification {
+  sample_id: string
+  kind: Sample['kind']
+  status: VerificationStatus
+  score: number | null
+  method: string
+  details: Record<string, number>
+  times?: number[]
+  pointcloud: string | null
+  points?: number
+  served_by?: ServedBy[]
 }
 
 // Skills
@@ -149,7 +173,8 @@ export interface Verification {
   status: VerificationStatus
   score: number | null
   method: string
-  details: { views: number; reproj_px: number; depth_stability: number; [k: string]: unknown }
+  /** Known keys: views, reproj_px or reproj_rel, depth_stability, camera_drift, static_pixels. */
+  details: { views: number; reproj_px?: number; reproj_rel?: number; depth_stability?: number; camera_drift?: number; [k: string]: unknown }
   checked_at: string | null
   pointcloud: string | null
   served_by?: ServedBy[]
@@ -265,6 +290,8 @@ export interface Twin {
   frames: TwinFrame[]
   bounds: { min: Vec3; max: Vec3 }
   up: Vec3
+  /** The recording camera in the twin frame (pinhole intrinsics in source pixels). */
+  camera?: { position: Vec3; f?: number; cx?: number; cy?: number; person_depth_m?: number }
 }
 
 // Jobs
@@ -345,6 +372,15 @@ export interface CoachMsg {
   t: number
   text: string
   audio: string | null
+  /** True when the voice is still being synthesised and follows as `coach_audio`. */
+  pending_audio?: boolean
+}
+
+export interface CoachAudioMsg {
+  type: 'coach_audio'
+  id: string
+  audio: string
+  duration: number
 }
 
 export interface TranscriptMsg {
@@ -370,6 +406,7 @@ export type CaptureServerMsg =
   | CaptureEventMsg
   | StepMsg
   | CoachMsg
+  | CoachAudioMsg
   | TranscriptMsg
   | SavedMsg
   | ErrorMsg
@@ -598,4 +635,45 @@ export interface Earnings {
   currency: string
   by_month: [string, number][]
   entries: EarningsEntry[]
+}
+
+// Quality and safety audit (use case 5)
+
+export type AuditStepStatus = 'done' | 'missing' | 'out_of_order'
+
+export interface AuditStep {
+  index: number
+  title: string
+  status: AuditStepStatus
+  score: number | null
+  expert_seconds: number | null
+  /** Where the step starts in the worker's run (the backend may send [start, end]). */
+  run_t: number | null
+  run_t_end?: number | null
+  run_seconds: number | null
+  /** Targets as lists after normalisation (the backend may send a string or a list). */
+  gaze_check: { expert_looked_at: string[]; worker_looked_at: string[]; ok: boolean | null } | null
+}
+
+export interface AuditSummary {
+  steps_total: number
+  done: number
+  out_of_order: number
+  missing: number
+  gaze_checks_ok: number
+  score: number | null
+}
+
+export interface AuditListItem {
+  id: string
+  worker: string
+  created_at: string
+  summary: AuditSummary | null
+  narrative: string | null
+  video: string | null
+}
+
+export interface Audit extends AuditListItem {
+  skill_id: string
+  steps: AuditStep[]
 }

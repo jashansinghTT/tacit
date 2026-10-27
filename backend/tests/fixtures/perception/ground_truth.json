@@ -1,0 +1,24 @@
+{
+  "note": "Approximate ground truth written by a person-level review of each clip (times in the trimmed mp4, seconds). 'image left' is the person's right side.",
+  "smp_vase": {
+    "steps": [
+      {"t": [0.0, 4.0], "hand": "both", "action": "gather the loose dried stems lying on the table into a bundle", "objects": ["stems"]},
+      {"t": [6.5, 9.5], "hand": "right", "action": "pull one stem from the bundle and push it into the black vase", "objects": ["stem", "black vase"]},
+      {"t": [15.5, 18.5], "hand": "right", "action": "pull one stem and push it into the black vase", "objects": ["stem", "black vase"]},
+      {"t": [23.5, 26.5], "hand": "right", "action": "pull one stem and push it into the black vase", "objects": ["stem", "black vase"]},
+      {"t": [31.5, 34.5], "hand": "right", "action": "pull one stem and push it into the black vase", "objects": ["stem", "black vase"]},
+      {"t": [41.5, 44.5], "hand": "right", "action": "pull one stem and push it into the black vase", "objects": ["stem", "black vase"]}
+    ],
+    "between": "sorting the bundle with both hands; the left hand holds the bundle at chest height the whole time",
+    "never_touched": ["clear glass vase of pampas grass on the right"]
+  },
+  "smp_jars": {
+    "steps": [
+      {"t": [2.0, 10.0], "hand": "right", "action": "lift the small glass beaker from beside the corked carafe, hold it up, set it back", "objects": ["cup", "bottle"]},
+      {"t": [15.5, 22.0], "hand": "right", "action": "pick up the white-labelled candle jar and raise it to the nose with both hands", "objects": ["cup"]},
+      {"t": [22.0, 24.5], "hand": "right", "action": "set the candle jar down left of the yellow candle and nudge it straight", "objects": ["cup"]},
+      {"t": [26.0, 28.0], "hand": "both", "action": "handle a second small jar", "objects": ["cup"]},
+      {"t": [31.5, 38.0], "hand": "left", "action": "reach right, lift the white bottle and inspect it with both hands", "objects": ["bottle"]}
+    ]
+  }
+}

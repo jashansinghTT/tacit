@@ -28,7 +28,7 @@ import numpy as np
 
 from .demos import instruction, max_steps
 from .env import DT, HOME_TCP, SimEnv
-from .expert import ScriptedExpert, natural_yaw
+from .expert import V_MAX, ScriptedExpert, _step_toward, natural_yaw
 from .program import parse_program
 from .scene import ARM_JOINTS, FINGER_JOINTS
 
@@ -45,6 +45,9 @@ class Runner:
             raise ValueError(f"mode must be one of {MODES}, got {mode!r}")
         if mode == "policy" and not policy_path:
             raise ValueError("policy mode needs policy_path (train a policy first)")
+        if mode == "policy":
+            from .policy import check_program
+            check_program(policy_path, program)
         if mode == "replay" and human_path is None:
             raise ValueError("replay mode needs human_path (the expert's wrist path)")
         self.program = program
@@ -95,28 +98,41 @@ class Runner:
             self._stop.set()
             th.join(timeout=5)
 
-    def run_episode(self) -> dict:
-        """Run to the end without pacing or camera streaming. Returns {success, steps, reason}."""
+    def run_episode(self, on_step=None) -> dict:
+        """Run to the end without pacing or camera streaming. Returns {success, steps, reason}.
+
+        `on_step(env)` (optional) is called after every control step on the simulation's thread,
+        so it may render (e.g. evidence videos).
+        """
         if self.mode == "gr00t":
             # GR00T needs rendering, which must stay on one thread: run on a fresh one.
             box: dict = {}
-            th = threading.Thread(target=lambda: box.update(r=self._episode_blocking()), daemon=True)
+
+            def work():
+                try:
+                    box["r"] = self._episode_blocking(on_step)
+                except BaseException as e:  # re-raised on the caller's thread
+                    box["e"] = e
+
+            th = threading.Thread(target=work, daemon=True)
             th.start()
             th.join()
+            if "e" in box:
+                raise box["e"]
             return box["r"]
-        return self._episode_blocking()
+        return self._episode_blocking(on_step)
 
     def stop(self) -> None:
         self._stop.set()
 
     # ------------------------------------------------------------------ internals
 
-    def _episode_blocking(self) -> dict:
-        for _ in self._run(realtime=False, stream=False):
+    def _episode_blocking(self, on_step=None) -> dict:
+        for _ in self._run(realtime=False, stream=False, on_step=on_step):
             pass
         return self.result
 
-    def _run(self, realtime: bool, stream: bool):
+    def _run(self, realtime: bool, stream: bool, on_step=None):
         env = SimEnv(self.program, seed=self.seed)
         layout = env.layout
         cams = None
@@ -134,14 +150,14 @@ class Runner:
             elif self.mode == "replay":
                 from .retarget import PathFollower, retarget_wrist_path
                 hp = self.human_path
-                if isinstance(hp, dict) and "points" in hp and hp.get("frame") != "camera" and "scale" in hp:
-                    path = hp
+                if isinstance(hp, dict) and "points" in hp and "scale" in hp:
+                    path = hp            # already retargeted
                 elif isinstance(hp, dict):
                     path = retarget_wrist_path(hp["points"], hp["times"], hp.get("grip"))
                 else:
                     raise ValueError("human_path must be a dict with points and times")
                 follower = PathFollower(path)
-                limit = int((follower.duration + 1.5) / DT)
+                limit = int((follower.duration + 4.0) / DT)
             elif self.mode == "gr00t":
                 from .gr00t import Gr00tClient, Gr00tController
                 from .render import Cameras
@@ -157,7 +173,7 @@ class Runner:
                 limit = int(self.max_seconds / DT)
 
             if stream:
-                yield {
+                meta = {
                     "type": "meta", "mode": self.mode, "seed": self.seed,
                     "joints": ARM_JOINTS + FINGER_JOINTS,
                     "objects": [o.name for o in layout.objects],
@@ -165,7 +181,11 @@ class Runner:
                     "dt": round(DT, 6),
                     "instruction": instruction(layout),
                 }
-                yield self._state(env)
+                if follower is not None:
+                    # The path the robot follows; its times start at the first "replay" state.
+                    meta["human"] = {k: path.get(k) for k in ("times", "points", "grip", "transform")}
+                yield meta
+                yield self._state(env, self._phase(env, follower))
             wall0 = time.perf_counter()
             done_steps = 0
             reason = None
@@ -182,10 +202,16 @@ class Runner:
                         pos, yaw, grip = ctrl.act(env)
                         env.step_ee(pos, yaw, grip)
                 elif self.mode == "replay":
-                    pos, grip = follower.target(env.t + DT)
-                    env.step_ee(pos, natural_yaw(pos), grip)
-                    want, _ = follower.target(env.t)
-                    follower.errors.append(float(np.linalg.norm(env.tcp_pos() - want)))
+                    if follower.t0 is None:
+                        # Approach the path's first point, then play the path at its own timing.
+                        start, _ = follower.target(0.0)
+                        env.step_ee(_step_toward(env.tcp_pos(), start, V_MAX), natural_yaw(start), 0.0)
+                        if np.linalg.norm(env.tcp_pos() - start) < 0.01:
+                            follower.t0 = env.t
+                    else:
+                        want, grip = follower.target(env.t + DT - follower.t0)
+                        env.step_ee(want, natural_yaw(want), grip)
+                        follower.errors.append(float(np.linalg.norm(env.tcp_pos() - want)))
                 else:
                     info = gr.step()
                     if info is not None:
@@ -193,13 +219,15 @@ class Runner:
                         if stream:
                             yield {"type": "gr00t", **info}
                 if stream:
-                    yield self._state(env)
+                    yield self._state(env, self._phase(env, follower))
                     if self.mode == "gr00t" and k % self.camera_every == 0:
                         f = gr.frame(env.steps)
                         from .render import jpeg_b64
                         for name in ("exterior", "wrist"):
                             yield {"type": "camera", "name": name, "t": round(env.t, 4),
                                    "jpeg": jpeg_b64(f[name], 80)}
+                if on_step is not None:
+                    on_step(env)
                 if realtime:
                     lag = wall0 + env.t - time.perf_counter()
                     if lag > 0:
@@ -210,7 +238,7 @@ class Runner:
                     reason = f"dropped the {dropped[0]} off the table"
                     break
                 if self.mode == "replay":
-                    if env.t >= follower.duration + 0.5:
+                    if follower.t0 is not None and env.t - follower.t0 >= follower.duration + 0.3:
                         break
                     continue
                 if env.monitor.phase == "done":
@@ -220,6 +248,8 @@ class Runner:
             else:
                 if self.mode != "replay":
                     reason = f"timed out during {env.monitor.label}"
+                elif follower.t0 is None:
+                    reason = "could not reach the start of the path"
 
             if self.mode == "replay":
                 err = float(np.mean(follower.errors)) if follower.errors else 0.0
@@ -253,7 +283,13 @@ class Runner:
                 client.close()
 
     @staticmethod
-    def _state(env: SimEnv) -> dict:
+    def _phase(env: SimEnv, follower) -> str:
+        if follower is not None:
+            return "approach" if follower.t0 is None else "replay"
+        return env.monitor.label
+
+    @staticmethod
+    def _state(env: SimEnv, phase: str) -> dict:
         q = env.qpos9()
         return {
             "type": "state",
@@ -262,21 +298,25 @@ class Runner:
             "objects": env.object_poses(),
             "ee": [round(float(v), 4) for v in env.tcp_pos()],
             "gripper": round(float(np.mean(q[7:9])), 5),
-            "phase": env.monitor.label,
+            "phase": phase,
         }
 
 
 def run_episode(program, mode: str = "scripted", seed: int = 0, policy_path=None, human_path=None,
-                gr00t_url: str | None = None, **kw) -> dict:
-    return Runner(program, mode, seed, policy_path, human_path, gr00t_url, **kw).run_episode()
+                gr00t_url: str | None = None, on_step=None, **kw) -> dict:
+    return Runner(program, mode, seed, policy_path, human_path, gr00t_url, **kw).run_episode(on_step)
 
 
 def evaluate_policy(program, policy_path, trials: int = 20, seed: int = 0, on_trial=None) -> dict:
     """Run the policy on `trials` randomised scenes (seeds seed .. seed + trials - 1).
 
     `on_trial(i, trials, result)` is called after each trial. Returns
-    {success_rate, trials: [{seed, success, steps, reason}]}.
+    {success_rate, trials: [{seed, success, steps, reason}]}. Raises ProgramMismatch if the
+    policy was trained on a different program.
     """
+    from .policy import check_program
+
+    check_program(policy_path, program)
     t0 = time.time()
     out = []
     for i in range(trials):

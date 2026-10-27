@@ -25,6 +25,7 @@ export const db = {
     ]],
   ]),
   sessions: new Map<string, { skill_id: string; lang: string }>(),
+  audits: new Map<string, import('../api/types').Audit[]>(),
 }
 
 export function rid(prefix: string) {
@@ -59,6 +60,12 @@ const PLANS: Record<string, StagePlan[]> = {
     { name: 'demos', secs: 3, detail: '200 randomised sim demonstrations', models: ['MuJoCo@cpu'] },
     { name: 'train', secs: 9, detail: '30 epochs, behaviour cloning', models: ['PyTorch@cpu'] },
     { name: 'save', secs: 0.5, detail: 'policy stored with the skill' },
+  ],
+  audit: [
+    { name: 'decode', secs: 0.8, detail: '312 frames at 10 fps' },
+    { name: 'perceive', secs: 3.5, detail: 'hands, gaze and parts per frame', models: ['MediaPipe@cpu', 'HaMeR@0', 'Gaze-LLE@0', 'RF-DETR@0'] },
+    { name: 'align', secs: 1.4, detail: 'dynamic time warping against the expert' },
+    { name: 'report', secs: 2.2, detail: 'step table and narrative', models: ['gpt-oss-20b@2'] },
   ],
   evaluate: [
     { name: 'trials', secs: 8, detail: '20 randomised trials', models: ['MuJoCo@cpu'] },

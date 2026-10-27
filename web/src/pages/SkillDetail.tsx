@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Bot, Box as BoxIcon, FileText, GraduationCap, LayoutList, MessageCircleQuestion, ShieldCheck, Store, UserCheck } from 'lucide-react'
+import { Bot, Box as BoxIcon, ClipboardCheck, FileText, GraduationCap, LayoutList, MessageCircleQuestion, ShieldCheck, Store, UserCheck } from 'lucide-react'
 import { useJob, useSkill, useTracks, useTwin, qk } from '@/lib/api/queries'
 import { fmtDate } from '@/lib/format'
 import { usePlayback } from '@/lib/playback'
@@ -12,10 +12,11 @@ import { TwinTab } from '@/components/skill/TwinTab'
 import { SopTab } from '@/components/skill/SopTab'
 import { VerifyTab } from '@/components/skill/VerifyTab'
 import { AnswerTab } from '@/components/skill/AnswerTab'
+import { AuditTab } from '@/components/skill/AuditTab'
 import { ProcessingPanel } from '@/components/skill/ProcessingPanel'
 
-type Tab = 'overview' | 'twin' | 'sop' | 'verify' | 'answer'
-const TABS: Tab[] = ['overview', 'twin', 'sop', 'verify', 'answer']
+type Tab = 'overview' | 'twin' | 'sop' | 'verify' | 'answer' | 'audit'
+const TABS: Tab[] = ['overview', 'twin', 'sop', 'verify', 'answer', 'audit']
 
 export default function SkillDetailPage() {
   const { id } = useParams()
@@ -145,6 +146,7 @@ export default function SkillDetailPage() {
               { key: 'sop', label: 'SOP', icon: <FileText className="size-4" /> },
               { key: 'verify', label: 'Verify', icon: <ShieldCheck className="size-4" /> },
               { key: 'answer', label: 'Answer questions', icon: <MessageCircleQuestion className="size-4" />, count: pending },
+              { key: 'audit', label: 'Audit a run', icon: <ClipboardCheck className="size-4" /> },
             ]}
           />
           <div role="tabpanel" aria-label={tab}>
@@ -153,6 +155,7 @@ export default function SkillDetailPage() {
             {tab === 'sop' && <SopTab skill={s} />}
             {tab === 'verify' && <VerifyTab skill={s} />}
             {tab === 'answer' && <AnswerTab skill={s} />}
+            {tab === 'audit' && <AuditTab skill={s} />}
           </div>
         </>
       )}

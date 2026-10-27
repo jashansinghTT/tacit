@@ -38,10 +38,32 @@ function buildTracks(duration: number) {
   return { fps: 10, width: 1280, height: 720, frames }
 }
 
+// The real twin and clouds use a frame where the camera looks down -z; the mock scene's camera
+// looks down +z, so turn the mock world half a turn about y.
+const flip = (p: [number, number, number]): [number, number, number] => [-p[0], p[1], -p[2]]
+
 function buildTwin(duration: number) {
   const frames = []
-  for (let t = 0; t <= duration; t += 0.1) frames.push(twinAt(t % SCENE_DURATION))
-  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.4], max: [0.66, 0.8, 0.62] }, up: [0, 1, 0] }
+  for (let t = 0; t <= duration; t += 0.1) {
+    const f = twinAt(t % SCENE_DURATION)
+    frames.push({
+      ...f,
+      body: f.body?.map(flip) ?? null,
+      hands: { left: f.hands.left?.map(flip) ?? null, right: f.hands.right?.map(flip) ?? null },
+      gaze: f.gaze ? { origin: flip(f.gaze.origin), target: flip(f.gaze.target) } : null,
+      objects: f.objects.map((o) => ({ ...o, pos: flip(o.pos) })),
+    })
+  }
+  return { fps: 10, frames, bounds: { min: [-0.66, 0, -0.62], max: [0.66, 0.8, 0.4] }, up: [0, 1, 0], camera: { position: [0, 0.8, 1.3], f: 808, cx: 640, cy: 360, person_depth_m: 1.75 } }
+}
+
+function flippedCloud(fake: boolean) {
+  const pts = pointCloud(24000, fake)
+  for (let i = 0; i < pts.length; i += 6) {
+    pts[i] = -pts[i]
+    pts[i + 2] = -pts[i + 2]
+  }
+  return pts
 }
 
 function newSkillFromSample(sampleId: string, kind: Skill['source']['kind']): Skill {
@@ -73,10 +95,39 @@ function finishProcessing(id: string) {
     ...s.verification,
     status: fake ? 'suspect' : 'verified',
     score: fake ? 0.29 : 0.93,
-    details: fake ? { views: 4, reproj_px: 10.4, depth_stability: 0.38 } : { views: 4, reproj_px: 1.7, depth_stability: 0.95 },
+    details: fake ? { views: 4, reproj_rel: 0.121, depth_stability: 0.93, camera_drift: 0.18 } : { views: 4, reproj_rel: 0.015, depth_stability: 0.994, camera_drift: 0.0012 },
     checked_at: new Date().toISOString(),
   }
   if (s.title === 'Live capture') s.title = 'Kit an M6 bracket set (live)'
+}
+
+function mockAudit(s: Skill, id: string, worker: string, daysAgo = 0) {
+  // A plausible run: one step skipped, two swapped, and the final check made without looking.
+  const steps = s.steps.map((st, i) => {
+    const missing = i === 3
+    const swapped = i === 1 || i === 2
+    const exp = Math.round((st.t_end - st.t_start) * 10) / 10
+    const run = missing ? null : Math.round(exp * (0.85 + ((i * 37) % 60) / 100) * 10) / 10
+    const looked = st.gaze_target ?? 'kit tray'
+    const gazeOk = i !== 5
+    return {
+      index: st.index, title: st.title,
+      status: (missing ? 'missing' : swapped ? 'out_of_order' : 'done') as 'missing' | 'out_of_order' | 'done',
+      score: missing ? null : Math.round((swapped ? 0.71 : 0.86 + (i % 3) * 0.04) * 100) / 100,
+      expert_seconds: exp, run_t: missing ? null : Math.round((i === 1 ? st.t_start + 6.4 : i === 2 ? st.t_start - 6 : st.t_start * 1.1) * 10) / 10, run_seconds: run,
+      gaze_check: missing ? null : { expert_looked_at: [looked], worker_looked_at: gazeOk ? [looked, 'right hand'] : ['outbound rail'], ok: gazeOk },
+    }
+  })
+  const done = steps.filter((x) => x.status === 'done').length
+  const ooo = steps.filter((x) => x.status === 'out_of_order').length
+  const missing = steps.filter((x) => x.status === 'missing').length
+  const created = new Date(Date.now() - daysAgo * 86400000).toISOString()
+  return {
+    id, skill_id: s.id, worker, video: '/mock/samples/sort.mp4', created_at: created,
+    narrative: `${worker} completed ${done + ooo} of ${steps.length} steps. Steps 2 and 3 ran out of order: the bracket was seated before it was picked from the blue bin, and the bolt pick in step 4 was skipped, which would ship a kit without bolts. At the final check ${worker.split(' ')[0]} looked at the outbound rail instead of the tray, so the missing bolts went unnoticed.`,
+    summary: { steps_total: steps.length, done, out_of_order: ooo, missing, gaze_checks_ok: steps.filter((x) => x.gaze_check?.ok).length, score: 0.68 },
+    steps,
+  }
 }
 
 // Kick off the seeded "processing" skill so the pipeline view has something live.
@@ -125,6 +176,20 @@ const routes: [string, RegExp, Handler][] = [
   }],
   ['GET', /^\/api\/users$/, () => users],
   ['GET', /^\/api\/samples$/, () => samples],
+  ['GET', /^\/api\/samples\/([\w-]+)\/verify$/, ({ m }) => {
+    const smp = samples.find((x) => x.id === m[1])
+    if (!smp) throw notFound(`sample ${m[1]}`)
+    const fake = smp.kind === 'ai-generated'
+    return {
+      sample_id: smp.id, kind: smp.kind, status: fake ? 'suspect' : 'verified', score: fake ? 0.235 : 0.904, method: 'VGGT multi-view consistency',
+      details: fake ? { views: 4, reproj_rel: 0.132, depth_stability: 0.95, camera_drift: 0.206, static_pixels: 152292 } : { views: 4, reproj_rel: 0.013, depth_stability: 0.991, camera_drift: 0.0008, static_pixels: 91490 },
+      times: [0.4, 1.8, 3.2, 4.7], pointcloud: `/media/samples/${smp.id}.pointcloud.bin`, points: 24000, served_by: served('VGGT-1B', 0, 3610),
+    }
+  }],
+  ['GET', /^\/media\/samples\/([\w-]+)\.pointcloud\.bin$/, ({ m }) => {
+    const pts = flippedCloud(m[1] === 'smp_fake')
+    return new Response(pts.buffer as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'X-Points': String(pts.length / 6) } })
+  }],
 
   ['GET', /^\/api\/skills$/, ({ url }) => {
     const status = url.searchParams.get('status')
@@ -176,6 +241,21 @@ const routes: [string, RegExp, Handler][] = [
     }
     return s
   }],
+  ['POST', /^\/api\/skills\/([\w-]+)\/answer$/, ({ m, form }) => {
+    const s = skillOr404(m[1])
+    const typed = form?.get('text')
+    const text = typeof typed === 'string' && typed ? typed : 'I roll them between my fingers. Two feels different from three.'
+    const idx = Number(form?.get('step_index') ?? NaN)
+    const question = form?.get('question')
+    const q = s.qa.find((x) => (typeof question === 'string' && x.question === question) || s.steps.find((st) => st.index === idx)?.id === x.step_id)
+    if (q) q.answer = text
+    const step = s.steps.find((st) => st.index === idx || st.id === q?.step_id)
+    if (step) {
+      step.why = text
+      step.why_source = 'expert'
+    }
+    return { text, skill: s }
+  }],
   ['DELETE', /^\/api\/skills\/([\w-]+)$/, ({ m }) => {
     skillOr404(m[1])
     db.skills.delete(m[1])
@@ -190,7 +270,7 @@ const routes: [string, RegExp, Handler][] = [
   ['GET', /^\/api\/skills\/([\w-]+)\/twin$/, ({ m }) => buildTwin(skillOr404(m[1]).source.duration)],
   ['GET', /^\/api\/skills\/([\w-]+)\/pointcloud$/, ({ m }) => {
     const s = skillOr404(m[1])
-    const pts = pointCloud(24000, s.verification.status === 'suspect')
+    const pts = flippedCloud(s.verification.status === 'suspect')
     return new Response(pts.buffer as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'X-Points': String(pts.length / 6) } })
   }],
   ['POST', /^\/api\/skills\/([\w-]+)\/process$/, ({ m }) => {
@@ -205,6 +285,27 @@ const routes: [string, RegExp, Handler][] = [
     return { job_id: startJob('verify', s.id) }
   }],
 
+  ['POST', /^\/api\/skills\/([\w-]+)\/audit$/, ({ m, form }) => {
+    const s = skillOr404(m[1])
+    const worker = String(form?.get('worker') || 'Unnamed worker')
+    const audit_id = rid('au')
+    const job_id = startJob('audit', s.id, () => {
+      const list = db.audits.get(s.id) ?? []
+      list.unshift(mockAudit(s, audit_id, worker))
+      db.audits.set(s.id, list)
+    })
+    return { job_id, audit_id }
+  }],
+  ['GET', /^\/api\/skills\/([\w-]+)\/audits$/, ({ m }) => {
+    const s = skillOr404(m[1])
+    if (!db.audits.has(s.id) && s.id === 'sk_sort') db.audits.set(s.id, [mockAudit(s, 'au_seed1', 'Sam Okafor', 2)])
+    return (db.audits.get(s.id) ?? []).map(({ steps: _steps, skill_id: _sid, ...rest }) => rest)
+  }],
+  ['GET', /^\/api\/skills\/([\w-]+)\/audits\/([\w-]+)$/, ({ m }) => {
+    const a = (db.audits.get(m[1]) ?? []).find((x) => x.id === m[2])
+    if (!a) throw notFound(`audit ${m[2]}`)
+    return a
+  }],
   ['GET', /^\/api\/jobs\/([\w-]+)$/, ({ m }) => {
     const j = getJob(m[1])
     if (!j) throw notFound(`job ${m[1]}`)

@@ -52,8 +52,16 @@ def load_skill(skill_id: str) -> dict | None:
 
 
 def save_skill(skill: dict) -> dict:
+    """Write the record. User intent saved meanwhile (a test flag, a title the user chose) is kept,
+    so a long job saving its older copy does not undo a rename made while it ran."""
+    path = skill_dir(skill["id"]) / "skill.json"
+    disk = read_json(path) or {}
+    if disk.get("test"):
+        skill["test"] = True
+    if disk.get("title_locked") and not skill.get("title_locked"):
+        skill["title"], skill["title_locked"] = disk["title"], True
     skill["updated_at"] = now()
-    write_json(skill_dir(skill["id"]) / "skill.json", skill)
+    write_json(path, skill)
     with session() as s:
         row = s.get(SkillRow, skill["id"]) or SkillRow(id=skill["id"])
         row.title = skill.get("title") or row.title
@@ -69,6 +77,7 @@ def save_skill(skill: dict) -> dict:
         row.listing_id = skill.get("listing_id")
         row.source_kind = (skill.get("source") or {}).get("kind", "upload")
         row.sample_id = (skill.get("source") or {}).get("sample_id")
+        row.test = bool(skill.get("test"))
         s.add(row)
         s.commit()
     return skill

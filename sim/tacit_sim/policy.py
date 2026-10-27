@@ -146,6 +146,41 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
             "episodes": n_eps, "frames": n, "seconds": round(time.time() - t0, 2)}
 
 
+def policy_info(policy_path: str | os.PathLike) -> dict:
+    """What a policy file was trained on: {program, trained_on, loss_curve, val_loss, format}."""
+    ck = torch.load(policy_path, map_location="cpu", weights_only=False)
+    if ck.get("format") != FORMAT:
+        raise ValueError(f"{policy_path}: not a {FORMAT} checkpoint")
+    return {k: ck.get(k) for k in ("format", "program", "trained_on", "loss_curve", "val_loss")}
+
+
+class ProgramMismatch(ValueError):
+    """The policy was trained on a different program than the one it is asked to run."""
+
+
+def check_program(policy_path: str | os.PathLike, program) -> None:
+    """Raise ProgramMismatch unless `program` has the same tasks as the policy's training program.
+
+    A behaviour-cloning policy only knows the tasks it was shown: run on another program it
+    fails every trial (e.g. it was trained with places into a tray, and the program now says
+    pick and put back down). Failing loudly here beats a silent 0%.
+    """
+    from .program import parse_program
+
+    trained = policy_info(policy_path).get("program")
+    if trained is None:
+        return
+
+    def tasks(p):
+        return [(t.object.lower(), (t.target or "").lower()) for t in parse_program(p).tasks]
+
+    if tasks(trained) != tasks(program):
+        def fmt(p):
+            return ", ".join(f"{o} -> {t or 'put back'}" for o, t in tasks(p)) or "nothing"
+        raise ProgramMismatch(f"this policy was trained on [{fmt(trained)}] but the program is "
+                              f"[{fmt(program)}]; train the policy again for this program")
+
+
 class PolicyController:
     """Runs a trained policy in a SimEnv: one query per control step, temporally ensembled."""
 

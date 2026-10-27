@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 
 from .env import HOME_TCP, SimEnv
-from .expert import grasp_height, natural_yaw
+from .expert import grasp_height, natural_yaw, place_yaw
 from .ik import wrap_period
 
 MAX_TASKS = 8
@@ -31,6 +31,8 @@ def goal_yaw(env: SimEnv) -> float:
     if mon.phase == "pick" and mon.task is not None:
         obj = env.object_state(mon.task.object)
         return env.grasp_yaw(mon.task.object, natural_yaw(obj.pos))
+    if mon.phase == "place" and mon.task is not None:
+        return place_yaw(env, mon.task.object, env.tcp_pos())
     return natural_yaw(env.tcp_pos())
 
 
@@ -46,7 +48,6 @@ def observe(env: SimEnv) -> np.ndarray:
     if mon.phase == "done" or task is None:
         obs[5:8] = HOME_TCP - tcp
     else:
-        spec = env.spec(task.object)
         o = env.object_state(task.object).pos
         if mon.phase == "pick":
             # Point at the grasp, not the centre: the grasp height depends on the part.
@@ -54,8 +55,9 @@ def observe(env: SimEnv) -> np.ndarray:
         else:
             obs[5:8] = o - tcp
         obs[8:11] = env.target_point(task) - o
-        obs[11] = spec.half_height
-        obs[12] = spec.grasp_half_width
+        g = env.grasp_info(task.object)
+        obs[11] = g.half_z
+        obs[12] = g.half_width
     obs[13] = env.grip_cmd
     obs[14 + PHASES.index(mon.phase)] = 1.0
     if task is not None and mon.phase != "done":

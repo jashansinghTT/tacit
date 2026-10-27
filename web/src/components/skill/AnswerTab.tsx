@@ -5,43 +5,32 @@ import { api, type QA, type Skill } from '@/lib/api'
 import { qk } from '@/lib/api/queries'
 import { useMicrophone, useSpeaker } from '@/lib/media'
 import { fmtClock } from '@/lib/format'
-import { Badge, Button, EmptyState, Panel, ServedByList, toast } from '@/components/ui'
+import { Badge, Button, EmptyState, Panel, toast } from '@/components/ui'
 import { Caption, TalkButton } from '@/components/speech/Speech'
-import type { ServedBy } from '@/lib/api'
 
 function QuestionCard({ skill, q, onSaved }: { skill: Skill; q: QA; onSaved: (s: Skill) => void }) {
   const step = skill.steps.find((s) => s.id === q.step_id)
   const [draft, setDraft] = useState('')
   const [typing, setTyping] = useState(false)
   const [busy, setBusy] = useState<'stt' | 'save' | null>(null)
-  const [served, setServed] = useState<ServedBy[] | undefined>()
   const speaker = useSpeaker()
-  const mic = useMicrophone({
-    onUtterance: async (wav) => {
-      setBusy('stt')
-      try {
-        const r = await api.stt(wav)
-        setDraft(r.text)
-        setServed(r.served_by)
-      } catch (e) {
-        toast.error('Could not transcribe', (e as Error).message)
-      } finally {
-        setBusy(null)
-      }
-    },
-  })
-  const save = async () => {
-    if (!draft.trim()) return
-    setBusy('save')
+  const step_index = step?.index
+  const send = async (input: { audio?: Blob; text?: string }) => {
+    setBusy(input.audio ? 'stt' : 'save')
     try {
-      const updated = await api.patchSkill(skill.id, { qa: [{ ...q, answer: draft.trim() }] })
-      onSaved(updated)
-      toast.ok('Answer saved', step ? `Attached to step ${step.index}: ${step.title}` : undefined)
+      const r = await api.answer(skill.id, { ...input, step_index, question: q.question })
+      setDraft(r.text)
+      onSaved(r.skill)
+      toast.ok('Answer saved', step ? `Step ${step.index}, "${step.title}", now explains it in the expert's words.` : undefined)
     } catch (e) {
       toast.error('Could not save the answer', (e as Error).message)
     } finally {
       setBusy(null)
     }
+  }
+  const mic = useMicrophone({ onUtterance: (wav) => void send({ audio: wav }) })
+  const save = () => {
+    if (draft.trim()) void send({ text: draft.trim() })
   }
   return (
     <article className="panel p-4" data-testid={`question-${q.id ?? q.step_id}`}>
@@ -82,7 +71,7 @@ function QuestionCard({ skill, q, onSaved }: { skill: Skill; q: QA; onSaved: (s:
             {(typing || draft || busy === 'stt') && (
               <div className="space-y-2">
                 <textarea
-                  value={busy === 'stt' ? 'Transcribing on chip 1…' : draft}
+                  value={busy === 'stt' ? 'Transcribing with Whisper on chip 1…' : draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={2}
                   disabled={busy === 'stt'}
@@ -90,8 +79,7 @@ function QuestionCard({ skill, q, onSaved }: { skill: Skill; q: QA; onSaved: (s:
                   aria-label="Your answer"
                   className="w-full resize-none rounded-md bg-ink-900 p-3 text-[13px] text-fg shadow-[inset_0_0_0_1px_var(--color-line-strong)] outline-none placeholder:text-fg-faint focus:shadow-[inset_0_0_0_1px_var(--color-ion)]"
                 />
-                <div className="flex items-center justify-between gap-3">
-                  <ServedByList served={served} />
+                <div className="flex items-center justify-end gap-3">
                   <Button size="sm" variant="primary" icon={<Send className="size-3.5" />} onClick={save} loading={busy === 'save'} disabled={!draft.trim() || busy === 'stt'} data-testid="save-answer">
                     Save answer
                   </Button>
@@ -125,15 +113,15 @@ export function AnswerTab({ skill }: { skill: Skill }) {
             </EmptyState>
           </Panel>
         ) : (
-          pending.map((q) => <QuestionCard key={q.id ?? `${q.step_id}-${q.t}`} skill={skill} q={q} onSaved={onSaved} />)
+          pending.map((q, i) => <QuestionCard key={`${q.id}-${i}`} skill={skill} q={q} onSaved={onSaved} />)
         )}
       </div>
       <Panel title="Answered" eyebrow={`${answered.length} answers in the expert's words`} pad={false}>
         <ul className="divide-y divide-line">
-          {answered.map((q) => {
+          {answered.map((q, i) => {
             const step = skill.steps.find((s) => s.id === q.step_id)
             return (
-              <li key={q.id ?? q.step_id} className="px-4 py-3">
+              <li key={`${q.id}-${i}`} className="px-4 py-3">
                 <div className="text-[11px] text-fg-subtle">{step ? `Step ${step.index} · ${step.title}` : q.step_id}</div>
                 <div className="mt-1 text-[13px] text-fg-muted">{q.question}</div>
                 <div className="mt-1.5 text-[13px] text-fg italic">"{q.answer}"</div>

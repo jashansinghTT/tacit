@@ -30,6 +30,16 @@ MAX_DYAW = 3.0 * DT        # rad per control step
 
 
 @dataclass
+class GraspInfo:
+    """How to grasp an object as it lies now (upright, or knocked over)."""
+
+    half_z: float          # centre to top (and to bottom), vertical
+    half_width: float      # half the size the fingers close across
+    yaw: float | None      # direction the fingers close along; None = any
+    period: float          # yaw symmetry of the grasp (pi, pi/2), 0 = any yaw
+
+
+@dataclass
 class ObjectState:
     pos: np.ndarray
     quat: np.ndarray       # w, x, y, z
@@ -78,7 +88,10 @@ class TaskMonitor:
                 self.phase = "place"
                 self.lost_steps = 0
         elif self.phase == "place":
-            if not held and env.in_target(t) and env.finger_width() > 2 * env.spec(t.object).grasp_half_width + 0.006:
+            g = env.grasp_info(t.object)
+            clear = (env.finger_width() > 2 * g.half_width + 0.006
+                     or env.tcp_pos()[2] > o.pos[2] + g.half_z + 0.015)
+            if not held and env.in_target(t) and env.grip_cmd < 0.5 and clear:
                 self.completed.append(t.index)
                 self.index += 1
                 self.phase = "pick" if self.task is not None else "done"
@@ -123,10 +136,15 @@ class SimEnv:
         for name, tasks in by_target.items():
             tgt = self.layout.target(name)
             n = len(tasks)
-            span = min(0.5 * tgt.inner_half, 0.03 * (n - 1))
-            for k, t in enumerate(tasks):
-                dy = 0.0 if n == 1 else span * (1 - 2 * k / (n - 1))
-                slots[t.index] = np.array([tgt.pos[0], tgt.pos[1] + dy])
+            r = tgt.inner_half
+            if n <= 3:
+                # In a row across the bin (long parts are released lengthwise along x).
+                offs = [(0.0, 0.0)] if n == 1 else [(0.0, 0.6 * r * (1 - 2 * k / (n - 1))) for k in range(n)]
+            else:
+                offs = [(0.5 * r * sx, 0.5 * r * sy) for sx, sy in ((1, 1), (1, -1), (-1, 1), (-1, -1))]
+                offs = [offs[k % 4] for k in range(n)]
+            for t, (dx, dy) in zip(tasks, offs):
+                slots[t.index] = np.array([tgt.pos[0] + dx, tgt.pos[1] + dy])
         return slots
 
     def reset(self, seed: int | None = None, arm_noise: float = 0.05) -> None:
@@ -202,15 +220,33 @@ class SimEnv:
     def rest_height(self, name: str) -> float:
         return self._rest_z.get(name, self.spec(name).half_height)
 
+    def grasp_info(self, name: str) -> GraspInfo:
+        o = self.spec(name)
+        R = self.data.xmat[self.ids.object_body[name]].reshape(3, 3)
+        if o.kind == "box":
+            h = np.asarray(o.size)
+            half_z = float(np.abs(R[2]) @ h)
+            # Of the two most horizontal local axes, close across the shorter one.
+            horiz = sorted(range(3), key=lambda i: abs(R[2, i]))[:2]
+            i = min(horiz, key=lambda k: h[k])
+            other = horiz[1] if horiz[0] == i else horiz[0]
+            period = math.pi / 2 if abs(h[i] - h[other]) < 1e-6 else math.pi
+            return GraspInfo(half_z, float(h[i]), math.atan2(R[1, i], R[0, i]), period)
+        r, hz = o.size
+        c = abs(R[2, 2])
+        half_z = float(c * hz + math.sqrt(max(0.0, 1.0 - c * c)) * r)
+        if c > 0.7:
+            return GraspInfo(half_z, r, None, 0.0)
+        # Lying down: close across the diameter, perpendicular to the axis.
+        return GraspInfo(half_z, r, math.atan2(R[1, 2], R[0, 2]) + math.pi / 2, math.pi)
+
     def grasp_yaw(self, name: str, current: float | None = None) -> float:
         """Gripper yaw that closes the fingers across the object's grasp axis, nearest `current`."""
         current = self.gripper_yaw() if current is None else current
-        o = self.object_state(name)
-        period = self.spec(name).yaw_period
-        if period == 0.0:
+        g = self.grasp_info(name)
+        if g.yaw is None:
             return current
-        # Object grasp axis is its local x; the fingers close along the gripper's yaw direction.
-        return current + wrap_period(o.yaw - current, period)
+        return current + wrap_period(g.yaw - current, g.period)
 
     def contacts_with(self, name: str) -> tuple[bool, bool]:
         geoms = self.ids.object_geoms[name]
@@ -235,12 +271,12 @@ class SimEnv:
 
     def target_point(self, task: Task) -> np.ndarray:
         """Where the task wants the object's centre when it is released."""
-        o = self.spec(task.object)
+        half_z = self.grasp_info(task.object).half_z
         if task.target is None:
             xy = self._start_xy[task.object]
-            return np.array([xy[0], xy[1], o.half_height + 0.012])
+            return np.array([xy[0], xy[1], half_z + 0.012])
         xy = self.release_xy[task.index]
-        return np.array([xy[0], xy[1], BIN_FLOOR + o.half_height + 0.012])
+        return np.array([xy[0], xy[1], BIN_FLOOR + half_z + 0.012])
 
     def in_target(self, task: Task, name: str | None = None) -> bool:
         name = name or task.object
@@ -250,7 +286,8 @@ class SimEnv:
             return np.linalg.norm(p[:2] - xy) < 0.04 and p[2] < self.rest_height(name) + 0.01
         tgt = self.layout.target(task.target)
         inside = np.all(np.abs(p[:2] - np.array(tgt.pos)) < tgt.inner_half - 0.005)
-        return bool(inside and p[2] < BIN_FLOOR + tgt.wall_height)
+        # Bottom below the wall top: in the bin, even when resting on another part.
+        return bool(inside and p[2] - self.grasp_info(name).half_z < BIN_FLOOR + tgt.wall_height)
 
     def final_tasks(self) -> list[Task]:
         """The last task for each object (where it should end up)."""

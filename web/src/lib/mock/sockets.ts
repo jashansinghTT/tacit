@@ -111,7 +111,8 @@ function captureSocket(skillId: string) {
         if (q) {
           const id = `q${++qn}`
           lastQuestion = id
-          s.later(2100, () => s.push({ type: 'coach', id, t: msg.t + 2.1, text: q, audio: silentWav(q.length / 15) }))
+          s.later(1400, () => s.push({ type: 'coach', id, t: msg.t + 1.4, text: q, audio: null, pending_audio: true }))
+          s.later(3600, () => s.push({ type: 'coach_audio', id, audio: silentWav(q.length / 15), duration: q.length / 15 }))
         }
         lastStep = idx
       }

@@ -12,7 +12,8 @@ mostly spread across the table plane with smaller vertical motion:
    by the same factor and clamp it between a safe minimum and maximum TCP height.
 
 Image right maps to the robot's -y (the camera faces the expert as the robot faces the table),
-and away from the camera maps to +x. A light smoothing removes tracking jitter.
+and away from the camera maps to +x. A light smoothing removes tracking jitter before the fit.
+The result carries the affine map (`transform`) so other hand landmarks can be placed the same way.
 """
 
 from __future__ import annotations
@@ -74,21 +75,39 @@ def retarget_wrist_path(points_xyz, times, grip=None) -> dict:
     if v[2] < 0:
         v = -v
     pu, pv, ph = X @ u, X @ v, X @ normal
-    ph = ph - ph.min()
+    h_min = float(ph.min())
+    u_mid = float((pu.max() + pu.min()) / 2)
+    v_mid = float((pv.max() + pv.min()) / 2)
 
     span_u = max(np.ptp(pu), 1e-6)
     span_v = max(np.ptp(pv), 1e-6)
-    s = min((WORKSPACE_Y[1] - WORKSPACE_Y[0]) / span_u, (WORKSPACE_X[1] - WORKSPACE_X[0]) / span_v, 1.5)
-    x = (WORKSPACE_X[0] + WORKSPACE_X[1]) / 2 + (pv - (pv.max() + pv.min()) / 2) * s
-    y = -((pu - (pu.max() + pu.min()) / 2) * s)
-    z = np.clip(Z_LIFT + ph * s, Z_MIN, Z_MAX)
-    pts = np.stack([x, y, z], axis=1)
+    s = float(min((WORKSPACE_Y[1] - WORKSPACE_Y[0]) / span_u, (WORKSPACE_X[1] - WORKSPACE_X[0]) / span_v, 1.5))
+    x_mid = (WORKSPACE_X[0] + WORKSPACE_X[1]) / 2
+    y_mid = (WORKSPACE_Y[0] + WORKSPACE_Y[1]) / 2
+    # One affine map for any camera-frame point p (wrist or any hand landmark):
+    #   robot = M @ [p, 1], with z then clipped to [Z_MIN, Z_MAX] for the TCP path.
+    M = np.zeros((3, 4))
+    M[0, :3], M[0, 3] = s * v, x_mid - s * (v @ c) - s * v_mid
+    M[1, :3], M[1, 3] = -s * u, y_mid + s * (u @ c) + s * u_mid
+    M[2, :3], M[2, 3] = s * normal, Z_LIFT - s * (normal @ c) - s * h_min
+    pts = np.c_[P, np.ones(len(P))] @ M.T
+    pts[:, 2] = np.clip(pts[:, 2], Z_MIN, Z_MAX)
     return {
         "times": (T - T[0]).round(4).tolist(),
         "points": pts.round(4).tolist(),
         "grip": None if G is None else np.clip(G, 0, 1).round(3).tolist(),
-        "scale": round(float(s), 4),
-        "plane": {"normal_cam": normal.round(4).tolist(), "origin_cam": c.round(4).tolist()},
+        "scale": round(s, 6),
+        "plane": {"normal_cam": normal.round(6).tolist(), "origin_cam": c.round(6).tolist()},
+        "transform": {
+            "matrix": M.round(6).tolist(),
+            "note": "robot = matrix @ [x, y, z, 1] for a camera-frame point (OpenCV axes, metres); "
+                    "equivalently X = p - origin_cam, robot = [x_mid + (X.v - v_mid) s, y_mid - (X.u - u_mid) s, "
+                    "z_lift + (X.n - h_min) s]. The TCP path also clips z to z_clip.",
+            "origin_cam": c.round(6).tolist(), "u": u.round(6).tolist(), "v": v.round(6).tolist(),
+            "n": normal.round(6).tolist(), "u_mid": round(u_mid, 6), "v_mid": round(v_mid, 6),
+            "h_min": round(h_min, 6), "scale": round(s, 6), "x_mid": x_mid, "y_mid": y_mid,
+            "z_lift": Z_LIFT, "z_clip": [Z_MIN, Z_MAX],
+        },
     }
 
 
@@ -102,6 +121,7 @@ class PathFollower:
         self.g = None if g is None else np.asarray(g, dtype=float)
         self.duration = float(self.t[-1])
         self.errors: list[float] = []
+        self.t0: float | None = None       # sim time the playback started (after the approach)
 
     def target(self, t: float) -> tuple[np.ndarray, float]:
         t = min(max(t, 0.0), self.duration)

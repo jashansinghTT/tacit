@@ -1,6 +1,6 @@
 {
   "project": "tacit",
-  "updated_at": "2026-10-27T18:45:00Z",
+  "updated_at": "2026-10-27T20:18:29+00:00",
   "cards": [
     {
       "id": "backend",
@@ -21,7 +21,7 @@
       "id": "vision",
       "title": "tacit-vision cohost: HaMeR + Gaze-LLE + RF-DETR + VGGT on chip 0",
       "owner": "tacit-vision",
-      "state": "ready",
+      "state": "merged",
       "branch": "work/vision",
       "worktree": "~/tacit-wt/vision",
       "acceptance": [
@@ -37,7 +37,7 @@
       "id": "sim",
       "title": "Robot sim, BC policy training, GR00T closed loop, web assets",
       "owner": "tacit-sim",
-      "state": "ready",
+      "state": "running",
       "branch": "work/sim",
       "worktree": "~/tacit-wt/sim",
       "acceptance": [
@@ -53,7 +53,7 @@
       "id": "web",
       "title": "Website and app: landing, Studio, Skill, Learn, Robot Lab, Exchange, Box",
       "owner": "tacit-web",
-      "state": "ready",
+      "state": "running",
       "branch": "work/web",
       "worktree": "~/tacit-wt/web",
       "acceptance": [
@@ -69,7 +69,7 @@
       "id": "qa",
       "title": "E2E suite on the real stack (SPEC section 9) and fix loop",
       "owner": "tacit-qa",
-      "state": "backlog",
+      "state": "running",
       "branch": "work/qa",
       "worktree": "~/tacit-wt/qa",
       "acceptance": [
@@ -77,6 +77,59 @@
       ],
       "merge_gate": "suite green twice in a row",
       "handoff": ".orchestration/cards/qa/handoff.md"
+    },
+    {
+      "id": "perception",
+      "title": "Steps that match real footage (eval against ground truth)",
+      "owner": "tacit-vision",
+      "state": "running",
+      "branch": "work/perception",
+      "worktree": "~/tacit-wt/vision",
+      "acceptance": [
+        "step P/R >= 0.7 on vase and jars",
+        "tests pass"
+      ],
+      "merge_gate": "eval numbers recorded; backend tests pass",
+      "handoff": ".orchestration/cards/perception/handoff.md"
+    },
+    {
+      "id": "web-learn",
+      "title": "Learn, Lesson, Team, Reflex glove",
+      "owner": "tacit-web-learn",
+      "state": "running",
+      "branch": "work/web-learn",
+      "worktree": "~/tacit-wt/web-learn",
+      "acceptance": [
+        "practice, tutor, quiz, glove work on the real backend"
+      ],
+      "merge_gate": "checks + e2e + evidence",
+      "handoff": ".orchestration/cards/web-learn/handoff.md"
+    },
+    {
+      "id": "web-exchange",
+      "title": "Exchange, Listing, Sell, Library, Earnings",
+      "owner": "tacit-web-exchange",
+      "state": "merged",
+      "branch": "work/web-exchange",
+      "worktree": "~/tacit-wt/web-exchange",
+      "acceptance": [
+        "sell -> license -> pack -> royalty on the real backend"
+      ],
+      "merge_gate": "checks + e2e + evidence",
+      "handoff": ".orchestration/cards/web-exchange/handoff.md"
+    },
+    {
+      "id": "web-robot",
+      "title": "Robot Lab",
+      "owner": "tacit-web-robot",
+      "state": "running",
+      "branch": "work/web-robot",
+      "worktree": "~/tacit-wt/web-robot",
+      "acceptance": [
+        "replay, train, evaluate, policy, GR00T runs from the page"
+      ],
+      "merge_gate": "checks + e2e + evidence",
+      "handoff": ".orchestration/cards/web-robot/handoff.md"
     }
   ]
 }
