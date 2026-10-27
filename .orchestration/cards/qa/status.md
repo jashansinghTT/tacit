@@ -1,32 +1,25 @@
 # Status: qa
 
-State: running
-Updated: 2026-10-27T20:10Z
+State: running (release runs during the lead's deploy freeze, 21:05 to 22:35Z)
+Updated: 2026-10-27T21:20Z
 
 ## Works
-- API suite `tests/e2e/` (one test per SPEC 9 flow; timings with "a person would accept" limits; evidence per
-  run in `.orchestration/evidence/qa/runs/<UTC>-api/`; `scripts/e2e/report.py` writes `RESULTS.md`).
-  Follows the lead's conventions: "QA " titles (test skills, hidden unless include_test=1), background
-  narration (polled, flagged if > 2 min), interrupted jobs followed to their re-run (flagged).
-- Browser suite `web/e2e/flows.spec.ts` + `scripts/e2e/playwright.config.ts` + `scripts/e2e/ui.sh` (merges
-  work/web, web-learn, web-exchange, web-robot into a local throwaway `qa/ui-merge` at `~/tacit-wt/qa-ui`, builds,
-  serves on :5790 proxied to 8710, Chromium with fake camera/mic from `~/tacit/data/e2e`). All 7 flows written
-  against the real test ids; F1 and F7 pass in the browser.
-- `scripts/e2e/make_media.sh`: capture/practice y4m (640x360, 15 fps) from smp_vase, answer/question WAVs (S2 Pro).
-- Seen passing on the real stack in dev runs: API F1, F3 (live capture: coach text 0.8 to 1.3 s after the step
-  closes, transcript, answer attached to a step), F7; UI F1, F7.
+- API suite `tests/e2e/` and browser suite `web/e2e/flows.spec.ts` cover all 7 SPEC 9 flows on the real stack,
+  with timings, evidence per run, `RESULTS.md` (via `scripts/e2e/report.py`) and teardown of what each run makes
+  (listings with their licenses and ledger entries always; skills when the run passed).
+- Browser runs use a local merge of main + work/web, web-learn, web-exchange, web-robot (`scripts/e2e/ui.sh`,
+  `~/tacit-wt/qa-ui`, vite preview on :5790 proxied to 8710); web-robot is not on main yet.
+- Seen passing on the real stack (dev runs): API F1, F3, F7; browser F1 (incl. the guided tour), F3, F6, F7.
+
+## Release runs
+- API #1 `20261027T210713Z-api` and UI #1 `20261027T211440Z-ui` running.
 
 ## Findings (record: `.orchestration/evidence/qa/FINDINGS.md`)
-- QA-1 backend: restart orphaned running jobs. Fixed by the lead (re-run on startup); seen working.
-- QA-2 sim: BC policy 0/20 on a two-object program (19/20 on one object). Sent to sim-c4. Open.
-- QA-3 backend/speech: interactive TTS queued minutes behind narration, 120 s timeouts. Fixed by the lead
-  (one S2 Pro slot, interactive first); verifying. Related: STT waits behind S2 Pro on chip 1 (transcript
-  50.6 s before the fix); asked the lead to give STT the same priority.
-
-## Blockers
-- The backend restarts often while the lead merges (3 of my last 4 runs were interrupted). Asked the lead for a
-  deploy-free window for the two consecutive release runs.
+- Fixed: QA-1 (jobs after restart), QA-2 (train/evaluate program), QA-3 (TTS priority), QA-4 (policy after
+  restart), QA-6 (teardown endpoints), QA-8 (Studio follows re-run jobs). Mitigated: QA-5 (training under load),
+  QA-7 (S2 Pro CPU priority).
+- Open: QA-9 web (hands-free answering never arms while the coach's voice is slow; sent to web-1e); STT still
+  7 to 13 s behind the S2 Pro request in flight (told the lead). Watch item: one live capture closed no step in 2 min.
 
 ## Next
-1. Full API run dev-iter4, then the full browser run; file what fails.
-2. Two consecutive green timestamped runs, API and UI; RESULTS.md; handoff.
+Two consecutive green release runs (API and UI), then handoff.
