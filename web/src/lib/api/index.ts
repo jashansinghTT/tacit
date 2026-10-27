@@ -1,7 +1,7 @@
 import { request, requestBinary, streamEvents } from './client'
 import { TacitSocket } from './socket'
 import type * as T from './types'
-import { normalizeBox, normalizeSkill, normalizeSummary } from './normalize'
+import { normalizeAudit, normalizeBox, normalizeSkill, normalizeSummary } from './normalize'
 
 export * from './types'
 export { ApiError, MOCK, mediaUrl, setApiUser, getApiUser } from './client'
@@ -61,6 +61,16 @@ export const api = {
   verify: (id: string) => request<{ job_id: string }>(`/api/skills/${id}/verify`, { method: 'POST' }),
 
   job: <R = Record<string, unknown>>(id: string) => request<T.Job<R>>(`/api/jobs/${id}`),
+
+  /** Compare a worker's recorded run with the expert's skill (quality and safety). */
+  startAudit: (skillId: string, file: File, worker: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('worker', worker)
+    return request<{ job_id: string; audit_id: string }>(`/api/skills/${skillId}/audit`, { method: 'POST', form })
+  },
+  audits: (skillId: string) => request<T.AuditListItem[]>(`/api/skills/${skillId}/audits`),
+  audit: (skillId: string, auditId: string) => request<T.Audit>(`/api/skills/${skillId}/audits/${auditId}`).then(normalizeAudit),
 
   tts: (text: string, lang = 'en') =>
     request<T.TtsResponse>('/api/speech/tts', { method: 'POST', body: { text, voice: 'default', lang } }),
