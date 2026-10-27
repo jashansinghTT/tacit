@@ -21,6 +21,11 @@ deploy/vision-up.sh        # builds the image if needed, starts the group on chi
 deploy/vision-down.sh      # tt-model stop (clean SIGTERM; the host closes the mesh)
 ```
 
+`vision-up.sh` builds only when the staged manifest or its image is missing; after changing an
+adapter, the manifest or the Dockerfile, run `build.sh` yourself, then `vision-down.sh` and
+`vision-up.sh`. `vision-up.sh` exits 0 once all four `/health` say ok (also when the group was
+already up), so a watchdog can call it to restart a group that went down.
+
 By hand:
 
 ```bash
@@ -32,7 +37,113 @@ curl -s localhost:21004/
 ~/tacit/.tools/ttm/bin/tt-model stop  ~/tacit/build/cohost-vision/tt_kernel_manifest.json
 ```
 
-MEASURED_SECTIONS
+## Measured (chip 0 of this QuietBox 2, Blackhole p300c, 2026-10-27)
+
+All requests are the fixture requests in `backend/tests/fixtures/<member>/` (README there), sent
+by `tools/vision_probe.py`; standalone = each member's own published package alone on chip 0.
+
+### Outputs: identical to standalone
+
+Every member answers its fixture requests **bit-identically** to its standalone package: the
+maximum absolute difference is 0 on every output field. That covers HaMeR's `rotmats`, `betas`,
+`cam` and `cam_t_full` (right and left hand), and Gaze-LLE's `inout`, gaze target and float32
+64x64 heatmaps for 3 heads. It covers RF-DETR's labels, boxes and scores (5 of 5 matched, IoU 1,
+score diff 0), and VGGT's `extrinsic`, `intrinsic`, `pose_enc` and all four dense arrays (npz and
+JSON forms). The same holds under load: every response in the runs below was compared with the
+standalone baseline, and all of them were identical.
+
+| run | HaMeR | Gaze-LLE | RF-DETR | VGGT |
+|---|---|---|---|---|
+| one at a time, after a cold and after a warm boot | identical | identical | identical | identical |
+| all four at once, 10 requests each | 10/10 | 10/10 | 10/10 | 10/10 |
+| live path, 300 each, with VGGT running 10 times | 300/300 | 300/300 | 300/300 | 10/10 |
+| soak: 3000 each, with VGGT running 60 times (152 s) | 3000/3000 | 3000/3000 | 3000/3000 | 60/60 |
+
+### Latency, one request at a time (warm, 20 requests)
+
+| member | request | standalone wall p50 / model p50 | cohost wall p50 / model p50 |
+|---|---|---|---|
+| HaMeR | one hand, 334x512 frame | 15.2 / 13.1 ms | 15.6 / 13.3 ms |
+| Gaze-LLE | 3 heads, 500x334 | 9.6 / 6.3 ms | 9.9 / 6.4 ms |
+| RF-DETR | 640x480 | 13.2 / 8.7 ms | 12.3 / 8.2 ms |
+| VGGT-1B | 2 views, npz | 1112 / 895 ms | 1078 / 886 ms |
+
+Wall is the client's round trip; model is the server's own device-time field (`timing_ms.device`,
+`inference`, `inference`, `forward`). Other VGGT view counts in the group: 1 view 419 ms, 3 views
+1.86 s, 4 views 2.81 s (wall, JSON output).
+
+### Latency with the members busy at once
+
+The members take turns on the chip, so a request waits for whatever device work is ahead of it.
+
+| load | HaMeR p50 / p95 / max | Gaze-LLE p50 / p95 / max | RF-DETR p50 / p95 / max |
+|---|---|---|---|
+| the three live members back to back (300 each) | 32 / 41 / 60 ms | 33 / 42 / 49 ms | 33 / 40 / 61 ms |
+| the same, with VGGT (2 views) running 10 times meanwhile | 32 / 54 / 955 ms | 32 / 54 / 931 ms | 32 / 54 / 939 ms |
+
+With all three live members saturated, each serves about 30 requests/s (90 in total), so one
+frame of HaMeR + Gaze-LLE + RF-DETR fits in about 33 ms. A live request that arrives during a
+VGGT forward waits for the rest of it (up to 1.1 s for 2 views, 2.8 s for 4). VGGT itself: p50
+1.18 s per 2-view request while the others are busy.
+
+### Device memory (status port, `GET :21004/`)
+
+| member | DRAM per chip after load / compile / capture | L1 held after each phase |
+|---|---|---|
+| HaMeR | 1.18 / +0.00 / +0.00 GiB | 0 KiB/core |
+| Gaze-LLE | 0.13 / +0.01 / +0.00 GiB | 0 KiB/core |
+| RF-DETR | 0.06 / +0.01 / +0.00 GiB | 0 KiB/core |
+| VGGT-1B | 2.60 / +0.46 / +0.37 GiB | 0 KiB/core |
+| total | 4.82 GiB of 32 GiB, plus a 1.84 GiB trace region | L1_SMALL 14.8 KiB/core |
+
+`compiles_after_capture` stays `{}` through all of the above, error requests included: no
+program is compiled once traces exist.
+
+### Boot
+
+| boot | time to all four healthy | notes |
+|---|---|---|
+| cold (empty kernel cache, `deploy/vision-up.sh` incl. image build) | 221 s | compile: HaMeR 25 s, Gaze-LLE 35 s, RF-DETR 30 s, VGGT 123 s; captures 2 s |
+| warm (kernel cache in `~/.cache/tt-model/cohost-vision/cache`) | 31 s | |
+
+Standalone, for comparison: HaMeR 19 s, Gaze-LLE 39 s, RF-DETR 36 s, VGGT 219 s (partly warm
+caches), one chip each.
+
+## Known issues and limits
+
+- **VGGT blocks the live path while it runs.** A VGGT request holds the chip for its whole
+  forward (0.4 s for 1 view to 2.8 s for 4); HaMeR, Gaze-LLE and RF-DETR requests that arrive
+  meanwhile wait. Run VGGT outside live capture (Tacit uses it only in the offline Check step).
+- **One request at a time per member**, as standalone; requests queue first come, first served.
+- **HaMeR: MANO parameters only.** `MANO_RIGHT.pkl` is licence-bound and not shipped; place your
+  own at `~/.cache/tt-model/cohost-vision/weights/MANO_RIGHT.pkl` (mounted as `/weight-cache`)
+  to get vertices, joints and 2-D keypoints.
+- **One member down, the group down** (co-host design): if a member's server thread ends, the
+  container exits; `deploy/vision-up.sh` starts it again.
+- The image is built FROM the four member images, so they must be loaded in docker to rebuild it.
+- Only HaMeR's and RF-DETR's L1 constant rows changed placement (copied into L1 at each use
+  instead of resident; see below); everything else is each member's published code as is.
+
+## What had to change to fit (and why)
+
+1. **No member may keep anything resident in L1.** The first boot failed compiling VGGT's camera
+   layer norm: `Statically allocated circular buffers ... clash with L1 buffers on core range
+   [0-0 - 0-0]. L1 buffer allocated at 1427456 and static circular buffer region ends at
+   1545088`. That program uses nearly all of core (0,0)'s L1, while RF-DETR (24 layer-scale rows)
+   and HaMeR (one ones row) held 46 KiB/core of resident L1. They keep those rows in L1 because
+   the fused matmul-addcmul kernel wants its scale row in the same buffer type as an L1 residual,
+   and mixed placement does not compile in this tree (`no matching function for call to
+   read_ternary_blocks_sync`). So the adapters free the resident copies and have the models' own
+   selectors (`hamer.vit._ones`, `TtDinoBackbone._ls`) return a copy made into L1 right before
+   the op that reads it. Same values, same op: outputs stay bit-identical; cost +0.2 ms on
+   HaMeR's device time, none measurable on RF-DETR. Resident L1 would also be unsafe in a group
+   even if it fit: a trace replay does not re-check circular buffers, so one member's replay
+   could silently overwrite another's L1 constants. The boot log lists every live L1 buffer
+   after each phase (`TT_COHOST_L1_REPORT=1`): none, throughout.
+2. **`l1_small_size` is VGGT's own 64 KiB.** At 96 KiB (enough for RF-DETR's 32 KiB plus VGGT's
+   64 KiB), VGGT's dense outputs moved in 0.3% of values by a few fp16 ulps (PCC 1 - 1e-7;
+   cameras unchanged): its conv2d configs depend on the L1_SMALL size. At 64 KiB they are
+   bit-identical. The group uses 14.8 KiB/core of it.
 
 ## How it is built (and how to rebuild it)
 

@@ -1,0 +1,58 @@
+{
+    "mesh_device": "P150",
+    "members": {
+        "hamer": {
+            "kind": "app",
+            "port": 21000,
+            "ready": true
+        },
+        "gaze": {
+            "kind": "app",
+            "port": 21001,
+            "ready": true
+        },
+        "rfdetr": {
+            "kind": "app",
+            "port": 21002,
+            "ready": true
+        },
+        "vggt": {
+            "kind": "app",
+            "port": 21003,
+            "ready": true
+        }
+    },
+    "device_owner": null,
+    "compiles_after_capture": {},
+    "dram_gib_per_chip": {
+        "members": {
+            "hamer": {
+                "load": 1.178,
+                "warmup-compile": 0.001,
+                "warmup-capture": 0.0
+            },
+            "gaze": {
+                "load": 0.131,
+                "warmup-compile": 0.006,
+                "warmup-capture": 0.003
+            },
+            "rfdetr": {
+                "load": 0.063,
+                "warmup-compile": 0.01,
+                "warmup-capture": 0.0
+            },
+            "vggt": {
+                "load": 2.595,
+                "warmup-compile": 0.458,
+                "warmup-capture": 0.373
+            }
+        },
+        "total": 4.818
+    },
+    "l1_kib_per_core_after_phase": {
+        "hamer": 0.0,
+        "gaze": 0.0,
+        "rfdetr": 0.0,
+        "vggt": 0.0
+    }
+}

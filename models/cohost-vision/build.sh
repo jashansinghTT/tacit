@@ -35,7 +35,8 @@ find "$CTX/ctx" -name __pycache__ -prune -exec rm -rf {} +
 (cd "$CTX/ctx/tt-cohost/tt_kernel" && sha256sum __init__.py cohost/*.py > "$CTX/runtime.sha256")
 
 # 2. the image, then its digest tag (the way `tt-model package` names images)
-docker build -f "$HERE/Dockerfile" -t "$REPO:build" \
+# no provenance attestation: it carries a timestamp, so every build would get a new id and tag
+docker build -f "$HERE/Dockerfile" -t "$REPO:build" --provenance=false --sbom=false \
   --build-arg BASE_IMAGE="$BASE_IMAGE" --build-arg HAMER_IMAGE="$HAMER_IMAGE" \
   --build-arg GAZE_IMAGE="$GAZE_IMAGE" --build-arg RFDETR_IMAGE="$RFDETR_IMAGE" "$CTX"
 ID="$(docker image inspect "$REPO:build" --format '{{.Id}}')"
