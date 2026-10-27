@@ -164,6 +164,31 @@ test('guide: the virtual glove plays the step and the Reflex file downloads', as
   await shot(page, 'lesson-guide', { at: 'mode-bar' })
 })
 
+test('guide: with a glove connected, Reflex guides the hand and stops', async ({ page }) => {
+  // No glove hardware on this box: only the three Reflex endpoints are stubbed, in this browser.
+  const calls: string[] = []
+  await page.route('**/api/reflex/status', (r) => r.fulfill({ json: { connected: true, url: 'http://127.0.0.1:8000', mock: true, state: 'idle', fingers: ['thumb', 'index', 'middle', 'ring', 'pinky'] } }))
+  await page.route('**/api/reflex/guide', async (r) => {
+    calls.push(`guide ${r.request().postData()}`)
+    await r.fulfill({ json: { connected: true, name: 'tacit_step1', steps: [{ pose: [0.2, 0.3, 0.3, 0.3, 0.3], seconds: 0.5 }, { pose: [0.15, 0.15, 0.15, 0.15, 0.15], seconds: 0.5 }], seconds: 6 } })
+  })
+  await page.route('**/api/reflex/stop', async (r) => {
+    calls.push('stop')
+    await r.fulfill({ json: { ok: true } })
+  })
+  await openLesson(page)
+  await page.getByTestId('seg-guide').click()
+  await expect(page.getByTestId('reflex-status')).toHaveText(/Glove connected/)
+  await page.getByTestId('reflex-guide').click()
+  await expect(page.getByTestId('reflex-stop')).toBeVisible()
+  await expect(page.getByTestId('guide-stage')).toContainText('on your hand too')
+  await page.getByTestId('reflex-stop').click()
+  await expect(page.getByTestId('reflex-guide')).toBeVisible()
+  expect(calls[0]).toContain(`"skill_id":"${fx.skillId}"`)
+  expect(calls[0]).toContain('"step_index":1')
+  expect(calls).toContain('stop')
+})
+
 test('quiz: a passing quiz earns a downloadable certificate', async ({ page }) => {
   await openLesson(page)
   await page.getByTestId('rail-quiz').click()
