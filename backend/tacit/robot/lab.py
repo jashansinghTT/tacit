@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import re
 import logging
 import threading
 from typing import Any
@@ -30,11 +31,24 @@ def sim():
         raise SimUnavailable("The robot simulator (tacit_sim) is not installed yet.") from e
 
 
+_WHERE = re.compile(r"\s+(in front of you|on your (left|right)|to your (left|right)|beside .*|next to .*|"
+                    r"at the (left|right|middle|centre|center).*|on the (left|right).*|of the bench.*)$", re.I)
+
+
+def clean_name(name: str) -> str:
+    """'cup in front of you' -> 'cup', 'the item' -> 'part': the sim names objects, not places."""
+    n = _WHERE.sub("", (name or "").strip())
+    n = re.sub(r"^(the|a|an)\s+", "", n, flags=re.I).strip()
+    return "part" if n.lower() in ("", "item", "object", "thing") else n
+
+
 def normalize_program(prog: list[dict], default_target: str = "tray", max_pairs: int = 4) -> list[dict]:
     """Pick-and-place pairs only: a pick without a place goes to the last target used (or the tray);
-    a place without a pick is dropped."""
+    a place without a pick is dropped. Names lose their location words."""
+    prog = [{**op, **({"object": clean_name(op["object"])} if op.get("object") else {}),
+             **({"target": clean_name(op["target"])} if op.get("target") else {})} for op in prog or []]
     out, held, last_target = [], None, default_target
-    for op in prog or []:
+    for op in prog:
         if op.get("op") == "pick" and op.get("object"):
             if held:
                 out += [{"op": "pick", "object": held}, {"op": "place", "target": last_target}]

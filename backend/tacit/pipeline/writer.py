@@ -13,6 +13,8 @@ Rules:
 - One action per step. Imperative mood. Instructions of at most 22 words. Step titles of at most 6 words.
 - "why": if the expert explained the step, use their words (shortened, first person turned into plain statements) and set \
 why_source to "expert". Otherwise give the most likely practical reason in one sentence and set why_source to "inferred".
+- The why gives the reason behind the action (what it protects, enables or prevents, or what goes wrong \
+otherwise), in plain words; it never just restates the instruction.
 - Every step is something the trainee DOES with their hands (pick up, place, turn, align, press, hold, hand over, set \
 down). Never write a step that only says to observe or watch.
 - Each timeline step is one observed action. Its "action" says what the hands did: "insert" put the item held in the \

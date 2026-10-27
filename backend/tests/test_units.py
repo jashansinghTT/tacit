@@ -404,3 +404,11 @@ async def test_priority_gate_lets_live_frames_jump_offline_work():
     gate.release()
     await asyncio.gather(*tasks)
     assert order == ["live", "batch", "vggt"] and gate.snapshot() == {"inflight": 0, "waiting": 0}
+
+
+def test_program_names_lose_location_words():
+    from tacit.robot.lab import clean_name, normalize_program
+    assert clean_name("cup in front of you") == "cup" and clean_name("vase on your right") == "vase"
+    assert clean_name("the item") == "part" and clean_name("bottle beside the carafe") == "bottle"
+    assert normalize_program([{"op": "pick", "object": "the item"}, {"op": "place", "target": "vase on your right"}]) == [
+        {"op": "pick", "object": "part"}, {"op": "place", "target": "vase"}]

@@ -114,6 +114,14 @@ def recover_interrupted_jobs() -> list[str]:
     for skill_id in [r for r in resume]:
         if not load_skill(skill_id):
             resume.remove(skill_id)
+    with session() as s:
+        ids = [r.id for r in s.exec(select(SkillRow)).all()]
+    for skill_id in ids:  # a training cut short by the restart must not read "training" forever
+        sk = load_skill(skill_id)
+        pol = ((sk or {}).get("robot") or {}).get("policy") or {}
+        if pol.get("status") == "training":
+            sk["robot"]["policy"] = {**pol, "status": "failed", "error": "interrupted by a backend restart"}
+            save_skill(sk)
     if resume:
         log.warning("resuming %d interrupted processing jobs: %s", len(resume), resume)
     return resume
@@ -294,8 +302,9 @@ async def skills_patch(skill_id: str, body: dict):
 
 @app.delete("/api/skills/{skill_id}")
 async def skills_delete(skill_id: str):
+    removed = market.delete_listings_of(skill_id)
     delete_skill(skill_id)
-    return {"ok": True}
+    return {"ok": True, "listings_removed": removed}
 
 
 @app.get("/api/skills/{skill_id}/tracks")
@@ -757,6 +766,12 @@ async def ex_get(listing_id: str):
 @app.post("/api/exchange/listings")
 async def ex_create(body: dict, x_tacit_user: str | None = Header(default=None)):
     return market.create_listing(body["skill_id"], body, user_id(x_tacit_user))
+
+
+@app.delete("/api/exchange/listings/{listing_id}")
+async def ex_delete(listing_id: str):
+    """Test cleanup: only a listing of a test ("QA ...") skill can be removed, with its licenses and royalties."""
+    return market.delete_listing(listing_id)
 
 
 @app.post("/api/exchange/listings/{listing_id}/license")
