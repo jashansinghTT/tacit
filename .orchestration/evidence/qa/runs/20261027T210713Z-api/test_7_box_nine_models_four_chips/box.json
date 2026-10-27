@@ -1,0 +1,175 @@
+{
+  "host": "qbge-devex-02",
+  "updated_at": "2026-10-27T21:19:46Z",
+  "chips": [
+    {
+      "id": 0,
+      "board": "p300c #1",
+      "group": "tacit-vision",
+      "status": "ok",
+      "models": [
+        {
+          "key": "hamer",
+          "name": "HaMeR",
+          "role": "3D hands",
+          "port": 21000,
+          "healthy": true,
+          "p50_ms": 32.9,
+          "calls": 3425,
+          "errors": 0,
+          "backend": "tt"
+        },
+        {
+          "key": "gaze",
+          "name": "Gaze-LLE",
+          "role": "gaze target",
+          "port": 21001,
+          "healthy": true,
+          "p50_ms": 39.2,
+          "calls": 2241,
+          "errors": 0,
+          "backend": "tt"
+        },
+        {
+          "key": "rfdetr",
+          "name": "RF-DETR",
+          "role": "parts and objects",
+          "port": 21002,
+          "healthy": true,
+          "p50_ms": 38.8,
+          "calls": 2346,
+          "errors": 0,
+          "backend": "tt"
+        },
+        {
+          "key": "vggt",
+          "name": "VGGT-1B",
+          "role": "3D rebuild, verification",
+          "port": 21003,
+          "healthy": true,
+          "p50_ms": 3409.6,
+          "calls": 6,
+          "errors": 0,
+          "backend": "tt"
+        }
+      ],
+      "memory": {
+        "dram_gib": 4.82,
+        "dram_total_gib": 32.0,
+        "members": {
+          "hamer": 1.18,
+          "gaze": 0.14,
+          "rfdetr": 0.07,
+          "vggt": 3.43
+        },
+        "device_owner": "rfdetr"
+      }
+    },
+    {
+      "id": 1,
+      "board": "p300c #1",
+      "group": "cohost-speech",
+      "status": "ok",
+      "models": [
+        {
+          "key": "whisper",
+          "name": "Whisper large-v3",
+          "role": "speech to text",
+          "port": 21010,
+          "healthy": true,
+          "p50_ms": 734.2,
+          "calls": 3,
+          "errors": 0,
+          "backend": "tt"
+        },
+        {
+          "key": "tts",
+          "name": "S2 Pro",
+          "role": "text to speech",
+          "port": 21011,
+          "healthy": true,
+          "p50_ms": 18909.9,
+          "calls": 38,
+          "errors": 0,
+          "backend": "tt"
+        },
+        {
+          "key": "music",
+          "name": "MiniMax Music 3",
+          "role": "lesson music",
+          "port": 21012,
+          "healthy": true,
+          "p50_ms": null,
+          "calls": 0,
+          "errors": 0,
+          "backend": "tt"
+        }
+      ],
+      "memory": {
+        "dram_gib": 29.51,
+        "dram_total_gib": 32.0,
+        "members": {
+          "whisper": 3.95,
+          "s2pro": 7.28,
+          "music3": 18.3
+        },
+        "device_owner": "s2pro"
+      }
+    },
+    {
+      "id": 2,
+      "board": "p300c #2",
+      "group": "gpt-oss-20b-fast",
+      "status": "ok",
+      "models": [
+        {
+          "key": "llm",
+          "name": "gpt-oss-20b",
+          "role": "coach, writer, tutor",
+          "port": 21020,
+          "healthy": true,
+          "p50_ms": 5080.8,
+          "calls": 30,
+          "errors": 1,
+          "backend": "tt"
+        }
+      ],
+      "memory": null
+    },
+    {
+      "id": 3,
+      "board": "p300c #2",
+      "group": "gr00t",
+      "status": "ok",
+      "models": [
+        {
+          "key": "gr00t",
+          "name": "GR00T N1.7",
+          "role": "robot foundation policy",
+          "port": 21030,
+          "healthy": true,
+          "p50_ms": null,
+          "calls": 0,
+          "errors": 0,
+          "backend": "tt"
+        }
+      ],
+      "memory": null
+    }
+  ],
+  "totals": {
+    "models": 9,
+    "healthy": 9,
+    "chips": 4
+  },
+  "speech_queue": {
+    "listen": 1,
+    "interactive": 1,
+    "batch": 1,
+    "busy": true
+  },
+  "vision_queue": {
+    "inflight": 0,
+    "waiting": 0
+  }
+}

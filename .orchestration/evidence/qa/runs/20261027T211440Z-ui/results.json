@@ -1,0 +1,671 @@
+{
+  "config": {
+    "argv": [
+      "/home/jashan/.nvm/versions/node/v24.16.0/bin/node",
+      "/home/jashan/tacit-wt/qa-ui/web/node_modules/.bin/playwright",
+      "test",
+      "-c",
+      "e2e/qa.config.ts"
+    ],
+    "configFile": "/home/jashan/tacit-wt/qa-ui/web/e2e/qa.config.ts",
+    "rootDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "flows.spec.ts"
+        ],
+        "timeout": 1200000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "snapshotDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "testIgnore": [],
+        "testMatch": "flows.spec.ts",
+        "timeout": 1200000,
+        "use": {
+          "baseURL": "http://127.0.0.1:5790",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "off",
+          "video": "off",
+          "actionTimeout": 20000,
+          "navigationTimeout": 30000,
+          "permissions": [
+            "camera",
+            "microphone"
+          ],
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "launchOptions": {
+            "args": [
+              "--use-fake-device-for-media-stream",
+              "--use-fake-ui-for-media-stream",
+              "--use-file-for-fake-video-capture=/home/jashan/tacit/data/e2e/capture.y4m",
+              "--use-file-for-fake-audio-capture=/home/jashan/tacit/data/e2e/answer.wav",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "flows.spec.ts",
+      "file": "flows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "with the capture camera",
+          "file": "flows.spec.ts",
+          "line": 146,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F1 landing and navigation render with no console errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 37216,
+                      "error": {
+                        "message": "Error: tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-tour=\"lesson-player\"]').first()\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d locator('[data-tour=\"lesson-player\"]').first() with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-tour=\"lesson-player\"]').first()\u001b[22m\n",
+                        "stack": "Error: tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-tour=\"lesson-player\"]').first()\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d locator('[data-tour=\"lesson-player\"]').first() with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-tour=\"lesson-player\"]').first()\u001b[22m\n\n    at fn (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:196:117)\n    at Run.time (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:45:20)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:195:17",
+                        "location": {
+                          "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                          "column": 117,
+                          "line": 196
+                        },
+                        "snippet": "  194 |     for (const [i, t] of targets.entries()) {\n  195 |       await run.time(`tour stop ${i + 1}: ${t}`, 5, async () => {\n> 196 |         await expect(page.locator(`[data-tour=\"${t}\"]`).first(), `tour stop ${i + 1} has no ${t} on ${page.url()}`).toBeVisible({ timeout: 20_000 })\n      |                                                                                                                     ^\n  197 |       })\n  198 |       await page.waitForTimeout(600)\n  199 |       await run.shot(`tour-${i + 1}-${t}`)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                            "column": 117,
+                            "line": 196
+                          },
+                          "message": "Error: tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-tour=\"lesson-player\"]').first()\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - tour stop 3 has no lesson-player on http://127.0.0.1:5790/learn/sk_3b7c613d locator('[data-tour=\"lesson-player\"]').first() with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-tour=\"lesson-player\"]').first()\u001b[22m\n\n\n  194 |     for (const [i, t] of targets.entries()) {\n  195 |       await run.time(`tour stop ${i + 1}: ${t}`, 5, async () => {\n> 196 |         await expect(page.locator(`[data-tour=\"${t}\"]`).first(), `tour stop ${i + 1} has no ${t} on ${page.url()}`).toBeVisible({ timeout: 20_000 })\n      |                                                                                                                     ^\n  197 |       })\n  198 |       await page.waitForTimeout(600)\n  199 |       await run.shot(`tour-${i + 1}-${t}`)\n    at fn (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:196:117)\n    at Run.time (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:45:20)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:195:17"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:14:42.023Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-with-the-capture-cam-59235-nder-with-no-console-errors-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-with-the-capture-cam-59235-nder-with-no-console-errors-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                        "column": 117,
+                        "line": 196
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-064883f660eedba3ed4a",
+              "file": "flows.spec.ts",
+              "line": 147,
+              "column": 3
+            },
+            {
+              "title": "F2 sample video is processed into a ready skill with steps, verification and SOP",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 2400000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "processing took 237 s"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 238278,
+                      "error": {
+                        "message": "Error: steps shown\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m1\u001b[39m",
+                        "stack": "Error: steps shown\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m1\u001b[39m\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:245:48",
+                        "location": {
+                          "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                          "column": 48,
+                          "line": 245
+                        },
+                        "snippet": "  243 |     const steps = page.getByTestId('steps-list').locator('[data-testid^=\"step-\"]')\n  244 |     await expect(steps.first()).toBeVisible()\n> 245 |     expect(await steps.count(), 'steps shown').toBeGreaterThanOrEqual(3)\n      |                                                ^\n  246 |     await run.shot('skill-overview')\n  247 |     const sk = await api<{ verification: { status: string; score: number }; steps: unknown[]; sop_markdown: string }>(page, `/api/skills/${skillId}`)\n  248 |     run.note(`skill ${skillId}: ${sk.steps.length} steps, verification ${sk.verification.status} ${sk.verification.score}`)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                            "column": 48,
+                            "line": 245
+                          },
+                          "message": "Error: steps shown\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m1\u001b[39m\n\n  243 |     const steps = page.getByTestId('steps-list').locator('[data-testid^=\"step-\"]')\n  244 |     await expect(steps.first()).toBeVisible()\n> 245 |     expect(await steps.count(), 'steps shown').toBeGreaterThanOrEqual(3)\n      |                                                ^\n  246 |     await run.shot('skill-overview')\n  247 |     const sk = await api<{ verification: { status: string; score: number }; steps: unknown[]; sop_markdown: string }>(page, `/api/skills/${skillId}`)\n  248 |     run.note(`skill ${skillId}: ${sk.steps.length} steps, verification ${sk.verification.status} ${sk.verification.score}`)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:245:48"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:15:20.352Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "processing took 237 s"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cHJvY2Vzc2luZyB0b29rIDIzNyBz"
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-with-the-capture-cam-d50c9--steps-verification-and-SOP-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-with-the-capture-cam-d50c9--steps-verification-and-SOP-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                        "column": 48,
+                        "line": 245
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-b0d473b82205d8da716d",
+              "file": "flows.spec.ts",
+              "line": 209,
+              "column": 3
+            },
+            {
+              "title": "F3 live capture with the fake camera gets a spoken coach question and a transcribed answer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1800000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "coach asked: Why did you choose the right hand to pick up the vase?\n11.2 s\nreplay"
+                    },
+                    {
+                      "type": "note",
+                      "description": "capture timeline:\n0.5s q=0 voice_coming=0 answers=0 mic=-\n9.0s q=1 voice_coming=0 answers=0 mic=-\n15.6s q=1 voice_coming=0 answers=0 mic=REC\n21.1s q=1 voice_coming=0 answers=1 mic=-\n25.6s q=2 voice_coming=1 answers=1 mic=-\n35.6s q=3 voice_coming=2 answers=1 mic=-"
+                    },
+                    {
+                      "type": "note",
+                      "description": "transcript: M\nbecause the parts on the left are already sorted, so I check them before I place them in the tray.\n42.7 s\nWhisper 18462 ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 190640,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:19:19.028Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "coach asked: Why did you choose the right hand to pick up the vase?\n11.2 s\nreplay"
+                        },
+                        {
+                          "type": "note",
+                          "description": "capture timeline:\n0.5s q=0 voice_coming=0 answers=0 mic=-\n9.0s q=1 voice_coming=0 answers=0 mic=-\n15.6s q=1 voice_coming=0 answers=0 mic=REC\n21.1s q=1 voice_coming=0 answers=1 mic=-\n25.6s q=2 voice_coming=1 answers=1 mic=-\n35.6s q=3 voice_coming=2 answers=1 mic=-"
+                        },
+                        {
+                          "type": "note",
+                          "description": "transcript: M\nbecause the parts on the left are already sorted, so I check them before I place them in the tray.\n42.7 s\nWhisper 18462 ms"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "Y29hY2ggYXNrZWQ6IFdoeSBkaWQgeW91IGNob29zZSB0aGUgcmlnaHQgaGFuZCB0byBwaWNrIHVwIHRoZSB2YXNlPwoxMS4yIHMKcmVwbGF5"
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "Y2FwdHVyZSB0aW1lbGluZToKMC41cyBxPTAgdm9pY2VfY29taW5nPTAgYW5zd2Vycz0wIG1pYz0tCjkuMHMgcT0xIHZvaWNlX2NvbWluZz0wIGFuc3dlcnM9MCBtaWM9LQoxNS42cyBxPTEgdm9pY2VfY29taW5nPTAgYW5zd2Vycz0wIG1pYz1SRUMKMjEuMXMgcT0xIHZvaWNlX2NvbWluZz0wIGFuc3dlcnM9MSBtaWM9LQoyNS42cyBxPTIgdm9pY2VfY29taW5nPTEgYW5zd2Vycz0xIG1pYz0tCjM1LjZzIHE9MyB2b2ljZV9jb21pbmc9MiBhbnN3ZXJzPTEgbWljPS0="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "dHJhbnNjcmlwdDogTQpiZWNhdXNlIHRoZSBwYXJ0cyBvbiB0aGUgbGVmdCBhcmUgYWxyZWFkeSBzb3J0ZWQsIHNvIEkgY2hlY2sgdGhlbSBiZWZvcmUgSSBwbGFjZSB0aGVtIGluIHRoZSB0cmF5Lgo0Mi43IHMKV2hpc3BlciAxODQ2MiBtcw=="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6ImNhbWVyYSBwcmV2aWV3IiwicyI6MC4xMjYsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJmaXJzdCBjb2FjaCBxdWVzdGlvbiAoZnJvbSBzdGFydCkiLCJzIjo5LjE1NywibGltaXRfcyI6NjAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJtaWMgcGlja3MgdXAgdGhlIHNwb2tlbiBhbnN3ZXIgKGZyb20gcXVlc3Rpb24pIiwicyI6MTEuODYxLCJsaW1pdF9zIjozMCwic2xvdyI6ZmFsc2V9LHsic3RlcCI6ImFuc3dlciB0cmFuc2NyaWJlZCAoZnJvbSBlbmQgb2Ygc3BlZWNoKSIsInMiOjE4LjE3LCJsaW1pdF9zIjo1LCJzbG93Ijp0cnVlfSx7InN0ZXAiOiJwcm9jZXNzIHRoZSBjYXB0dXJlIChVSSkiLCJzIjoxNDIuMDk5LCJsaW1pdF9zIjoxODAsInNsb3ciOmZhbHNlfV0="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-32510bb71fdaf1addbfb",
+              "file": "flows.spec.ts",
+              "line": 262,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "with the practice camera",
+          "file": "flows.spec.ts",
+          "line": 345,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F4 learn: narration plays, practice scores with a hint, tutor answers by text and voice",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "practice: score 32 MATCH; hint \"Bring your hand up to where the part sits.\""
+                    },
+                    {
+                      "type": "note",
+                      "description": "voice question heard as: transcribing on chip 1…"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 61157,
+                      "error": {
+                        "message": "Error: heard \"transcribing on chip 1…\"\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m0.5\u001b[39m\nReceived:    \u001b[31m0\u001b[39m",
+                        "stack": "Error: heard \"transcribing on chip 1…\"\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m0.5\u001b[39m\nReceived:    \u001b[31m0\u001b[39m\n    at learnFlow (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:423:60)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:353:7",
+                        "location": {
+                          "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                          "column": 60,
+                          "line": 423
+                        },
+                        "snippet": "  421 |   const asked = (await page.getByTestId('tutor-question').last().innerText()).trim()\n  422 |   run.note(`voice question heard as: ${asked}`)\n> 423 |   expect(overlap(asked, questionText), `heard \"${asked}\"`).toBeGreaterThanOrEqual(0.5)\n      |                                                            ^\n  424 |   await run.time('tutor voice: answer complete', 30, async () => {\n  425 |     await expect(answers.last()).toHaveAttribute('data-status', 'done', { timeout: 120_000 })\n  426 |   })"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                            "column": 60,
+                            "line": 423
+                          },
+                          "message": "Error: heard \"transcribing on chip 1…\"\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m0.5\u001b[39m\nReceived:    \u001b[31m0\u001b[39m\n\n  421 |   const asked = (await page.getByTestId('tutor-question').last().innerText()).trim()\n  422 |   run.note(`voice question heard as: ${asked}`)\n> 423 |   expect(overlap(asked, questionText), `heard \"${asked}\"`).toBeGreaterThanOrEqual(0.5)\n      |                                                            ^\n  424 |   await run.time('tutor voice: answer complete', 30, async () => {\n  425 |     await expect(answers.last()).toHaveAttribute('data-status', 'done', { timeout: 120_000 })\n  426 |   })\n    at learnFlow (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:423:60)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:353:7"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:22:29.713Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "practice: score 32 MATCH; hint \"Bring your hand up to where the part sits.\""
+                        },
+                        {
+                          "type": "note",
+                          "description": "voice question heard as: transcribing on chip 1…"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cHJhY3RpY2U6IHNjb3JlIDMyIE1BVENIOyBoaW50ICJCcmluZyB5b3VyIGhhbmQgdXAgdG8gd2hlcmUgdGhlIHBhcnQgc2l0cy4i"
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "dm9pY2UgcXVlc3Rpb24gaGVhcmQgYXM6IHRyYW5zY3JpYmluZyBvbiBjaGlwIDHigKY="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6Im5hcnJhdGlvbiBzdGFydHMgcGxheWluZyIsInMiOjAuMzY0LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoiZmlyc3QgcHJhY3RpY2Ugc2NvcmUiLCJzIjowLjg3NiwibGltaXRfcyI6NSwic2xvdyI6ZmFsc2V9LHsic3RlcCI6InByYWN0aWNlIGhpbnQgc2hvd24iLCJzIjowLjQwOSwibGltaXRfcyI6MTAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0dXRvciB0ZXh0OiBmaXJzdCB3b3JkcyIsInMiOjAuMDA2LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoidHV0b3IgdGV4dDogYW5zd2VyIGNvbXBsZXRlIiwicyI6Mi4zNCwibGltaXRfcyI6MzAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0dXRvciB0ZXh0OiBhbnN3ZXIgc3Bva2VuIiwicyI6NDUuMjE3LCJsaW1pdF9zIjoxNSwic2xvdyI6dHJ1ZX0seyJzdGVwIjoidHV0b3Igdm9pY2U6IHF1ZXN0aW9uIHRyYW5zY3JpYmVkIiwicyI6MC4wMDMsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfV0="
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-with-the-practice-ca-73c1c-r-answers-by-text-and-voice-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                        "column": 60,
+                        "line": 423
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-14fc95d79a7ae8bfb3ed",
+              "file": "flows.spec.ts",
+              "line": 346,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "the rest",
+          "file": "flows.spec.ts",
+          "line": 439,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F5 robot lab: train, evaluate at least 80% over 20 trials, GR00T run streams frames",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 1200836,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 1200000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 1200000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 1200000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts",
+                            "column": 52,
+                            "line": 461
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('eval-score')\nExpected pattern: \u001b[32m/\\d+\\s*%/\u001b[39m\nReceived string:  \u001b[31m\"20/20\"\u001b[39m\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByTestId('eval-score') with timeout 1800000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('eval-score')\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"1/1\"\u001b[22m\n\u001b[2m    3 × locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"2/2\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"3/3\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"4/4\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"5/5\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"6/6\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"8/8\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"9/9\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"11/11\"\u001b[22m\n\u001b[2m    2 × locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"12/12\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"13/13\"\u001b[22m\n\u001b[2m    2 × locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"14/14\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"15/15\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"16/16\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"17/17\"\u001b[22m\n\u001b[2m    - locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m    - unexpected value \"19/19\"\u001b[22m\n\u001b[2m    1777 × locator resolved to <div data-testid=\"eval-score\" class=\"telemetry text-2xl font-medium text-fg\">…</div>\u001b[22m\n\u001b[2m         - unexpected value \"20/20\"\u001b[22m\n\u001b[2m  - Test timeout of 1200000ms exceeded.\u001b[22m\n\n\n  459 |     await run.time('evaluate 20 trials (UI)', 180, async () => {\n  460 |       await expect(page.getByTestId('trial-cell')).toHaveCount(20, { timeout: 30 * 60_000 })\n> 461 |       await expect(page.getByTestId('eval-score')).toContainText(/\\d+\\s*%/, { timeout: 30 * 60_000 })\n      |                                                    ^\n  462 |     })\n  463 |     await expect.poll(async () => (await page.getByTestId('eval-score').innerText()).trim(), { timeout: 30 * 60_000 }).toMatch(/\\d+\\s*%/)\n  464 |     await page.waitForTimeout(2000)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:461:52\n    at Run.time (/home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:45:14)\n    at /home/jashan/tacit-wt/qa-ui/web/e2e/flows.spec.ts:459:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:23:31.112Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-the-rest-F5-robot-la-7f199-ls-GR00T-run-streams-frames-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T211440Z-ui/artifacts/flows-the-rest-F5-robot-la-7f199-ls-GR00T-run-streams-frames-chromium/error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-81d01ef80dd5a85d32d0",
+              "file": "flows.spec.ts",
+              "line": 440,
+              "column": 3
+            },
+            {
+              "title": "F6 exchange: list, license as buyer, download the pack, earnings show the royalty",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "listing lst_dcab9eed"
+                    },
+                    {
+                      "type": "note",
+                      "description": "pack: 208 files"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6816,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "buffer": ""
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:43:32.199Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "listing lst_dcab9eed"
+                        },
+                        {
+                          "type": "note",
+                          "description": "pack: 208 files"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "bGlzdGluZyBsc3RfZGNhYjllZWQ="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cGFjazogMjA4IGZpbGVz"
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6InB1Ymxpc2ggdGhlIGxpc3RpbmciLCJzIjowLjA2MSwibGltaXRfcyI6Mywic2xvdyI6ZmFsc2V9LHsic3RlcCI6ImxpY2Vuc2UgKFVJKSIsInMiOjAuMDg0LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX1d"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-410ee93b017279020b8a",
+              "file": "flows.spec.ts",
+              "line": 486,
+              "column": 3
+            },
+            {
+              "title": "F7 box page shows all nine models healthy on four chips",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2769,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T21:43:39.051Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6ImJveCBwYWdlIiwicyI6MC4wOTUsImxpbWl0X3MiOjMsInNsb3ciOmZhbHNlfV0="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-9c0be0a668728c09b9a1",
+              "file": "flows.spec.ts",
+              "line": 557,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T21:14:41.581Z",
+    "duration": 1740267.603,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}
