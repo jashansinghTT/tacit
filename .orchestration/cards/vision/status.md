@@ -1,11 +1,11 @@
 # Status: vision
 
-State: running
-Updated: 2026-10-27T19:14:12+00:00
+State: review
+Updated: 2026-10-27T19:24:54+00:00
 
 ## Now
-Step 5: measuring cold and warm boot through deploy/vision-up.sh (kernel cache emptied), then
-README numbers and handoff.
+Merge gate met; handoff.md written. The group is running on chip 0 (warm boot, image
+tt-model/cohost-vision:5882863c8941). Nothing in progress.
 
 ## Works
 - Fixtures for all four members committed (a612436, 6e75d2d); lead cherry-picked them into main.
@@ -18,6 +18,10 @@ README numbers and handoff.
   Gaze 9.9/6.4 (9.6/6.3), RF-DETR 12.3/8.2 (13.2/8.7), VGGT 2 views 1078/886 (1112/895) ms.
   Three live members saturating the chip: ~32 ms p50 each (~30 frames/s); a request that lands
   during a VGGT forward waits up to ~0.95 s.
+- Soak: HaMeR/Gaze/RF-DETR 3000 each + VGGT 60, 152 s: 9060/9060 bit-identical, no late compiles.
+- Boot: cold (empty kernel cache, deploy/vision-up.sh incl. image build) 221 s; warm 30-31 s.
+  Clean stop (deploy/vision-down.sh) 3.5 s.
+- README with measured numbers: models/cohost-vision/README.md; evidence: .orchestration/evidence/vision/.
 - Status port: DRAM per member (HaMeR 1.18, Gaze 0.14, RF-DETR 0.07, VGGT 3.43 GiB; total
   4.82 GiB/chip), L1 held after every phase 0 KiB/core, compiles_after_capture {}.
 
@@ -35,7 +39,8 @@ README numbers and handoff.
 - l1_small_size 64 KiB (VGGT's own): at 96 KiB VGGT's dense outputs moved by a few fp16 ulps.
 
 ## Next
-- Cold/warm boot numbers, README table, handoff.md, State: review.
+- Lead: review and merge work/vision; point deploy/stack.yaml's vision-cohost group at
+  deploy/vision-up.sh (or the staged manifest ~/tacit/build/cohost-vision/tt_kernel_manifest.json).
 
 ## Blockers
 - None.
