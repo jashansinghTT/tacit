@@ -35,7 +35,9 @@ def listing_dict(l: Listing) -> dict:
     skill = load_skill(l.skill_id) or {}
     ver = (skill.get("verification") or {})
     thumb = skill.get("motion_thumb", "") if l.thumb.endswith("/thumb.jpg") or not l.thumb else l.thumb
-    return {"id": l.id, "skill_id": l.skill_id, "title": l.title, "summary": l.summary, "thumb": thumb,
+    # The skill's current text: a reprocessed skill updates its listing too.
+    return {"id": l.id, "skill_id": l.skill_id, "title": skill.get("title") or l.title, "summary": skill.get("summary") or l.summary,
+            "thumb": thumb,
             "preview_video": l.preview_video, "expert": {"id": expert["id"], "name": expert["name"]}, "plant": l.plant,
             "industry": l.industry, "robot_types": json.loads(l.robot_types), "verified": ver.get("status") == "verified",
             "verification_score": ver.get("score"), "consent": json.loads(l.consent or "{}"), "price": json.loads(l.price),
