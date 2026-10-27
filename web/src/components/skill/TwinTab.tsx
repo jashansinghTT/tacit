@@ -96,7 +96,7 @@ export function TwinTab({ skill, twin, tracks, pb, loading }: { skill: Skill; tw
                 <li key={s.id}>
                   <button onClick={() => pb.seek(s.t_start + 0.01)} className={cn('flex w-full items-center gap-3 px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-white/[0.03]', on && 'bg-ion/[0.06]')}>
                     <span className={cn('telemetry text-xs', on ? 'text-ion' : 'text-fg-faint')}>{String(s.index).padStart(2, '0')}</span>
-                    <span className={cn('flex-1 truncate', on ? 'text-fg' : 'text-fg-muted')}>{s.title}</span>
+                    <span className={cn('line-clamp-2 flex-1', on ? 'text-fg' : 'text-fg-muted')}>{s.title}</span>
                     <span className="h-1 w-14 overflow-hidden rounded-full bg-white/[0.06]">
                       <span className="block h-full bg-ion" style={{ width: `${Math.max(0, Math.min(1, (pb.time - s.t_start) / (s.t_end - s.t_start))) * 100}%` }} />
                     </span>

@@ -241,11 +241,12 @@ const valve = briefSkill({
 const bearing = briefSkill({
   id: 'sk_bearing', title: 'Press a bearing into the housing', daysAgo: 4, score: 0.92,
   summary: 'Seat a 6204 bearing square in the housing with the arbor press, without loading the races.',
+  // Long titles in the backend's multi-step format, to keep layouts honest at 1024 px.
   steps: [
-    ['Wipe the bore', 'Wipe the housing bore with a lint-free cloth.', 'One grain of swarf in the bore cocks the bearing.'],
-    ['Square the bearing', 'Set the bearing on the bore, lettering up, and check it is square by eye.', 'Lettering up tells the next person which way it went in.'],
-    ['Press on the outer race', 'Use the outer-race driver and press in one smooth stroke.', 'Pressing on the inner race loads the balls and ruins it.'],
-    ['Spin check', 'Spin the bearing with a finger: it should run free and quiet.', 'A rough spin means it went in cocked.'],
+    ['Wipe the housing bore clean with a lint-free cloth before seating (1 of 4)', 'Wipe the housing bore with a lint-free cloth.', 'One grain of swarf in the bore cocks the bearing.'],
+    ['Square the 6204 bearing on the bore with the lettering facing up (2 of 4)', 'Set the bearing on the bore, lettering up, and check it is square by eye.', 'Lettering up tells the next person which way it went in.'],
+    ['Press on the outer race only with the driver in one smooth stroke (3 of 4)', 'Use the outer-race driver and press in one smooth stroke.', 'Pressing on the inner race loads the balls and ruins it.'],
+    ['Spin check: the bearing should run free and quiet under a finger (4 of 4)', 'Spin the bearing with a finger: it should run free and quiet.', 'A rough spin means it went in cocked.'],
   ],
   safety: ['Keep both hands on the press handle during the stroke.'],
 })

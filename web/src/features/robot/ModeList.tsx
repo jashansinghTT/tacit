@@ -9,7 +9,7 @@ export type LabMode = 'replay' | 'train' | 'evaluate' | 'policy' | 'gr00t'
 export const LAB_MODES: LabMode[] = ['replay', 'train', 'evaluate', 'policy', 'gr00t']
 
 export const MODE_META: Record<LabMode, { title: string; short: string; line: string; icon: LucideIcon }> = {
-  replay: { title: 'Replay the human', short: 'Replay', line: "The arm follows the expert's wrist path; her hands play alongside.", icon: Hand },
+  replay: { title: 'Replay the human', short: 'Replay', line: "The arm follows the expert's wrist path; the expert's hands play alongside.", icon: Hand },
   train: { title: 'Train a policy', short: 'Train', line: 'Randomised sim demonstrations, then a behaviour-cloning policy on CPU.', icon: BrainCircuit },
   evaluate: { title: 'Evaluate', short: 'Evaluate', line: 'Fresh randomised scenes; success rate and why trials fail.', icon: Grid3x3 },
   policy: { title: 'Run policy', short: 'Policy', line: 'Watch the trained policy on one randomised scene.', icon: Play },

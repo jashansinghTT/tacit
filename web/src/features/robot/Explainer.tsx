@@ -91,7 +91,7 @@ export function ExplainerStrip({
     },
     {
       key: 'variations',
-      label: 'Sim variations',
+      label: 'Sim demos',
       icon: Shuffle,
       value: training && train.demosDone != null && train.scriptedSuccess == null ? `${train.demosDone}` : (demos ?? 200),
       unit: training && train.demosDone != null && train.scriptedSuccess == null ? `/ ${train.demosTotal}` : 'demos',

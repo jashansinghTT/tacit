@@ -118,8 +118,8 @@ export function ReplayPanel({
   return (
     <div className="space-y-4">
       <Explain>
-        The arm follows {expert}&rsquo;s wrist, frame by frame. Her path was tracked in 3D from the camera, laid onto the table plane and scaled into the robot&rsquo;s reach; her
-        hands replay alongside as a ghost so you can compare.
+        The arm follows {expert}&rsquo;s wrist, frame by frame. The path was tracked in 3D from the camera, laid onto the table plane and scaled into the robot&rsquo;s reach; the
+        expert&rsquo;s hands replay alongside as a ghost so you can compare.
       </Explain>
       {path ? (
         <div className="grid grid-cols-3 gap-3">
@@ -134,7 +134,7 @@ export function ReplayPanel({
             <span className="size-2.5 rounded-full bg-data-left shadow-[0_0_6px_var(--color-data-left)]" />
             <span className="size-2.5 rounded-full bg-data-right shadow-[0_0_6px_var(--color-data-right)]" />
           </span>
-          The expert&rsquo;s hands (left, right) and her wrist path
+          The expert&rsquo;s hands (left, right) and the wrist path
         </span>
         <Switch checked={ghost} onChange={onGhost} label="Show the expert's hands" />
       </div>
