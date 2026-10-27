@@ -136,10 +136,11 @@ function PrimitiveLink({ body, kids }: { body: SimBody; kids: SimBody[] }) {
 }
 
 /**
- * True once the robot's GLB meshes are actually served. The meshes come from the sim card
- * (`web/public/sim/`); until they are merged the backend answers with JSON, so check the magic.
+ * Whether the robot's GLB meshes are actually served: true, false, or null while checking. The
+ * meshes come from the sim card (`web/public/sim/`); a missing file answers with JSON, so check
+ * the magic bytes.
  */
-export function useGlbAvailable(url: string | undefined | null) {
+export function useGlbAvailable(url: string | undefined | null): boolean | null {
   const q = useQuery({
     queryKey: ['robot', 'glb', url],
     enabled: Boolean(url),
@@ -152,5 +153,6 @@ export function useGlbAvailable(url: string | undefined | null) {
       return String.fromCharCode(...head) === 'glTF'
     },
   })
-  return q.data === true
+  if (!url) return false
+  return q.data ?? (q.isError ? false : null)
 }

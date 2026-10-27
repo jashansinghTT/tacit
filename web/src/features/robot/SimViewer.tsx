@@ -167,13 +167,15 @@ function SceneContent({ scene, pose, layers, ghost, humanPath }: Omit<SimViewerP
       ))}
       <SimObjects objects={scene.objects} pose={pose} labels={layers.labels} />
       <PhaseMarker scene={scene} pose={pose} />
-      {glb ? (
-        <Suspense fallback={<RobotModel robot={scene.robot} pose={pose} visual="primitive" attach={attach} />}>
+      {/* While the meshes are checked and loaded (well under a second here) draw no arm rather
+          than flash the primitive stand-in; primitives are for a box without the meshes. */}
+      {glb === true ? (
+        <Suspense fallback={null}>
           <RobotModel robot={scene.robot} pose={pose} visual="glb" attach={attach} />
         </Suspense>
-      ) : (
+      ) : glb === false ? (
         <RobotModel robot={scene.robot} pose={pose} visual="primitive" attach={attach} />
-      )}
+      ) : null}
       {layers.trail && <TcpTrail pose={pose} />}
       {humanPath && humanPath.length > 1 && <HumanPath points={humanPath} progress={progress} />}
       {ghost && layers.ghost && <GhostHands track={ghost} pose={pose} progress={progress} />}

@@ -110,7 +110,7 @@ export function ExplainerStrip({
           ? `epoch ${train.epoch}/${train.epochs} on CPU`
           : 'waiting for the demos'
         : trained
-          ? `${curve.length} epochs · trained ${fmtAgo(policy?.trained_at)}`
+          ? `${curve.length ? `${curve.length} epochs · ` : ''}trained ${fmtAgo(policy?.trained_at)}`
           : 'behaviour cloning on CPU',
       state: training && train.scriptedSuccess != null ? 'active' : trained ? 'done' : 'pending',
       mode: 'policy',
