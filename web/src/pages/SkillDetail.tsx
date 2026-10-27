@@ -108,9 +108,9 @@ export default function SkillDetailPage() {
                 onClick={(e) => !canList && e.preventDefault()}
                 aria-disabled={!canList}
                 title={canList ? undefined : 'Only ready, verified skills can be listed'}
-                variant="primary"
+                variant={canList ? 'primary' : 'secondary'}
                 icon={<Store className="size-4" />}
-                className={canList ? undefined : 'pointer-events-none opacity-45'}
+                className={canList ? undefined : 'pointer-events-none opacity-50'}
                 data-testid="action-list"
               >
                 List on Exchange
@@ -123,11 +123,30 @@ export default function SkillDetailPage() {
       {s.status === 'processing' ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <ProcessingPanel job={job} />
-          <Panel title="What happens next">
-            <p className="text-[13px] leading-relaxed text-fg-muted">
-              The box is turning the capture into a skill: tracking every frame, finding the steps, writing the lesson, the SOP and the robot program, checking the recording is real, building the 3D twin and recording narration. This page fills in when it finishes.
-            </p>
-          </Panel>
+          <div className="space-y-4">
+            <Panel title={s.steps.length ? 'Steps found so far' : 'What happens next'} eyebrow={s.steps.length ? 'the skill fills in stage by stage' : undefined} pad={!s.steps.length}>
+              {s.steps.length ? (
+                <ol className="divide-y divide-line">
+                  {s.steps.map((st) => (
+                    <li key={st.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="aspect-video w-24 shrink-0 overflow-hidden rounded-sm bg-ink-950">{st.keyframe && <img src={st.keyframe} alt="" className="size-full object-cover" loading="lazy" />}</div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[13px] text-fg">
+                          <span className="telemetry mr-2 text-ion">{String(st.index).padStart(2, '0')}</span>
+                          {st.title}
+                        </div>
+                        <div className="truncate text-xs text-fg-subtle">{st.instruction || 'Writing the instruction…'}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-[13px] leading-relaxed text-fg-muted">
+                  The box is turning the capture into a skill: tracking every frame, finding the steps, writing the lesson, the SOP and the robot program, checking the recording is real, building the 3D twin and recording narration. This page fills in as it goes.
+                </p>
+              )}
+            </Panel>
+          </div>
         </div>
       ) : s.status === 'failed' ? (
         <Panel>

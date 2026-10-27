@@ -21,7 +21,7 @@ export const STEPS: Record<Key, { n: string; title: string; line: string; body: 
   check: {
     n: '02', title: 'Check', line: 'Proof it was a real recording.', to: 'verify', cta: 'See a verification',
     body: 'VGGT rebuilds the scene in 3D from several views of the clip. A real camera gives one rigid scene; an AI-made video drifts. Every skill carries the score and a certificate.',
-    points: [['VGGT-1B: multi-view rebuild', 0], ['Reprojection and depth stability', null], ['Fakes flagged before they are sold', null]],
+    points: [['VGGT-1B: multi-view rebuild', 0], ['Reprojection error and camera drift', null], ['Fakes flagged before they are sold', null]],
   },
   teach: {
     n: '03', title: 'Teach', line: 'A lesson in the expert\'s own words.', to: 'learn', cta: 'Open the lesson',
