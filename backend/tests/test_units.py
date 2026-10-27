@@ -201,3 +201,18 @@ def test_sentence_split_and_wav_concat():
     out = _concat_wavs([wav(1600), wav(3200)])
     with wave.open(io.BytesIO(out)) as w:
         assert w.getnframes() == 1600 + 3200 + int(16000 * 0.12)
+
+
+
+def test_audit_compare_marks_done_missing_and_order():
+    from tacit.learn.audit import compare
+    skill = {"steps": [{"index": 1, "title": "cup", "t_start": 0.0, "t_end": 2.0, "objects": ["cup"], "hand": "right"},
+                       {"index": 2, "title": "bowl", "t_start": 2.0, "t_end": 4.0, "objects": ["bowl"], "hand": "right"},
+                       {"index": 3, "title": "spoon", "t_start": 4.0, "t_end": 6.0, "objects": ["spoon"], "hand": "right"}]}
+    frames = _frames_cup_left_to_right(60)
+    run_steps = [{"t_start": 0.0, "t_end": 2.0, "objects": ["cup"], "hand": "right"},
+                 {"t_start": 2.0, "t_end": 4.0, "objects": ["bowl"], "hand": "right"}]
+    rep = compare(skill, frames, frames, run_steps)
+    statuses = [r["status"] for r in rep["steps"]]
+    assert statuses[0] == "done" and statuses[1] == "done" and statuses[2] == "missing"
+    assert rep["summary"]["missing"] == 1

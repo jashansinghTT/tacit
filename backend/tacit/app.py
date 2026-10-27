@@ -16,7 +16,7 @@ from .box import box_status
 from .config import MEDIA, SAMPLES, VERSION, WEB_DIST, WEB_PUBLIC
 from .db import LessonProgress, SkillRow, User, init_db, select, session
 from .exchange import market
-from .learn import practice
+from .learn import audit, i18n, practice
 from .live import capture
 from .models import llm, speech
 from .models.base import ModelUnavailable
@@ -359,6 +359,30 @@ async def skills_verify(skill_id: str):
     return {"job_id": job.id}
 
 
+@app.post("/api/skills/{skill_id}/audit")
+async def skills_audit(skill_id: str, file: UploadFile = File(...), worker: str = Form("Sam Okafor")):
+    """Quality and safety: compare a worker's recorded run with the expert's skill."""
+    sk = load_skill(skill_id)
+    if not sk or sk.get("status") != "ready":
+        return err(400, "bad_request", "audits need a ready skill")
+    aid = audit.new_audit_id()
+    raw = audit.audits_dir(skill_id) / f"{aid}{Path(file.filename or 'run.mp4').suffix or '.mp4'}"
+    raw.write_bytes(await file.read())
+    job = jobs.run(jobs.create("audit", skill_id, audit.STAGES), lambda j: audit.run_audit(j, skill_id, raw, aid, worker))
+    return {"job_id": job.id, "audit_id": aid}
+
+
+@app.get("/api/skills/{skill_id}/audits")
+async def skills_audits(skill_id: str):
+    return audit.list_audits(skill_id)
+
+
+@app.get("/api/skills/{skill_id}/audits/{audit_id}")
+async def skills_audit_get(skill_id: str, audit_id: str):
+    r = read_json(audit.audits_dir(skill_id) / f"{audit_id}.json")
+    return r if r else err(404, "not_found", f"no audit {audit_id}")
+
+
 @app.post("/api/skills/{skill_id}/answer")
 async def skills_answer(skill_id: str, file: UploadFile | None = File(default=None), question: str = Form(""),
                         step_index: int | None = Form(default=None), text: str = Form("")):
@@ -464,18 +488,27 @@ async def lessons(x_tacit_user: str | None = Header(default=None), include_test:
 
 
 @app.get("/api/learn/lessons/{skill_id}")
-async def lesson(skill_id: str):
+async def lesson(skill_id: str, lang: str = "en"):
     sk = load_skill(skill_id)
     if not sk:
         return err(404, "not_found", f"no skill {skill_id}")
     nar = sk.get("narration") or {}
+    if lang != "en":
+        tr = await i18n.translate(skill_id, lang)
+        by_i = {s["index"]: s for s in tr.get("steps", [])}
+        sk = {**sk, "title": tr.get("title") or sk.get("title"), "summary": tr.get("summary") or sk.get("summary"),
+              "quiz": tr.get("quiz") or sk.get("quiz"), "safety": tr.get("safety") or sk.get("safety"),
+              "steps": [{**st, **{k: by_i.get(st["index"], {}).get(k) or st.get(k) for k in ("title", "instruction", "why", "tips")}}
+                        for st in sk.get("steps", [])]}
+        nar = tr.get("narration") or {}
     return {"skill_id": skill_id, "title": sk.get("title"), "summary": sk.get("summary"), "expert": sk.get("expert"),
             "video": (sk.get("source") or {}).get("video"), "intro_audio": (nar.get("intro") or {}).get("audio"),
             "steps": [{**{k: st.get(k) for k in ("id", "index", "title", "instruction", "why", "why_source", "keyframe", "t_start",
                                                   "t_end", "tips", "objects", "hand", "gaze_target")},
                        "narration_audio": (nar.get(st["id"]) or {}).get("audio"), "narration_text": (nar.get(st["id"]) or {}).get("text")}
                       for st in sk.get("steps", [])],
-            "quiz": sk.get("quiz", []), "safety": sk.get("safety", [])}
+            "quiz": sk.get("quiz", []), "safety": sk.get("safety", []), "lang": lang,
+            "languages": [{"code": k, "name": v} for k, v in writer.LANGS.items()]}
 
 
 @app.post("/api/learn/sessions")
