@@ -28,7 +28,7 @@ export default function act(T) {
     // The skill-trained policy's run (seeded scene): pick, carry, place.
     pplate = R.el('div', 'abs', root)
     pplate.style.cssText = 'inset:0'
-    policy = sequence(pplate, { dir: '/data/captures/policy/frames', count: 300, fps: 30 })
+    policy = sequence(pplate, { dir: '/data/captures/policy2/frames', count: 300, fps: 30 }) // labels off
     const wbox = R.el('div', 'abs', root)
     wbox.style.cssText = 'left:104px;bottom:70px'
     word = line(wbox, ['Do.'], { size: 290, style: 'text-shadow:0 10px 60px rgba(0,0,0,0.6)' })
