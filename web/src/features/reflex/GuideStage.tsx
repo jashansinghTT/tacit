@@ -22,7 +22,7 @@ function FingerBars({ track, timeRef }: { track: FingerTrack | undefined; timeRe
       for (let i = 0; i < 5; i++) {
         const b = bars.current[i]
         const n = nums.current[i]
-        if (b) b.style.transform = `scaleY(${Math.max(0.03, buf[i])})`
+        if (b) b.style.transform = `scaleX(${Math.max(0.03, buf[i])})`
         if (n) n.textContent = String(Math.round(buf[i] * 100))
       }
     }
@@ -30,20 +30,20 @@ function FingerBars({ track, timeRef }: { track: FingerTrack | undefined; timeRe
     return () => cancelAnimationFrame(raf)
   }, [track, timeRef])
   return (
-    <div className="flex items-end gap-2.5" data-testid="finger-bars" aria-label="Finger curl, 0 open to 100 closed">
+    <div className="flex w-full flex-col gap-2" data-testid="finger-bars" aria-label="Finger curl, 0 open to 100 closed">
       {FINGER_LABELS.map((l, i) => (
-        <div key={l} className="flex w-9 flex-col items-center gap-1">
-          <span ref={(r) => void (nums.current[i] = r)} className="telemetry text-[10px] text-fg-muted">
-            0
-          </span>
-          <span className="relative h-14 w-2 overflow-hidden rounded-full bg-white/[0.07]">
+        <div key={l} className="grid grid-cols-[40px_minmax(0,1fr)_22px] items-center gap-2">
+          <span className="text-[10.5px] text-fg-subtle">{l}</span>
+          <span className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
             <span
               ref={(r) => void (bars.current[i] = r)}
-              className="absolute inset-0 origin-bottom rounded-full"
-              style={{ background: FINGER_COLORS[i], boxShadow: `0 0 10px ${FINGER_COLORS[i]}`, transform: 'scaleY(0.03)' }}
+              className="absolute inset-0 origin-left rounded-full"
+              style={{ background: FINGER_COLORS[i], boxShadow: `0 0 8px ${FINGER_COLORS[i]}`, transform: 'scaleX(0.03)' }}
             />
           </span>
-          <span className="text-[10px] text-fg-subtle">{l}</span>
+          <span ref={(r) => void (nums.current[i] = r)} className="telemetry text-right text-[10px] text-fg-muted">
+            0
+          </span>
         </div>
       ))}
     </div>
@@ -153,28 +153,33 @@ export function GuideStage() {
     <div className="flex flex-col gap-3" data-testid="guide-stage">
       <div className="grid gap-3 md:grid-cols-2">
         <div className="relative aspect-[4/3] overflow-hidden rounded-lg shadow-[inset_0_0_0_1px_var(--color-line)]">
-          <StepVideo fit="fill" className="absolute inset-0" testId="guide-video" />
+          <StepVideo fit="fill" testId="guide-video" />
           <span className="pointer-events-none absolute top-3 left-3 rounded-sm bg-ink-950/75 px-2 py-1 text-[11px] text-fg backdrop-blur">
             {name}'s {side} hand
           </span>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-ink-950 shadow-[inset_0_0_0_1px_var(--color-line)]">
-          {track.isLoading ? <Skeleton className="absolute inset-0 rounded-none" /> : <VirtualGlove track={track.data} timeRef={pb.timeRef} side={side} className="absolute inset-0" />}
-          <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
-            <span className="rounded-sm bg-ink-950/75 px-2 py-1 text-[11px] text-fg backdrop-blur">Virtual glove · {side} hand</span>
-            {gloveUntil && (
-              <Badge tone="ok" dot pulse>
-                on your hand too
-              </Badge>
+        <div className="flex aspect-[4/3] overflow-hidden rounded-lg bg-ink-950 shadow-[inset_0_0_0_1px_var(--color-line)]">
+          <div className="relative min-w-0 flex-1">
+            {track.isLoading ? <Skeleton className="absolute inset-0 rounded-none" /> : <VirtualGlove track={track.data} timeRef={pb.timeRef} side={side} className="absolute inset-0" />}
+            <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
+              <span className="rounded-sm bg-ink-950/75 px-2 py-1 text-[11px] text-fg backdrop-blur">Virtual glove · {side} hand</span>
+              {gloveUntil && (
+                <Badge tone="ok" dot pulse>
+                  on your hand too
+                </Badge>
+              )}
+            </div>
+            <span className="telemetry pointer-events-none absolute right-3 bottom-2.5 text-[10px] text-fg-faint">drag to turn</span>
+            {!track.isLoading && !hasMotion && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-10 pb-3 text-center text-[13px] text-fg-muted">
+                No finger motion was tracked in this step, so the glove holds a relaxed pose.
+              </div>
             )}
           </div>
-          {!track.isLoading && !hasMotion && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-10 pb-4 text-center text-[13px] text-fg-muted">
-              No finger motion was tracked in this step, so the glove holds a relaxed pose.
-            </div>
-          )}
-          <div className="absolute right-3 bottom-3 rounded-lg bg-ink-950/80 p-2.5 backdrop-blur shadow-[0_0_0_1px_var(--color-line)]">
+          <div className="flex w-[132px] shrink-0 flex-col justify-center gap-3 border-l border-line bg-ink-900/70 px-3">
+            <span className="eyebrow">Curl</span>
             <FingerBars track={track.data} timeRef={pb.timeRef} />
+            <span className="telemetry text-[9.5px] text-fg-faint">0 open · 100 closed</span>
           </div>
         </div>
       </div>

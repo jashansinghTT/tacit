@@ -23,6 +23,8 @@ export interface Turn {
   transcribing: boolean
   answer: string
   status: 'streaming' | 'done' | 'error'
+  /** The text has stopped arriving; the stream may still be voicing the last sentences. */
+  textDone: boolean
   error?: string
   audio: string[]
   sources: string[]
@@ -33,6 +35,8 @@ export interface Turn {
 }
 
 let seq = 0
+/** The backend sends `done` only after every sentence is voiced; text is final once deltas pause. */
+const TEXT_DONE_MS = 1800
 
 /** "Ask the expert": streams the tutor's answer and speaks each sentence as it is ready. */
 export function useTutor(skillId: string) {
@@ -65,12 +69,14 @@ export function useTutor(skillId: string) {
 
   const ask = useCallback(
     async (input: TutorInput, lang: string) => {
-      if (turnsRef.current.some((t) => t.status === 'streaming')) return
+      // A new question supersedes one that is still being voiced.
+      if (turnsRef.current.some((t) => t.status === 'streaming' && !t.textDone)) return
+      abort.current?.abort()
       stopVoice()
       const id = `t${++seq}`
       const voice = 'audio' in input
       const history: ChatTurn[] = turnsRef.current
-        .filter((t) => t.status === 'done' && t.question && t.answer)
+        .filter((t) => (t.status === 'done' || t.textDone) && t.question && t.answer)
         .slice(-3)
         .flatMap((t) => [
           { role: 'user' as const, content: t.question },
@@ -78,7 +84,7 @@ export function useTutor(skillId: string) {
         ])
       setTurns((ts) => [
         ...ts,
-        { id, question: voice ? '' : (input as { question: string }).question, voice, transcribing: voice, answer: '', status: 'streaming', audio: [], sources: [], lang, speaking: null },
+        { id, question: voice ? '' : (input as { question: string }).question, voice, transcribing: voice, answer: '', status: 'streaming', textDone: false, audio: [], sources: [], lang, speaking: null },
       ])
       const q = new AudioQueue()
       queue.current = q
@@ -86,6 +92,7 @@ export function useTutor(skillId: string) {
       const ctl = new AbortController()
       abort.current = ctl
       const t0 = performance.now()
+      let quiet: ReturnType<typeof setTimeout> | null = null
       try {
         for await (const ev of askTutor(skillId, input, lang, history, ctl.signal)) {
           let data: unknown = null
@@ -99,6 +106,8 @@ export function useTutor(skillId: string) {
           } else if (ev.event === 'delta') {
             const text = (data as { text: string }).text
             patch(id, (t) => ({ answer: t.answer + text, transcribing: false }))
+            if (quiet) clearTimeout(quiet)
+            quiet = setTimeout(() => patch(id, () => ({ textDone: true, ms: performance.now() - t0 - TEXT_DONE_MS })), TEXT_DONE_MS)
           } else if (ev.event === 'audio') {
             const a = data as TutorAudioPart
             patch(id, (t) => {
@@ -111,24 +120,26 @@ export function useTutor(skillId: string) {
             const d = data as TutorDoneEvent
             patch(id, (t) => ({
               status: 'done',
+              textDone: true,
               answer: d.text || t.answer,
               question: t.question || d.question,
               sources: d.sources ?? [],
               transcribing: false,
-              ms: performance.now() - t0,
+              ms: t.ms ?? performance.now() - t0,
             }))
           } else if (ev.event === 'error') {
             patch(id, () => ({ status: 'error', error: (data as { message: string }).message, transcribing: false }))
           }
         }
-        patch(id, (t) => (t.status === 'streaming' ? { status: 'done', transcribing: false, ms: performance.now() - t0 } : {}))
+        patch(id, (t) => (t.status === 'streaming' ? { status: 'done', textDone: true, transcribing: false, ms: t.ms ?? performance.now() - t0 } : {}))
       } catch (e) {
         if ((e as Error).name === 'AbortError') {
-          patch(id, () => ({ status: 'done', transcribing: false }))
+          patch(id, () => ({ status: 'done', textDone: true, transcribing: false }))
         } else {
           patch(id, () => ({ status: 'error', error: (e as Error).message, transcribing: false }))
         }
       } finally {
+        if (quiet) clearTimeout(quiet)
         if (abort.current === ctl) abort.current = null
       }
     },
@@ -150,7 +161,7 @@ export function useTutor(skillId: string) {
     queue.current?.stop()
   }, [])
 
-  const busy = turns.some((t) => t.status === 'streaming')
+  const busy = turns.some((t) => t.status === 'streaming' && !t.textDone)
   return { turns, ask, cancel, replay, stopVoice, busy }
 }
 

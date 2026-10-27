@@ -20,7 +20,7 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
   const sentences = useMemo(() => splitSentences(turn.answer), [turn.answer])
   const first = lesson.expert.name.split(' ')[0]
   return (
-    <div className="flex gap-2.5" data-testid="tutor-answer" data-status={turn.status}>
+    <div className="flex gap-2.5" data-testid="tutor-answer" data-status={turn.status} data-text-done={turn.textDone || turn.status !== 'streaming'}>
       <Avatar name={lesson.expert.name} size={26} className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2 text-[11px] text-fg-subtle">
@@ -47,12 +47,17 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
                 {s}
               </span>
             ))}
-            {turn.status === 'streaming' && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-[1px] bg-ion" aria-hidden />}
+            {turn.status === 'streaming' && !turn.textDone && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-[1px] bg-ion" aria-hidden />}
             {turn.status === 'streaming' && !turn.answer && <span className="text-fg-subtle">{turn.transcribing ? 'Listening to your question…' : 'Thinking…'}</span>}
           </p>
         )}
-        {turn.status === 'done' && (
+        {(turn.status === 'done' || turn.textDone) && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {turn.status === 'streaming' && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-fg-subtle" data-testid="tutor-voicing">
+                <Loader2 className="size-3 animate-spin" /> voicing on chip 1
+              </span>
+            )}
             {turn.sources.map((s) => {
               const n = Number(s.replace(/\D/g, ''))
               return (
@@ -61,7 +66,7 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
                 </button>
               )
             })}
-            {turn.audio.length > 0 && (
+            {turn.status === 'done' && turn.audio.length > 0 && (
               <button onClick={onReplay} className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px] text-fg-subtle hover:bg-white/5 hover:text-fg" data-testid="tutor-replay">
                 <Volume2 className="size-3" /> Play again
               </button>

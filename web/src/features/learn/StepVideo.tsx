@@ -31,7 +31,7 @@ export function StepVideo({
   const src = lesson.video
   return (
     <div
-      className={cn('relative overflow-hidden bg-ink-950', className)}
+      className={cn(fit === 'fill' ? 'absolute inset-0' : 'relative', 'overflow-hidden bg-ink-950', className)}
       style={fit === 'aspect' ? { aspectRatio: `${W} / ${H}` } : undefined}
       data-testid={testId}
     >
