@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, ArrowUp, Languages, Loader2, Mic, Square, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useBox } from '@/lib/api/queries'
 import { useMicrophone } from '@/lib/media'
 import { useApp } from '@/lib/store'
 import { fmtMs } from '@/lib/format'
@@ -35,6 +36,7 @@ function suggestionsFor(lang: string, title: string, n: number): string[] {
 
 function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void; onSource: (step: number) => void }) {
   const { lesson } = useLessonCtx()
+  const voiceQueued = (useSpeechQueue().interactive ?? 0) > 0
   const sentences = useMemo(() => splitSentences(turn.answer), [turn.answer])
   const first = lesson.expert.name.split(' ')[0]
   return (
@@ -73,7 +75,7 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {turn.voicing && (
               <span className="inline-flex items-center gap-1 text-[11px] text-fg-subtle" data-testid="tutor-voicing">
-                <Loader2 className="size-3 animate-spin" /> voicing on chip 1
+                <Loader2 className="size-3 animate-spin" /> {voiceQueued ? 'speech queued on chip 1' : 'voicing on chip 1'}
               </span>
             )}
             {turn.sources.map((s) => {
@@ -97,13 +99,27 @@ function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void
   )
 }
 
+interface SpeechQueue {
+  listen?: number
+  interactive?: number
+  batch?: number
+  busy?: boolean
+}
+
+/** The chip-1 voice gate from /api/box: how many transcriptions and spoken replies are waiting. */
+function useSpeechQueue(): SpeechQueue {
+  const box = useBox()
+  return (box.data as { speech_queue?: SpeechQueue } | undefined)?.speech_queue ?? {}
+}
+
 function Question({ turn }: { turn: Turn }) {
+  const waiting = (useSpeechQueue().listen ?? 0) > 0
   return (
     <div className="flex justify-end" data-testid="tutor-question">
       <div className="max-w-[85%] rounded-xl rounded-br-sm bg-ink-600 px-3 py-2 text-[13.5px] leading-snug text-fg shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
         {turn.voice && (
           <span className="mb-0.5 flex items-center gap-1 text-[10.5px] text-fg-subtle">
-            <Mic className="size-3" /> {turn.transcribing ? 'transcribing on chip 1…' : 'you said'}
+            <Mic className="size-3" /> {turn.transcribing ? (waiting ? 'waiting for the voice chip…' : 'transcribing on chip 1…') : 'you said'}
           </span>
         )}
         {turn.transcribing && !turn.question ? <span className="skeleton inline-block h-3.5 w-40 align-middle" /> : turn.question}

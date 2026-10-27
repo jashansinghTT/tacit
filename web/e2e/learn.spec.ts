@@ -128,7 +128,8 @@ test('tutor: answers a spoken question with its transcript', async ({ page }) =>
   await expect(page.getByTestId('tutor-recording')).toBeVisible()
   // The voice-activity cut-off ends the question; Whisper transcribes it on chip 1.
   const q = page.getByTestId('tutor-question').first()
-  await expect(q).toContainText('you said', { timeout: 60_000 })
+  // Speech shares chip 1 with narration and music; a busy chip queues the request.
+  await expect(q).toContainText('you said', { timeout: 150_000 })
   const firstWords = fx.question!.split(/\s+/).slice(0, 3).join(' ').replace(/[^\w\s]/g, '')
   await expect(q).toContainText(new RegExp(firstWords, 'i'), { timeout: 60_000 })
   await expect(page.getByTestId('tutor-answer').first()).toHaveAttribute('data-status', 'done', { timeout: 90_000 })
