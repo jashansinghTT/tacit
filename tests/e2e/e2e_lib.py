@@ -80,19 +80,36 @@ def client() -> httpx.Client:
 
 
 def wait_job(api: httpx.Client, job_id: str, timeout_s: float, on_change=None) -> dict:
-    """Poll `GET /api/jobs/{id}` until done or failed; `on_change(job)` sees each new stage or status."""
+    """Poll `GET /api/jobs/{id}` until done or failed; `on_change(job)` sees each new stage or status.
+
+    The lead restarts the backend when merging; a restart loses running jobs, so the wait rides out the
+    restart and then fails with a clear message if the job stops moving.
+    """
     deadline = time.monotonic() + timeout_s
-    last = None
+    last, restarted_at, last_move, last_snap = None, None, time.monotonic(), None
     while True:
-        r = api.get(f"/api/jobs/{job_id}")
+        try:
+            r = api.get(f"/api/jobs/{job_id}")
+        except httpx.TransportError:
+            restarted_at = restarted_at or time.monotonic()
+            if time.monotonic() - restarted_at > 180:
+                raise
+            time.sleep(2.0)
+            continue
         r.raise_for_status()
         job = r.json()
         key = (job.get("status"), job.get("stage"))
         if key != last and on_change:
             on_change(job)
         last = key
+        snap = (job.get("status"), job.get("stage"), job.get("progress"))
+        if snap != last_snap:
+            last_snap, last_move = snap, time.monotonic()
         if job["status"] in ("done", "failed"):
             return job
+        if restarted_at and time.monotonic() - last_move > 60:
+            raise RuntimeError(f"job {job_id} was lost when the backend restarted (still '{job['status']}' at stage "
+                               f"{job.get('stage')}, no progress for 60 s)")
         if time.monotonic() > deadline:
             raise TimeoutError(f"job {job_id} still {job['status']} at stage {job.get('stage')} after {timeout_s:.0f} s")
         time.sleep(1.0)
@@ -174,7 +191,7 @@ def tts_wav(api: httpx.Client, text: str, dst: Path, rec: Recorder | None = None
     r.raise_for_status()
     meta = r.json()
     if rec:
-        rec.mark("tts: speak the spoken answer", time.perf_counter() - t0, limit_s=10)
+        rec.mark("tts: make the test's spoken answer (setup, S2 Pro)", time.perf_counter() - t0)
     raw = dst.with_suffix(".tts.wav")
     raw.write_bytes(fetch(api, meta["audio"]).content)
     return to_wav16k(raw, dst, **pad), meta
