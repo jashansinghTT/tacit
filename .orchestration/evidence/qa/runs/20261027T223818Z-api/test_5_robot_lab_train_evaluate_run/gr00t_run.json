@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "type": "meta",
+    "mode": "gr00t",
+    "seed": 3,
+    "joints": [
+      "panda_joint1",
+      "panda_joint2",
+      "panda_joint3",
+      "panda_joint4",
+      "panda_joint5",
+      "panda_joint6",
+      "panda_joint7",
+      "panda_finger_joint1",
+      "panda_finger_joint2"
+    ],
+    "objects": [
+      "stem"
+    ],
+    "targets": [
+      "vase"
+    ],
+    "dt": 0.033333,
+    "instruction": "Put the stem in the vase"
+  },
+  "states": 601,
+  "cameras": {
+    "exterior": {
+      "n": 100,
+      "bytes": 8972
+    },
+    "wrist": {
+      "n": 100,
+      "bytes": 7164
+    }
+  },
+  "gr00t": [
+    65.8,
+    66.0,
+    67.0,
+    69.0,
+    65.0,
+    68.1,
+    68.7,
+    66.4,
+    65.7,
+    72.1,
+    68.5,
+    82.1,
+    71.6,
+    80.4,
+    100.3,
+    70.9,
+    67.2,
+    67.5,
+    78.2,
+    65.8,
+    65.4,
+    71.1,
+    64.7,
+    66.7,
+    65.3,
+    65.5,
+    66.3,
+    66.0,
+    65.1,
+    67.7,
+    66.4,
+    65.4,
+    67.7,
+    66.7,
+    66.5,
+    67.6,
+    66.4,
+    66.4
+  ],
+  "done": {
+    "type": "done",
+    "success": false,
+    "steps": 600,
+    "reason": "timed out during pick stem",
+    "seconds": 20.0,
+    "regrasps": 0,
+    "tasks_done": 0,
+    "gr00t": {
+      "calls": 38,
+      "p50_ms": 66.7,
+      "max_ms": 100.3
+    }
+  },
+  "errors": [],
+  "phases": [
+    "pick stem"
+  ],
+  "first_msg_s": 0.1,
+  "first_camera_s": 0.21,
+  "seconds": 20.1,
+  "state_hz": 30.0
+}

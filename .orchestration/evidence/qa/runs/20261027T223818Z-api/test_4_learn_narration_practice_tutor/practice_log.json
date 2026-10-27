@@ -1,0 +1,401 @@
+{
+  "analysis": 54,
+  "feedback": [
+    {
+      "step_index": 1,
+      "score": 0.951,
+      "phase": 0.085,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.956,
+      "phase": 0.106,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.958,
+      "phase": 0.106,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.957,
+      "phase": 0.106,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.956,
+      "phase": 0.149,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.956,
+      "phase": 0.149,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.956,
+      "phase": 0.17,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.955,
+      "phase": 0.17,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.946,
+      "phase": 0.17,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.932,
+      "phase": 0.191,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.922,
+      "phase": 0.191,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.911,
+      "phase": 0.213,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.905,
+      "phase": 0.277,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.908,
+      "phase": 0.319,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.907,
+      "phase": 0.319,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.908,
+      "phase": 0.362,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.908,
+      "phase": 0.383,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.911,
+      "phase": 0.404,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.913,
+      "phase": 0.426,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.916,
+      "phase": 0.447,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.917,
+      "phase": 0.489,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.918,
+      "phase": 0.511,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.92,
+      "phase": 0.511,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.921,
+      "phase": 0.511,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.921,
+      "phase": 0.532,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.922,
+      "phase": 0.553,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.922,
+      "phase": 0.574,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.923,
+      "phase": 0.574,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.924,
+      "phase": 0.638,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.926,
+      "phase": 0.66,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.926,
+      "phase": 0.681,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.927,
+      "phase": 0.702,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.928,
+      "phase": 0.745,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.929,
+      "phase": 0.766,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.927,
+      "phase": 0.787,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.927,
+      "phase": 0.809,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.928,
+      "phase": 0.809,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.929,
+      "phase": 0.83,
+      "hint": "Hold the stem steady while inserting.",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.93,
+      "phase": 0.851,
+      "hint": "Hold the stem steady while inserting.",
+      "done": true
+    },
+    {
+      "step_index": 2,
+      "score": 0.827,
+      "phase": 0.688,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.817,
+      "phase": 0.719,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.818,
+      "phase": 0.688,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.821,
+      "phase": 0.594,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.814,
+      "phase": 0.562,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.773,
+      "phase": 0.562,
+      "hint": "Keep the stem upright as you insert.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.722,
+      "phase": 0.562,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.668,
+      "phase": 1.0,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": true
+    },
+    {
+      "step_index": 3,
+      "score": 0.579,
+      "phase": 1.0,
+      "hint": "Maintain a consistent insertion depth.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.0,
+      "phase": 1.0,
+      "hint": "Use your right hand for this step.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.0,
+      "phase": 0.0,
+      "hint": "Show both hands to the camera.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.001,
+      "phase": 1.0,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.003,
+      "phase": 1.0,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.003,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.004,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    }
+  ],
+  "step_done": [
+    {
+      "type": "step_done",
+      "step_index": 1,
+      "score": 0.958
+    },
+    {
+      "type": "step_done",
+      "step_index": 2,
+      "score": 0.827
+    }
+  ],
+  "errors": [],
+  "saved": {
+    "type": "saved",
+    "steps_done": 3,
+    "best_score": 0.788
+  }
+}

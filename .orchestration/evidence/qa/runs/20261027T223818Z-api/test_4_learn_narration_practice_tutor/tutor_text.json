@@ -1,0 +1,71 @@
+{
+  "delta": [
+    "The",
+    " first",
+    " step",
+    " matters",
+    " because",
+    " it",
+    " starts",
+    " building",
+    " the",
+    " arrangement",
+    ".",
+    " By",
+    " inserting",
+    " the",
+    " first",
+    " stem",
+    ",",
+    " you",
+    " establish",
+    " the",
+    " base",
+    " and",
+    " overall",
+    " balance",
+    " of",
+    " the",
+    " display",
+    ".",
+    " This",
+    " sets",
+    " the",
+    " foundation",
+    " for",
+    " the",
+    " rest",
+    " of",
+    " the",
+    " stems",
+    " to",
+    " follow",
+    "."
+  ],
+  "audio": [
+    {
+      "index": 0,
+      "audio": "/media/tts/aa28a98e21e74b28d83f.wav",
+      "duration": 3.39
+    },
+    {
+      "index": 1,
+      "audio": "/media/tts/35640ada5a39da235b42.wav",
+      "duration": 5.29
+    },
+    {
+      "index": 2,
+      "audio": "/media/tts/5cf69f00ec5f3431736f.wav",
+      "duration": 3.44
+    }
+  ],
+  "done": {
+    "text": "The first step matters because it starts building the arrangement. By inserting the first stem, you establish the base and overall balance of the display. This sets the foundation for the rest of the stems to follow.",
+    "audio_parts": 3,
+    "sources": [],
+    "question": "Why does the first step matter?"
+  },
+  "end": true,
+  "transcript": null,
+  "error": null
+}

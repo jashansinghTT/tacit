@@ -1,0 +1,652 @@
+{
+  "config": {
+    "argv": [
+      "/home/jashan/.nvm/versions/node/v24.16.0/bin/node",
+      "/home/jashan/tacit-wt/qa-ui/web/node_modules/.bin/playwright",
+      "test",
+      "-c",
+      "e2e/qa.config.ts"
+    ],
+    "configFile": "/home/jashan/tacit-wt/qa-ui/web/e2e/qa.config.ts",
+    "rootDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T221420Z-ui/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "flows.spec.ts"
+        ],
+        "timeout": 1200000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T221420Z-ui/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "snapshotDir": "/home/jashan/tacit-wt/qa-ui/web/e2e",
+        "testIgnore": [],
+        "testMatch": "flows.spec.ts",
+        "timeout": 1200000,
+        "use": {
+          "baseURL": "http://127.0.0.1:8710",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "off",
+          "video": "off",
+          "actionTimeout": 20000,
+          "navigationTimeout": 30000,
+          "permissions": [
+            "camera",
+            "microphone"
+          ],
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "launchOptions": {
+            "args": [
+              "--use-fake-device-for-media-stream",
+              "--use-fake-ui-for-media-stream",
+              "--use-file-for-fake-video-capture=/home/jashan/tacit/data/e2e/capture.y4m",
+              "--use-file-for-fake-audio-capture=/home/jashan/tacit/data/e2e/answer.wav",
+              "--autoplay-policy=no-user-gesture-required"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/home/jashan/tacit-wt/qa/.orchestration/evidence/qa/runs/20261027T221420Z-ui/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "flows.spec.ts",
+      "file": "flows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "with the capture camera",
+          "file": "flows.spec.ts",
+          "line": 156,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F1 landing and navigation render with no console errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7915,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:14:21.207Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6ImxhbmRpbmcgcGFnZSIsInMiOjAuMjE4LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoibmF2aWdhdGUgdG8gL3N0dWRpbyIsInMiOjAuMjI5LCJsaW1pdF9zIjoyLCJzbG93IjpmYWxzZX0seyJzdGVwIjoibmF2aWdhdGUgdG8gL3NraWxscyIsInMiOjAuMDc2LCJsaW1pdF9zIjoyLCJzbG93IjpmYWxzZX0seyJzdGVwIjoibmF2aWdhdGUgdG8gL2xlYXJuIiwicyI6MC4wODQsImxpbWl0X3MiOjIsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJuYXZpZ2F0ZSB0byAvcm9ib3QiLCJzIjowLjA3MSwibGltaXRfcyI6Miwic2xvdyI6ZmFsc2V9LHsic3RlcCI6Im5hdmlnYXRlIHRvIC9leGNoYW5nZSIsInMiOjAuMDcyLCJsaW1pdF9zIjoyLCJzbG93IjpmYWxzZX0seyJzdGVwIjoibmF2aWdhdGUgdG8gL3RlYW0iLCJzIjowLjA3NywibGltaXRfcyI6Miwic2xvdyI6ZmFsc2V9LHsic3RlcCI6Im5hdmlnYXRlIHRvIC9ib3giLCJzIjowLjA2MiwibGltaXRfcyI6Miwic2xvdyI6ZmFsc2V9XQ=="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-064883f660eedba3ed4a",
+              "file": "flows.spec.ts",
+              "line": 157,
+              "column": 3
+            },
+            {
+              "title": "F2 sample video is processed into a ready skill with steps, verification and SOP",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 2400000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "processing took 78 s"
+                    },
+                    {
+                      "type": "note",
+                      "description": "skill sk_ba6751f0: 5 steps, verification verified 0.901"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 79747,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:14:29.165Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "processing took 78 s"
+                        },
+                        {
+                          "type": "note",
+                          "description": "skill sk_ba6751f0: 5 steps, verification verified 0.901"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cHJvY2Vzc2luZyB0b29rIDc4IHM="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "c2tpbGwgc2tfYmE2NzUxZjA6IDUgc3RlcHMsIHZlcmlmaWNhdGlvbiB2ZXJpZmllZCAwLjkwMQ=="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6InByb2Nlc3MgdGhlIHNhbXBsZSAoVUkpIiwicyI6NzguMTYsImxpbWl0X3MiOjMwMCwic2xvdyI6ZmFsc2V9XQ=="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-b0d473b82205d8da716d",
+              "file": "flows.spec.ts",
+              "line": 204,
+              "column": 3
+            },
+            {
+              "title": "F3 live capture with the fake camera gets a spoken coach question and a transcribed answer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1800000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "coach asked: Why did you move your right hand first?\n3.3 s\nreplay"
+                    },
+                    {
+                      "type": "note",
+                      "description": "capture timeline:\n0.5s q=0 voice_coming=0 answers=0 mic=-\n1.5s q=1 voice_coming=0 answers=0 mic=REC\n3.5s q=1 voice_coming=0 answers=1 mic=-"
+                    },
+                    {
+                      "type": "note",
+                      "description": "transcript: I place them in the tray. (33% of the answer; the fake mic loops)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 29067,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:15:48.920Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "coach asked: Why did you move your right hand first?\n3.3 s\nreplay"
+                        },
+                        {
+                          "type": "note",
+                          "description": "capture timeline:\n0.5s q=0 voice_coming=0 answers=0 mic=-\n1.5s q=1 voice_coming=0 answers=0 mic=REC\n3.5s q=1 voice_coming=0 answers=1 mic=-"
+                        },
+                        {
+                          "type": "note",
+                          "description": "transcript: I place them in the tray. (33% of the answer; the fake mic loops)"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "Y29hY2ggYXNrZWQ6IFdoeSBkaWQgeW91IG1vdmUgeW91ciByaWdodCBoYW5kIGZpcnN0PwozLjMgcwpyZXBsYXk="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "Y2FwdHVyZSB0aW1lbGluZToKMC41cyBxPTAgdm9pY2VfY29taW5nPTAgYW5zd2Vycz0wIG1pYz0tCjEuNXMgcT0xIHZvaWNlX2NvbWluZz0wIGFuc3dlcnM9MCBtaWM9UkVDCjMuNXMgcT0xIHZvaWNlX2NvbWluZz0wIGFuc3dlcnM9MSBtaWM9LQ=="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "dHJhbnNjcmlwdDogSSBwbGFjZSB0aGVtIGluIHRoZSB0cmF5LiAoMzMlIG9mIHRoZSBhbnN3ZXI7IHRoZSBmYWtlIG1pYyBsb29wcyk="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6ImNhbWVyYSBwcmV2aWV3IiwicyI6MC4xMTksImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJmaXJzdCBjb2FjaCBxdWVzdGlvbiAoZnJvbSBzdGFydCkiLCJzIjoxLjM0MSwibGltaXRfcyI6NjAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJtaWMgcGlja3MgdXAgdGhlIHNwb2tlbiBhbnN3ZXIgKGZyb20gcXVlc3Rpb24pIiwicyI6Mi4zMjYsImxpbWl0X3MiOjMwLCJzbG93IjpmYWxzZX0seyJzdGVwIjoiYW5zd2VyIHRyYW5zY3JpYmVkIChmcm9tIGVuZCBvZiBzcGVlY2gpIiwicyI6MC4wMDMsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJwcm9jZXNzIHRoZSBjYXB0dXJlIChVSSkiLCJzIjoyMS4wMywibGltaXRfcyI6MTgwLCJzbG93IjpmYWxzZX1d"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-32510bb71fdaf1addbfb",
+              "file": "flows.spec.ts",
+              "line": 257,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "with the practice camera",
+          "file": "flows.spec.ts",
+          "line": 344,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F4 learn: narration plays, practice scores with a hint, tutor answers by text and voice",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "practice: score 2 MATCH; hint \"Bring your hand up to where the part sits.\""
+                    },
+                    {
+                      "type": "note",
+                      "description": "voice question heard as: What should I check before I start this task?"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 15410,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:16:17.992Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "practice: score 2 MATCH; hint \"Bring your hand up to where the part sits.\""
+                        },
+                        {
+                          "type": "note",
+                          "description": "voice question heard as: What should I check before I start this task?"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cHJhY3RpY2U6IHNjb3JlIDIgTUFUQ0g7IGhpbnQgIkJyaW5nIHlvdXIgaGFuZCB1cCB0byB3aGVyZSB0aGUgcGFydCBzaXRzLiI="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "dm9pY2UgcXVlc3Rpb24gaGVhcmQgYXM6IFdoYXQgc2hvdWxkIEkgY2hlY2sgYmVmb3JlIEkgc3RhcnQgdGhpcyB0YXNrPw=="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6Im5hcnJhdGlvbiBzdGFydHMgcGxheWluZyIsInMiOjAuMzU4LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoiZmlyc3QgcHJhY3RpY2Ugc2NvcmUiLCJzIjowLjI4NywibGltaXRfcyI6NSwic2xvdyI6ZmFsc2V9LHsic3RlcCI6InByYWN0aWNlIGhpbnQgc2hvd24iLCJzIjoxLjgxOSwibGltaXRfcyI6MTAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0dXRvciB0ZXh0OiBmaXJzdCB3b3JkcyIsInMiOjAuMDAyLCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoidHV0b3IgdGV4dDogYW5zd2VyIGNvbXBsZXRlIiwicyI6MS4yODIsImxpbWl0X3MiOjMwLCJzbG93IjpmYWxzZX0seyJzdGVwIjoidHV0b3IgdGV4dDogYW5zd2VyIHNwb2tlbiIsInMiOjAuMDAyLCJsaW1pdF9zIjoxNSwic2xvdyI6ZmFsc2V9LHsic3RlcCI6InR1dG9yIHZvaWNlOiBxdWVzdGlvbiB0cmFuc2NyaWJlZCIsInMiOjAuMDA2LCJsaW1pdF9zIjo1LCJzbG93IjpmYWxzZX0seyJzdGVwIjoidHV0b3Igdm9pY2U6IGFuc3dlciBjb21wbGV0ZSIsInMiOjAuMjc4LCJsaW1pdF9zIjozMCwic2xvdyI6ZmFsc2V9XQ=="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-14fc95d79a7ae8bfb3ed",
+              "file": "flows.spec.ts",
+              "line": 345,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "the rest",
+          "file": "flows.spec.ts",
+          "line": 442,
+          "column": 6,
+          "specs": [
+            {
+              "title": "F5 robot lab: train, evaluate at least 80% over 20 trials, GR00T run streams frames",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 2400000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "evaluation shows 9/9 (100%)"
+                    },
+                    {
+                      "type": "note",
+                      "description": "GR00T latency panel: LAST 265 ms P50 223 ms ON CHIP 157 ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 77737,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:16:33.406Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "evaluation shows 9/9 (100%)"
+                        },
+                        {
+                          "type": "note",
+                          "description": "GR00T latency panel: LAST 265 ms P50 223 ms ON CHIP 157 ms"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "ZXZhbHVhdGlvbiBzaG93cyA5LzkgKDEwMCUp"
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "R1IwMFQgbGF0ZW5jeSBwYW5lbDogTEFTVCAyNjUgbXMgUDUwIDIyMyBtcyBPTiBDSElQIDE1NyBtcw=="
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6InRyYWluIHRoZSBwb2xpY3kgKFVJKSIsInMiOjU4Ljk3LCJsaW1pdF9zIjozMDAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJldmFsdWF0ZSAyMCB0cmlhbHMgKFVJKSIsInMiOjAuMzg4LCJsaW1pdF9zIjoxODAsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJHUjAwVCBjYW1lcmEgZnJhbWVzIGFwcGVhciIsInMiOjEuNjYyLCJsaW1pdF9zIjoxMCwic2xvdyI6ZmFsc2V9XQ=="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-81d01ef80dd5a85d32d0",
+              "file": "flows.spec.ts",
+              "line": 443,
+              "column": 3
+            },
+            {
+              "title": "F6 exchange: list, license as buyer, download the pack, earnings show the royalty",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [
+                    {
+                      "type": "note",
+                      "description": "listing lst_3f087728"
+                    },
+                    {
+                      "type": "note",
+                      "description": "pack: 208 files"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7333,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "buffer": ""
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:17:51.157Z",
+                      "annotations": [
+                        {
+                          "type": "note",
+                          "description": "listing lst_3f087728"
+                        },
+                        {
+                          "type": "note",
+                          "description": "pack: 208 files"
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "bGlzdGluZyBsc3RfM2YwODc3Mjg="
+                        },
+                        {
+                          "name": "note",
+                          "contentType": "text/plain",
+                          "body": "cGFjazogMjA4IGZpbGVz"
+                        },
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6InB1Ymxpc2ggdGhlIGxpc3RpbmciLCJzIjowLjA2LCJsaW1pdF9zIjozLCJzbG93IjpmYWxzZX0seyJzdGVwIjoibGljZW5zZSAoVUkpIiwicyI6MC4xMDMsImxpbWl0X3MiOjMsInNsb3ciOmZhbHNlfV0="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-410ee93b017279020b8a",
+              "file": "flows.spec.ts",
+              "line": 492,
+              "column": 3
+            },
+            {
+              "title": "F7 box page shows all nine models healthy on four chips",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2976,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:17:58.501Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6ImJveCBwYWdlIiwicyI6MC4yMzgsImxpbWl0X3MiOjMsInNsb3ciOmZhbHNlfV0="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-9c0be0a668728c09b9a1",
+              "file": "flows.spec.ts",
+              "line": 563,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "extra",
+          "file": "flows.spec.ts",
+          "line": 587,
+          "column": 6,
+          "specs": [
+            {
+              "title": "X1 guided tour: every stop lands on its page and highlights its target (SPEC 8)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1200000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8316,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T22:18:01.483Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "timings",
+                          "contentType": "application/json",
+                          "body": "W3sic3RlcCI6InRvdXIgc3RvcCAxOiBzdHVkaW8tc291cmNlIiwicyI6MC4wMTksImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0b3VyIHN0b3AgMjogdmVyaWZ5LXBhbmVsIiwicyI6MC4wODcsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0b3VyIHN0b3AgMzogbGVzc29uLXBsYXllciIsInMiOjAuMDU5LCJsaW1pdF9zIjo1LCJzbG93IjpmYWxzZX0seyJzdGVwIjoidG91ciBzdG9wIDQ6IHJvYm90LW1vZGVzIiwicyI6MC4wNTEsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfSx7InN0ZXAiOiJ0b3VyIHN0b3AgNTogbGljZW5zZS1wYW5lbCIsInMiOjAuMDUyLCJsaW1pdF9zIjo1LCJzbG93IjpmYWxzZX0seyJzdGVwIjoidG91ciBzdG9wIDY6IGNoaXAtbWFwIiwicyI6MC4wMDgsImxpbWl0X3MiOjUsInNsb3ciOmZhbHNlfV0="
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "86d6a544053f1eb9f224-57d6fa4a5fbc3e0dc783",
+              "file": "flows.spec.ts",
+              "line": 588,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T22:14:20.864Z",
+    "duration": 228998.74300000002,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

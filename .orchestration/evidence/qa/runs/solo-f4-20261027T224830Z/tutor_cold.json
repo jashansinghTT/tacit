@@ -1,0 +1,65 @@
+{
+  "skill": "sk_30a3a915",
+  "at": "2026-10-27T22:49:03Z",
+  "wait_idle_1_s": 0.1,
+  "text": {
+    "marks": {
+      "first_text": 0.75,
+      "text_done": 1.05,
+      "first_audio": 16.08,
+      "end": 36.61
+    },
+    "text": "A common mistake is letting the second stem touch the rim or tilt. Maria says keep it upright and avoid contact with the rim to maintain balance.",
+    "question": "What is the most common mistake people make with the second stem?",
+    "audio_parts": [
+      [
+        16.08,
+        4.04
+      ],
+      [
+        36.61,
+        5.34
+      ]
+    ]
+  },
+  "wait_idle_2_s": 0.1,
+  "voice": {
+    "marks": {
+      "transcribed": 0.6,
+      "first_text": 1.22,
+      "text_done": 1.62,
+      "first_audio": 18.88,
+      "end": 47.36
+    },
+    "text": "You can check the insertion depth by keeping the stem at the same depth as the previous ones. If it sits level with the others, it\u2019s pushed in far enough. Maria says consistency keeps the arrangement balanced.",
+    "question": "How can I tell that the third stem is pushed in far enough?",
+    "audio_parts": [
+      [
+        18.88,
+        4.6
+      ],
+      [
+        33.34,
+        4.04
+      ],
+      [
+        47.36,
+        3.85
+      ]
+    ]
+  },
+  "box": {
+    "Whisper large-v3": {
+      "p50_ms": 551.5,
+      "calls": 6
+    },
+    "S2 Pro": {
+      "p50_ms": 16814.0,
+      "calls": 18
+    },
+    "MiniMax Music 3": {
+      "p50_ms": null,
+      "calls": 0
+    }
+  }
+}

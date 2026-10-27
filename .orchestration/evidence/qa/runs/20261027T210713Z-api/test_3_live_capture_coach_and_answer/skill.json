@@ -1,0 +1,234 @@
+{
+  "id": "sk_f4f1c3f9",
+  "title": "QA Insert Item into Vase",
+  "summary": "Place an item into a vase, ensuring proper alignment and secure placement.",
+  "status": "ready",
+  "created_at": "2026-10-27T21:14:40Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "live",
+    "video": "/media/skills/sk_f4f1c3f9/source.mp4",
+    "fps": 10.0,
+    "duration": 21.9,
+    "width": 960,
+    "height": 540
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 6.9,
+      "t_end": 11.3,
+      "title": "Insert Item into Vase",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "why_source": "expert",
+      "keyframe": "/media/skills/sk_f4f1c3f9/kf_01.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Hold the item firmly to avoid dropping it.",
+        "Align the item with the vase opening for a smooth insertion."
+      ]
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 16.0,
+      "t_end": 19.0,
+      "title": "Repeat Insertion",
+      "instruction": "Push the item held in the right hand into the vase on your right again.",
+      "why": "Repeating the insertion ensures all items are placed correctly.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_f4f1c3f9/kf_02.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Check the vase for any remaining items before the second insertion.",
+        "Use a gentle push to avoid splashing liquid."
+      ]
+    }
+  ],
+  "qa": [
+    {
+      "t": 11.3,
+      "question": "Why did you choose the right hand to pick up the vase?",
+      "question_audio": "/media/tts/e7f00fd43ec0417b4e17.wav",
+      "answer": "because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "step_index": 1,
+      "step_id": "st1"
+    },
+    {
+      "step_index": 2,
+      "step_id": "st2",
+      "t": 19.0,
+      "question": "Why is a second insertion necessary?",
+      "answer": null,
+      "pending": true
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "score": 0.898,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.0186,
+      "depth_stability": 0.9975,
+      "camera_drift": 0.0008,
+      "static_pixels": 51094,
+      "score": 0.898
+    },
+    "checked_at": "2026-10-27T21:15:23Z",
+    "pointcloud": "/api/skills/sk_f4f1c3f9/pointcloud"
+  },
+  "robot": {
+    "program": [
+      {
+        "op": "pick",
+        "object": "the item"
+      },
+      {
+        "op": "place",
+        "target": "vase on your right"
+      }
+    ]
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T21:14:40Z"
+  },
+  "updated_at": "2026-10-27T21:16:02Z",
+  "thumb": "/media/skills/sk_f4f1c3f9/thumb.jpg",
+  "sop_markdown": "# Insert Item into Vase\n\nPlace an item into a vase, ensuring proper alignment and secure placement.\n\n## Before you start\n- Have the vase on your right ready.\n- Hold the item in your right hand.\n- Ensure the left side parts are sorted.\n\n## 1. **Insert Item into Vase**\nPush the item held in the right hand into the vase on your right.  \n**Why:** The left side parts are already sorted, so I check them before placing items in the tray. (expert)\n\n## 2. **Repeat Insertion**\nPush the item held in the right hand into the vase on your right again.  \n**Why:** Repeating the insertion ensures all items are placed correctly. (inferred)\n\n## Check your work\n- Verify the item is fully seated in the vase.  \n- Confirm no other items remain to be inserted.",
+  "quiz": [
+    {
+      "q": "Why did the expert check the left side parts before inserting the item into the vase?",
+      "choices": [
+        "To ensure the vase is clean",
+        "To confirm the left side parts are sorted",
+        "To align the item with the vase opening"
+      ],
+      "answer": 1,
+      "explain": "The expert wants to verify that the left side parts are already sorted before placing items in the tray."
+    },
+    {
+      "q": "What is the purpose of repeating the insertion of the item into the vase?",
+      "choices": [
+        "To clean the vase",
+        "To ensure all items are placed correctly",
+        "To test the strength of the vase"
+      ],
+      "answer": 1,
+      "explain": "Repeating the insertion ensures all items are placed correctly."
+    },
+    {
+      "q": "Why does the expert align the item with the vase opening during insertion?",
+      "choices": [
+        "To make the item look neat",
+        "To avoid dropping the item",
+        "To ensure a smooth insertion"
+      ],
+      "answer": 2,
+      "explain": "Aligning the item with the vase opening allows a smooth insertion and prevents dropping."
+    }
+  ],
+  "safety": [
+    "Hold the item firmly to avoid dropping it.",
+    "Align the item with the vase opening for a smooth insertion.",
+    "Use a gentle push to avoid splashing liquid."
+  ],
+  "motion_thumb": "/media/skills/sk_f4f1c3f9/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/4e0dd12a71333e354b44.wav",
+      "duration": 7.5,
+      "text": "QA Insert Item into Vase. Place an item into a vase, ensuring proper alignment and secure placement."
+    },
+    "st1": {
+      "audio": "/media/tts/0d4b6d0abc2eddc05473.wav",
+      "duration": 7.41,
+      "text": "Step 1. Insert Item into Vase. Push the item held in the right hand into the vase on your right."
+    },
+    "st2": {
+      "audio": "/media/tts/a393f5d80a93de8ebdee.wav",
+      "duration": 7.09,
+      "text": "Step 2. Repeat Insertion. Push the item held in the right hand into the vase on your right again."
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 129,
+      "p50_ms": 43.4
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 162,
+      "p50_ms": 36.6
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 129,
+      "p50_ms": 43.1
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3428.1
+    },
+    {
+      "model": "S2 Pro",
+      "chip": 1,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 38160.7
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 6661.0
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 129,
+      "p50_ms": 44.9
+    },
+    {
+      "model": "S2 Pro",
+      "chip": null,
+      "backend": "cache",
+      "calls": 2,
+      "p50_ms": 0.0
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}

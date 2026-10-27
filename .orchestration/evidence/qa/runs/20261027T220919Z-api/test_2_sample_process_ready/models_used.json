@@ -1,0 +1,51 @@
+[
+  {
+    "model": "Gaze-LLE",
+    "chip": 0,
+    "backend": "tt",
+    "calls": 445,
+    "p50_ms": 43.8
+  },
+  {
+    "model": "HaMeR",
+    "chip": 0,
+    "backend": "tt",
+    "calls": 654,
+    "p50_ms": 68.4
+  },
+  {
+    "model": "RF-DETR",
+    "chip": 0,
+    "backend": "tt",
+    "calls": 445,
+    "p50_ms": 48.6
+  },
+  {
+    "model": "VGGT-1B",
+    "chip": 0,
+    "backend": "tt",
+    "calls": 1,
+    "p50_ms": 3467.9
+  },
+  {
+    "model": "gpt-oss-20b",
+    "chip": 2,
+    "backend": "tt",
+    "calls": 2,
+    "p50_ms": 7612.1
+  },
+  {
+    "model": "MediaPipe",
+    "chip": null,
+    "backend": "cpu",
+    "calls": 445,
+    "p50_ms": 46.4
+  },
+  {
+    "model": "S2 Pro",
+    "chip": null,
+    "backend": "cache",
+    "calls": 3,
+    "p50_ms": 0.0
+  }
+]

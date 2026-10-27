@@ -1,0 +1,76 @@
+{
+  "delta": [
+    "Before",
+    " you",
+    " begin",
+    ",",
+    " make",
+    " sure",
+    " the",
+    " vase",
+    " is",
+    " stable",
+    " and",
+    " the",
+    " stems",
+    " are",
+    " dry",
+    " and",
+    " straight",
+    ".",
+    " Check",
+    " that",
+    " the",
+    " stems",
+    " are",
+    " aligned",
+    " with",
+    " the",
+    " vase",
+    "’s",
+    " center",
+    " and",
+    " that",
+    " you",
+    " have",
+    " enough",
+    " space",
+    " to",
+    " avoid",
+    " over",
+    "‑",
+    "crow",
+    "ding",
+    ",",
+    " so",
+    " the",
+    " arrangement",
+    " won",
+    "’t",
+    " tip",
+    "."
+  ],
+  "audio": [
+    {
+      "index": 0,
+      "audio": "/media/tts/7da8641bb04a97a8b286.wav",
+      "duration": 4.88
+    },
+    {
+      "index": 1,
+      "audio": "/media/tts/f4a7a6a160d22b4cd2cd.wav",
+      "duration": 7.11
+    }
+  ],
+  "done": {
+    "text": "Before you begin, make sure the vase is stable and the stems are dry and straight. Check that the stems are aligned with the vase’s center and that you have enough space to avoid over‑crowding, so the arrangement won’t tip.",
+    "audio_parts": 2,
+    "sources": [],
+    "question": "What should I check before I start this task?"
+  },
+  "end": true,
+  "transcript": {
+    "text": "What should I check before I start this task?"
+  },
+  "error": null
+}

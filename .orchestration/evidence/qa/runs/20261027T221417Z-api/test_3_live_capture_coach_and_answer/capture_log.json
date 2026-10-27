@@ -1,0 +1,4988 @@
+{
+  "analysis": [
+    {
+      "t": 0.0,
+      "timing_ms": {
+        "mediapipe": 22.1,
+        "encode": 1.1,
+        "rfdetr": 17.1,
+        "hamer_right": 48.8,
+        "hamer_left": 48.8,
+        "gaze": 15.0,
+        "total": 82.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 48.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 48.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 22.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.1,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.3,
+        "rfdetr": 35.2,
+        "hamer_right": 49.1,
+        "hamer_left": 49.1,
+        "gaze": 39.1,
+        "total": 71.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 35.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 49.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 49.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 39.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.2,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.0,
+        "rfdetr": 19.8,
+        "hamer_right": 42.8,
+        "hamer_left": 42.8,
+        "gaze": 32.8,
+        "total": 65.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.3,
+      "timing_ms": {
+        "mediapipe": 12.9,
+        "encode": 1.0,
+        "rfdetr": 19.4,
+        "hamer_right": 41.3,
+        "hamer_left": 41.3,
+        "gaze": 31.6,
+        "total": 63.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.4,
+      "timing_ms": {
+        "mediapipe": 12.9,
+        "encode": 1.0,
+        "rfdetr": 19.2,
+        "hamer_right": 40.7,
+        "hamer_left": 40.7,
+        "gaze": 30.5,
+        "total": 62.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.5,
+      "timing_ms": {
+        "mediapipe": 13.8,
+        "encode": 1.0,
+        "rfdetr": 20.1,
+        "hamer_right": 41.0,
+        "hamer_left": 41.0,
+        "gaze": 31.0,
+        "total": 63.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.6,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.0,
+        "rfdetr": 19.4,
+        "hamer_right": 46.1,
+        "hamer_left": 46.1,
+        "gaze": 19.9,
+        "total": 68.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 46.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 46.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.7,
+      "timing_ms": {
+        "mediapipe": 11.6,
+        "encode": 1.1,
+        "rfdetr": 17.2,
+        "hamer_right": 40.3,
+        "hamer_left": 40.3,
+        "gaze": 31.0,
+        "total": 61.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 11.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.8,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.1,
+        "rfdetr": 19.1,
+        "hamer_right": 41.3,
+        "hamer_left": 41.3,
+        "gaze": 32.3,
+        "total": 63.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 0.9,
+      "timing_ms": {
+        "mediapipe": 14.3,
+        "encode": 1.1,
+        "rfdetr": 20.3,
+        "hamer_right": 41.3,
+        "hamer_left": 41.3,
+        "gaze": 31.5,
+        "total": 64.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.0,
+      "timing_ms": {
+        "mediapipe": 12.4,
+        "encode": 1.0,
+        "rfdetr": 18.8,
+        "hamer_right": 41.8,
+        "hamer_left": 41.8,
+        "gaze": 31.9,
+        "total": 63.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.1,
+      "timing_ms": {
+        "mediapipe": 13.6,
+        "encode": 1.3,
+        "rfdetr": 18.9,
+        "hamer_right": 43.4,
+        "hamer_left": 43.4,
+        "gaze": 31.4,
+        "total": 65.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.2,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.0,
+        "rfdetr": 20.8,
+        "hamer_right": 41.5,
+        "hamer_left": 41.5,
+        "gaze": 31.8,
+        "total": 64.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.3,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.1,
+        "rfdetr": 18.8,
+        "hamer_right": 40.7,
+        "hamer_left": 40.7,
+        "gaze": 30.5,
+        "total": 62.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.4,
+      "timing_ms": {
+        "mediapipe": 12.7,
+        "encode": 1.0,
+        "rfdetr": 18.7,
+        "hamer_right": 41.2,
+        "hamer_left": 41.2,
+        "gaze": 31.0,
+        "total": 62.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.5,
+      "timing_ms": {
+        "mediapipe": 15.2,
+        "encode": 1.0,
+        "rfdetr": 21.4,
+        "hamer_right": 41.1,
+        "hamer_left": 41.1,
+        "gaze": 31.2,
+        "total": 65.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.6,
+      "timing_ms": {
+        "mediapipe": 11.1,
+        "encode": 1.1,
+        "rfdetr": 16.9,
+        "hamer_right": 41.0,
+        "hamer_left": 41.0,
+        "gaze": 31.3,
+        "total": 60.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 11.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.7,
+      "timing_ms": {
+        "mediapipe": 15.0,
+        "encode": 1.1,
+        "rfdetr": 21.1,
+        "hamer_right": 43.0,
+        "hamer_left": 43.0,
+        "gaze": 33.1,
+        "total": 67.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 33.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.8,
+      "timing_ms": {
+        "mediapipe": 14.8,
+        "encode": 1.1,
+        "rfdetr": 21.3,
+        "hamer_right": 40.6,
+        "hamer_left": 40.6,
+        "gaze": 31.1,
+        "total": 64.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 1.9,
+      "timing_ms": {
+        "mediapipe": 13.8,
+        "encode": 1.0,
+        "rfdetr": 19.8,
+        "hamer_right": 41.5,
+        "hamer_left": 41.5,
+        "gaze": 31.3,
+        "total": 63.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.0,
+      "timing_ms": {
+        "mediapipe": 13.1,
+        "encode": 1.0,
+        "rfdetr": 19.5,
+        "hamer_right": 41.0,
+        "hamer_left": 41.0,
+        "gaze": 31.4,
+        "total": 63.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.1,
+      "timing_ms": {
+        "mediapipe": 12.7,
+        "encode": 1.0,
+        "rfdetr": 18.6,
+        "hamer_right": 41.5,
+        "hamer_left": 41.5,
+        "gaze": 31.7,
+        "total": 62.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.2,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.0,
+        "rfdetr": 20.9,
+        "hamer_right": 41.2,
+        "hamer_left": 41.2,
+        "gaze": 32.3,
+        "total": 64.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.3,
+      "timing_ms": {
+        "mediapipe": 13.0,
+        "encode": 1.0,
+        "rfdetr": 18.7,
+        "hamer_right": 40.3,
+        "hamer_left": 40.3,
+        "gaze": 30.5,
+        "total": 61.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.4,
+      "timing_ms": {
+        "mediapipe": 13.6,
+        "encode": 1.3,
+        "rfdetr": 18.7,
+        "hamer_right": 40.7,
+        "hamer_left": 40.7,
+        "gaze": 30.9,
+        "total": 63.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.5,
+      "timing_ms": {
+        "mediapipe": 13.3,
+        "encode": 1.1,
+        "rfdetr": 19.0,
+        "hamer_right": 41.8,
+        "hamer_left": 41.8,
+        "gaze": 31.9,
+        "total": 63.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.6,
+      "timing_ms": {
+        "mediapipe": 10.3,
+        "encode": 1.1,
+        "rfdetr": 18.6,
+        "hamer_right": 39.4,
+        "hamer_left": 39.4,
+        "gaze": 29.6,
+        "total": 58.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 39.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 39.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 29.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 10.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.7,
+      "timing_ms": {
+        "mediapipe": 13.1,
+        "encode": 1.1,
+        "rfdetr": 19.5,
+        "hamer_right": 41.2,
+        "hamer_left": 41.2,
+        "gaze": 31.5,
+        "total": 63.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.8,
+      "timing_ms": {
+        "mediapipe": 13.1,
+        "encode": 1.1,
+        "rfdetr": 19.5,
+        "hamer_right": 41.5,
+        "hamer_left": 41.5,
+        "gaze": 32.2,
+        "total": 63.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 2.9,
+      "timing_ms": {
+        "mediapipe": 15.5,
+        "encode": 1.1,
+        "rfdetr": 21.5,
+        "hamer_right": 41.4,
+        "hamer_left": 41.4,
+        "gaze": 31.2,
+        "total": 65.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.0,
+      "timing_ms": {
+        "mediapipe": 12.7,
+        "encode": 1.0,
+        "rfdetr": 18.7,
+        "hamer_right": 43.9,
+        "hamer_left": 43.9,
+        "gaze": 31.0,
+        "total": 65.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.1,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.1,
+        "rfdetr": 19.4,
+        "hamer_right": 41.7,
+        "hamer_left": 41.7,
+        "gaze": 32.3,
+        "total": 63.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.2,
+      "timing_ms": {
+        "mediapipe": 13.3,
+        "encode": 1.1,
+        "rfdetr": 18.9,
+        "hamer_right": 40.6,
+        "hamer_left": 40.6,
+        "gaze": 30.6,
+        "total": 62.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.3,
+      "timing_ms": {
+        "mediapipe": 13.4,
+        "encode": 1.1,
+        "rfdetr": 19.9,
+        "hamer_right": 41.8,
+        "hamer_left": 41.8,
+        "gaze": 31.9,
+        "total": 64.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.4,
+      "timing_ms": {
+        "mediapipe": 12.6,
+        "encode": 1.0,
+        "rfdetr": 17.3,
+        "hamer_right": 20.3,
+        "gaze": 28.2,
+        "total": 47.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.5,
+      "timing_ms": {
+        "mediapipe": 13.2,
+        "encode": 1.0,
+        "rfdetr": 17.4,
+        "hamer_right": 20.5,
+        "gaze": 28.4,
+        "total": 47.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.6,
+      "timing_ms": {
+        "mediapipe": 16.6,
+        "encode": 1.0,
+        "rfdetr": 20.5,
+        "hamer_right": 20.5,
+        "gaze": 28.6,
+        "total": 51.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.7,
+      "timing_ms": {
+        "mediapipe": 20.2,
+        "encode": 1.1,
+        "rfdetr": 15.1,
+        "hamer_right": 40.2,
+        "hamer_left": 40.2,
+        "gaze": 28.4,
+        "total": 68.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 20.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.8,
+      "timing_ms": {
+        "mediapipe": 12.9,
+        "encode": 1.0,
+        "rfdetr": 19.2,
+        "hamer_right": 41.0,
+        "hamer_left": 41.0,
+        "gaze": 31.1,
+        "total": 63.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 3.9,
+      "timing_ms": {
+        "mediapipe": 13.0,
+        "encode": 1.0,
+        "rfdetr": 20.0,
+        "hamer_right": 40.8,
+        "hamer_left": 40.8,
+        "gaze": 31.5,
+        "total": 63.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.0,
+      "timing_ms": {
+        "mediapipe": 13.4,
+        "encode": 1.0,
+        "rfdetr": 19.5,
+        "hamer_right": 41.1,
+        "hamer_left": 41.1,
+        "gaze": 31.4,
+        "total": 63.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.1,
+      "timing_ms": {
+        "mediapipe": 11.1,
+        "encode": 1.1,
+        "rfdetr": 50.6,
+        "hamer_right": 49.2,
+        "hamer_left": 49.2,
+        "gaze": 42.9,
+        "total": 68.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 50.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 49.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 49.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 11.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.2,
+      "timing_ms": {
+        "mediapipe": 18.2,
+        "encode": 1.0,
+        "rfdetr": 25.3,
+        "hamer_right": 45.3,
+        "hamer_left": 45.3,
+        "gaze": 34.9,
+        "total": 73.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 45.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 45.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 34.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 18.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.3,
+      "timing_ms": {
+        "mediapipe": 14.0,
+        "encode": 1.1,
+        "rfdetr": 20.2,
+        "hamer_right": 40.8,
+        "hamer_left": 40.8,
+        "gaze": 31.4,
+        "total": 63.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.4,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.3,
+        "rfdetr": 19.6,
+        "hamer_right": 41.7,
+        "hamer_left": 41.7,
+        "gaze": 31.7,
+        "total": 64.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "person",
+        "vase",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.5,
+      "timing_ms": {
+        "mediapipe": 13.4,
+        "encode": 1.0,
+        "rfdetr": 19.6,
+        "hamer_right": 44.5,
+        "hamer_left": 44.5,
+        "gaze": 31.9,
+        "total": 66.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 44.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 44.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.6,
+      "timing_ms": {
+        "mediapipe": 13.4,
+        "encode": 1.0,
+        "rfdetr": 20.4,
+        "hamer_right": 41.2,
+        "hamer_left": 41.2,
+        "gaze": 31.2,
+        "total": 64.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.7,
+      "timing_ms": {
+        "mediapipe": 13.1,
+        "encode": 1.1,
+        "rfdetr": 19.1,
+        "hamer_right": 41.3,
+        "hamer_left": 41.3,
+        "gaze": 31.3,
+        "total": 63.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.8,
+      "timing_ms": {
+        "mediapipe": 12.7,
+        "encode": 1.0,
+        "rfdetr": 18.7,
+        "hamer_right": 42.1,
+        "hamer_left": 42.1,
+        "gaze": 32.0,
+        "total": 63.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 32.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 4.9,
+      "timing_ms": {
+        "mediapipe": 13.4,
+        "encode": 1.1,
+        "rfdetr": 19.7,
+        "hamer_right": 43.5,
+        "hamer_left": 43.5,
+        "gaze": 31.6,
+        "total": 66.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 43.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.0,
+      "timing_ms": {
+        "mediapipe": 15.3,
+        "encode": 1.0,
+        "rfdetr": 21.8,
+        "hamer_right": 41.1,
+        "hamer_left": 41.1,
+        "gaze": 31.4,
+        "total": 65.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.1,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.1,
+        "rfdetr": 19.2,
+        "hamer_right": 41.2,
+        "hamer_left": 41.2,
+        "gaze": 31.2,
+        "total": 63.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.2,
+      "timing_ms": {
+        "mediapipe": 13.0,
+        "encode": 1.1,
+        "rfdetr": 20.0,
+        "hamer_right": 40.5,
+        "hamer_left": 40.5,
+        "gaze": 30.8,
+        "total": 62.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.3,
+      "timing_ms": {
+        "mediapipe": 12.7,
+        "encode": 1.0,
+        "rfdetr": 19.5,
+        "hamer_right": 42.9,
+        "hamer_left": 42.9,
+        "gaze": 31.1,
+        "total": 64.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 42.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.4,
+      "timing_ms": {
+        "mediapipe": 12.8,
+        "encode": 1.0,
+        "rfdetr": 17.2,
+        "hamer_right": 18.9,
+        "gaze": 26.4,
+        "total": 45.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.5,
+      "timing_ms": {
+        "mediapipe": 13.3,
+        "encode": 1.1,
+        "rfdetr": 17.9,
+        "hamer_right": 21.1,
+        "gaze": 28.8,
+        "total": 48.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.6,
+      "timing_ms": {
+        "mediapipe": 13.0,
+        "encode": 1.0,
+        "rfdetr": 18.5,
+        "hamer_right": 20.9,
+        "gaze": 28.4,
+        "total": 48.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.7,
+      "timing_ms": {
+        "mediapipe": 20.3,
+        "encode": 1.1,
+        "rfdetr": 15.4,
+        "hamer_right": 18.8,
+        "gaze": 26.2,
+        "total": 52.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 20.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.8,
+      "timing_ms": {
+        "mediapipe": 16.8,
+        "encode": 1.0,
+        "rfdetr": 21.0,
+        "hamer_right": 20.6,
+        "gaze": 28.2,
+        "total": 51.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 5.9,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.0,
+        "rfdetr": 15.8,
+        "gaze": 14.9,
+        "total": 34.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 14.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 0,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.0,
+      "timing_ms": {
+        "mediapipe": 11.5,
+        "encode": 1.1,
+        "rfdetr": 16.2,
+        "hamer_right": 22.0,
+        "gaze": 30.6,
+        "total": 48.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 22.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 11.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.1,
+      "timing_ms": {
+        "mediapipe": 20.4,
+        "encode": 1.1,
+        "rfdetr": 15.5,
+        "hamer_right": 19.1,
+        "gaze": 28.2,
+        "total": 54.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 20.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.2,
+      "timing_ms": {
+        "mediapipe": 14.1,
+        "encode": 1.1,
+        "rfdetr": 18.7,
+        "hamer_right": 20.8,
+        "gaze": 28.5,
+        "total": 49.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.3,
+      "timing_ms": {
+        "mediapipe": 20.0,
+        "encode": 1.0,
+        "rfdetr": 14.8,
+        "hamer_right": 20.2,
+        "gaze": 27.7,
+        "total": 53.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 14.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 20.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.4,
+      "timing_ms": {
+        "mediapipe": 20.5,
+        "encode": 1.0,
+        "rfdetr": 15.8,
+        "hamer_right": 18.9,
+        "gaze": 26.5,
+        "total": 52.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 20.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.5,
+      "timing_ms": {
+        "mediapipe": 11.2,
+        "encode": 1.1,
+        "rfdetr": 15.8,
+        "hamer_right": 19.1,
+        "gaze": 26.7,
+        "total": 44.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 11.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.6,
+      "timing_ms": {
+        "mediapipe": 18.1,
+        "encode": 1.1,
+        "rfdetr": 16.6,
+        "hamer_right": 18.9,
+        "gaze": 26.4,
+        "total": 52.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 18.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.7,
+      "timing_ms": {
+        "mediapipe": 17.6,
+        "encode": 1.1,
+        "rfdetr": 16.2,
+        "hamer_right": 19.3,
+        "gaze": 26.7,
+        "total": 52.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 26.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.8,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.1,
+        "rfdetr": 20.0,
+        "hamer_right": 23.6,
+        "gaze": 33.1,
+        "total": 53.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 23.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 33.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 6.9,
+      "timing_ms": {
+        "mediapipe": 15.3,
+        "encode": 1.4,
+        "rfdetr": 20.8,
+        "hamer_right": 23.3,
+        "gaze": 31.9,
+        "total": 55.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 23.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 31.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.0,
+      "timing_ms": {
+        "mediapipe": 14.3,
+        "encode": 1.3,
+        "rfdetr": 22.6,
+        "hamer_right": 21.5,
+        "gaze": 33.5,
+        "total": 54.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 22.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 33.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.3
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.1,
+      "timing_ms": {
+        "mediapipe": 15.6,
+        "encode": 1.0,
+        "rfdetr": 19.7,
+        "hamer_right": 22.0,
+        "gaze": 30.0,
+        "total": 52.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 22.0
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 15.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.2,
+      "timing_ms": {
+        "mediapipe": 14.5,
+        "encode": 1.0,
+        "rfdetr": 18.8,
+        "hamer_right": 20.7,
+        "gaze": 28.2,
+        "total": 48.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.3,
+      "timing_ms": {
+        "mediapipe": 14.1,
+        "encode": 1.0,
+        "rfdetr": 18.5,
+        "hamer_right": 399.7,
+        "gaze": 404.5,
+        "total": 427.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 399.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 404.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.1
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.7,
+      "timing_ms": {
+        "mediapipe": 14.5,
+        "encode": 1.0,
+        "rfdetr": 22.2,
+        "hamer_right": 2824.2,
+        "gaze": 2843.1,
+        "total": 2863.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 22.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 2824.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 2843.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 7.8,
+      "timing_ms": {
+        "mediapipe": 10.9,
+        "encode": 1.2,
+        "rfdetr": 2793.4,
+        "hamer_right": 41.1,
+        "gaze": 2785.9,
+        "total": 2826.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 2793.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 41.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 2785.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 10.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 10.5,
+      "timing_ms": {
+        "mediapipe": 12.6,
+        "encode": 1.0,
+        "rfdetr": 28.8,
+        "gaze": 19.7,
+        "total": 37.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 0,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 10.6,
+      "timing_ms": {
+        "mediapipe": 14.0,
+        "encode": 1.3,
+        "rfdetr": 18.2,
+        "hamer_right": 25.5,
+        "gaze": 33.3,
+        "total": 54.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 33.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 10.7,
+      "timing_ms": {
+        "mediapipe": 13.9,
+        "encode": 1.0,
+        "rfdetr": 18.3,
+        "hamer_right": 21.2,
+        "gaze": 29.3,
+        "total": 49.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 29.3
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 10.8,
+      "timing_ms": {
+        "mediapipe": 13.5,
+        "encode": 1.0,
+        "rfdetr": 18.8,
+        "hamer_right": 20.5,
+        "gaze": 27.7,
+        "total": 48.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.5
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 10.9,
+      "timing_ms": {
+        "mediapipe": 17.7,
+        "encode": 1.2,
+        "rfdetr": 16.2,
+        "hamer_left": 446.6,
+        "hamer_right": 446.6,
+        "gaze": 448.8,
+        "total": 475.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 446.6
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 446.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 448.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 11.3,
+      "timing_ms": {
+        "mediapipe": 12.4,
+        "encode": 1.0,
+        "rfdetr": 16.1,
+        "gaze": 15.0,
+        "total": 33.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 0,
+      "objects": [
+        "vase",
+        "vase",
+        "person"
+      ]
+    },
+    {
+      "t": 11.4,
+      "timing_ms": {
+        "mediapipe": 17.7,
+        "encode": 1.0,
+        "rfdetr": 21.5,
+        "hamer_right": 20.6,
+        "gaze": 28.2,
+        "total": 51.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 21.5
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.7
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "vase",
+        "person"
+      ]
+    },
+    {
+      "t": 11.5,
+      "timing_ms": {
+        "mediapipe": 17.2,
+        "encode": 1.0,
+        "rfdetr": 15.9,
+        "hamer_right": 18.3,
+        "gaze": 25.5,
+        "total": 50.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.9
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "vase",
+        "person"
+      ]
+    },
+    {
+      "t": 11.6,
+      "timing_ms": {
+        "mediapipe": 17.2,
+        "encode": 1.0,
+        "rfdetr": 15.8,
+        "hamer_right": 18.1,
+        "gaze": 25.5,
+        "total": 50.2
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 11.7,
+      "timing_ms": {
+        "mediapipe": 16.6,
+        "encode": 1.0,
+        "rfdetr": 20.4,
+        "hamer_right": 20.1,
+        "gaze": 27.9,
+        "total": 50.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 11.8,
+      "timing_ms": {
+        "mediapipe": 14.2,
+        "encode": 1.0,
+        "rfdetr": 19.8,
+        "hamer_left": 40.4,
+        "hamer_right": 40.4,
+        "gaze": 30.4,
+        "total": 62.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 40.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 14.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 2,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 11.9,
+      "timing_ms": {
+        "mediapipe": 10.4,
+        "encode": 1.0,
+        "rfdetr": 15.3,
+        "hamer_right": 20.1,
+        "gaze": 27.8,
+        "total": 44.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 10.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.0,
+      "timing_ms": {
+        "mediapipe": 16.2,
+        "encode": 1.1,
+        "rfdetr": 19.8,
+        "hamer_right": 20.1,
+        "gaze": 27.9,
+        "total": 50.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.8
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.9
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.1,
+      "timing_ms": {
+        "mediapipe": 16.2,
+        "encode": 1.0,
+        "rfdetr": 20.0,
+        "hamer_right": 20.2,
+        "gaze": 28.1,
+        "total": 50.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.1
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.2,
+      "timing_ms": {
+        "mediapipe": 16.4,
+        "encode": 1.0,
+        "rfdetr": 20.2,
+        "hamer_right": 19.9,
+        "gaze": 27.7,
+        "total": 49.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 19.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.7
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.3,
+      "timing_ms": {
+        "mediapipe": 12.2,
+        "encode": 1.0,
+        "rfdetr": 16.7,
+        "hamer_right": 20.2,
+        "gaze": 27.8,
+        "total": 45.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.2
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.4,
+      "timing_ms": {
+        "mediapipe": 12.4,
+        "encode": 1.0,
+        "rfdetr": 17.1,
+        "hamer_right": 20.1,
+        "gaze": 27.6,
+        "total": 46.3
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.4
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.5,
+      "timing_ms": {
+        "mediapipe": 12.6,
+        "encode": 1.0,
+        "rfdetr": 16.7,
+        "hamer_right": 24.8,
+        "gaze": 29.6,
+        "total": 47.9
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 24.8
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 29.6
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "vase",
+        "person"
+      ]
+    },
+    {
+      "t": 12.6,
+      "timing_ms": {
+        "mediapipe": 12.9,
+        "encode": 1.0,
+        "rfdetr": 17.0,
+        "hamer_right": 20.4,
+        "gaze": 28.2,
+        "total": 47.0
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.0
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.2
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.7,
+      "timing_ms": {
+        "mediapipe": 12.9,
+        "encode": 1.0,
+        "rfdetr": 17.3,
+        "hamer_right": 20.4,
+        "gaze": 27.8,
+        "total": 46.7
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.3
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.4
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 27.8
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.9
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.8,
+      "timing_ms": {
+        "mediapipe": 13.0,
+        "encode": 1.0,
+        "rfdetr": 17.2,
+        "hamer_right": 20.9,
+        "gaze": 28.5,
+        "total": 47.4
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.2
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.9
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 13.0
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 12.9,
+      "timing_ms": {
+        "mediapipe": 19.6,
+        "encode": 1.2,
+        "rfdetr": 15.4,
+        "hamer_right": 18.1,
+        "gaze": 25.5,
+        "total": 50.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 15.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.1
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 19.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 13.0,
+      "timing_ms": {
+        "mediapipe": 12.8,
+        "encode": 1.0,
+        "rfdetr": 17.1,
+        "hamer_right": 20.5,
+        "gaze": 28.0,
+        "total": 46.5
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 17.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.5
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 28.0
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.8
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "vase",
+        "person"
+      ]
+    },
+    {
+      "t": 13.1,
+      "timing_ms": {
+        "mediapipe": 17.6,
+        "encode": 1.0,
+        "rfdetr": 16.4,
+        "hamer_right": 18.3,
+        "gaze": 25.4,
+        "total": 50.6
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.4
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 18.3
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 17.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 13.2,
+      "timing_ms": {
+        "mediapipe": 16.2,
+        "encode": 1.0,
+        "rfdetr": 20.1,
+        "hamer_right": 25.6,
+        "gaze": 30.4,
+        "total": 52.1
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 20.1
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 25.6
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 30.4
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 16.2
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    },
+    {
+      "t": 13.3,
+      "timing_ms": {
+        "mediapipe": 12.6,
+        "encode": 1.0,
+        "rfdetr": 16.7,
+        "hamer_right": 24.7,
+        "gaze": 29.5,
+        "total": 47.8
+      },
+      "served_by": [
+        {
+          "model": "RF-DETR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 16.7
+        },
+        {
+          "model": "HaMeR",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 24.7
+        },
+        {
+          "model": "Gaze-LLE",
+          "chip": 0,
+          "backend": "tt",
+          "ms": 29.5
+        },
+        {
+          "model": "MediaPipe",
+          "chip": null,
+          "backend": "cpu",
+          "ms": 12.6
+        }
+      ],
+      "unavailable": [],
+      "hands": 1,
+      "objects": [
+        "vase",
+        "person",
+        "vase"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "type": "event",
+      "t": 0.6,
+      "kind": "look",
+      "object": "left hand"
+    },
+    {
+      "type": "event",
+      "t": 1.2,
+      "kind": "look",
+      "object": "workbench"
+    },
+    {
+      "type": "event",
+      "t": 1.8,
+      "kind": "look",
+      "object": "right hand"
+    },
+    {
+      "type": "event",
+      "t": 3.8,
+      "kind": "look",
+      "object": "left hand"
+    },
+    {
+      "type": "event",
+      "t": 4.4,
+      "kind": "look",
+      "object": "right hand"
+    },
+    {
+      "type": "event",
+      "t": 5.4,
+      "kind": "look",
+      "object": "workbench"
+    },
+    {
+      "type": "event",
+      "t": 6.0,
+      "kind": "look",
+      "object": "vase"
+    },
+    {
+      "type": "event",
+      "t": 6.6,
+      "kind": "look",
+      "object": "right hand"
+    },
+    {
+      "type": "event",
+      "t": 6.9,
+      "kind": "grasp",
+      "hand": "right",
+      "object": "vase on your right"
+    },
+    {
+      "type": "event",
+      "t": 10.5,
+      "kind": "release",
+      "hand": "right",
+      "object": "vase on your right",
+      "target": null
+    },
+    {
+      "type": "event",
+      "t": 10.5,
+      "kind": "look",
+      "object": "workbench"
+    },
+    {
+      "type": "event",
+      "t": 10.7,
+      "kind": "grasp",
+      "hand": "right",
+      "object": "vase on your right"
+    },
+    {
+      "type": "event",
+      "t": 11.4,
+      "kind": "look",
+      "object": "right hand"
+    },
+    {
+      "type": "event",
+      "t": 11.8,
+      "kind": "release",
+      "hand": "right",
+      "object": "vase on your right",
+      "target": null
+    },
+    {
+      "type": "event",
+      "t": 12.7,
+      "kind": "look",
+      "object": "workbench"
+    }
+  ],
+  "steps": [
+    {
+      "index": 1,
+      "t_start": 6.8,
+      "t_end": 7.8,
+      "hand": "right",
+      "objects": [
+        "vase on your right"
+      ],
+      "gaze_target": "right hand",
+      "why_closed": "release",
+      "action": "insert",
+      "draft": "Push the item held in the right hand into the vase on your right"
+    }
+  ],
+  "coach": [
+    {
+      "type": "coach",
+      "id": "q1",
+      "t": 7.8,
+      "text": "Why did you choose the right hand to pick up the vase?",
+      "audio": "/media/tts/e7f00fd43ec0417b4e17.wav",
+      "pending_audio": false,
+      "_at": 10.654644302092493
+    }
+  ],
+  "coach_audio": [],
+  "transcript": [
+    {
+      "type": "transcript",
+      "question_id": "q1",
+      "text": "because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "ms": 719
+    }
+  ],
+  "errors": [],
+  "saved": {
+    "type": "saved",
+    "skill_id": "sk_0888e62c",
+    "job_id": "job_291a3951"
+  },
+  "analysis_latency_s": {
+    "n": 102,
+    "p50": 0.119,
+    "p90": 1.38
+  },
+  "frames_sent": 134,
+  "seconds": 13.6
+}

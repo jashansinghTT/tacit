@@ -1,0 +1,281 @@
+{
+  "id": "sk_bcba9454",
+  "title": "QA Arranging dried stems in a vase",
+  "summary": "Arrange dried stems by inserting each into the vase, ensuring a neat, balanced display.",
+  "status": "ready",
+  "created_at": "2026-10-27T21:07:13Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "sample",
+    "sample_id": "smp_vase",
+    "video": "/media/skills/sk_bcba9454/source.mp4",
+    "fps": 30.0,
+    "duration": 44.5,
+    "width": 1280,
+    "height": 720
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T21:07:13Z"
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 6.8,
+      "t_end": 11.4,
+      "title": "Insert First Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Place the item into the vase to begin the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_01.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Center the item for balance",
+        "Use gentle pressure to avoid damage"
+      ]
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 16.0,
+      "t_end": 19.1,
+      "title": "Insert Second Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the second item to build the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_02.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Align with previous item",
+        "Maintain even spacing"
+      ]
+    },
+    {
+      "id": "st3",
+      "index": 3,
+      "t_start": 22.1,
+      "t_end": 27.8,
+      "title": "Insert Third Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the third item to complete the core arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_03.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Check height consistency",
+        "Avoid overcrowding"
+      ]
+    },
+    {
+      "id": "st4",
+      "index": 4,
+      "t_start": 31.3,
+      "t_end": 36.6,
+      "title": "Insert Fourth Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the fourth item to enhance fullness.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_04.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Ensure stability",
+        "Keep stems upright"
+      ]
+    },
+    {
+      "id": "st5",
+      "index": 5,
+      "t_start": 41.6,
+      "t_end": 44.4,
+      "title": "Insert Fifth Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the final item to finish the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_05.jpg",
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": [
+        "Verify overall balance",
+        "Adjust if needed"
+      ]
+    }
+  ],
+  "qa": [
+    {
+      "step_index": 1,
+      "step_id": "st1",
+      "t": 11.4,
+      "question": "Why is it important to push the item into the vase rather than drop it?",
+      "answer": null,
+      "pending": true
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "score": 0.901,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.0161,
+      "depth_stability": 0.9946,
+      "camera_drift": 0.0014,
+      "static_pixels": 59692,
+      "score": 0.901
+    },
+    "checked_at": "2026-10-27T21:08:47Z",
+    "pointcloud": "/api/skills/sk_bcba9454/pointcloud"
+  },
+  "robot": {
+    "program": [
+      {
+        "op": "pick",
+        "object": "the item"
+      },
+      {
+        "op": "place",
+        "target": "vase on your right"
+      }
+    ]
+  },
+  "updated_at": "2026-10-27T21:12:25Z",
+  "title_locked": true,
+  "thumb": "/media/skills/sk_bcba9454/thumb.jpg",
+  "sop_markdown": "# Insert Items into Vase\n\nArrange dried stems by inserting each into the vase, ensuring a neat, balanced display.\n\n## Before you start\n- Gather all dried stems and the vase.\n- Position the vase on a stable surface.\n- Have a clean workspace ready.\n\n## Steps\n\n1. **Insert First Item**  \n   Push the item held in the right hand into the vase on your right.  \n   **Why:** Place the item into the vase to begin the arrangement.  \n\n2. **Insert Second Item**  \n   Push the item held in the right hand into the vase on your right.  \n   **Why:** Add the second item to build the arrangement.  \n\n3. **Insert Third Item**  \n   Push the item held in the right hand into the vase on your right.  \n   **Why:** Add the third item to complete the core arrangement.  \n\n4. **Insert Fourth Item**  \n   Push the item held in the right hand into the vase on your right.  \n   **Why:** Add the fourth item to enhance fullness.  \n\n5. **Insert Fifth Item**  \n   Push the item held in the right hand into the vase on your right.  \n   **Why:** Add the final item to finish the arrangement.  \n\n## Check your work\n- Verify that all stems are upright and evenly spaced.\n- Ensure the overall arrangement looks balanced and neat.",
+  "quiz": [
+    {
+      "q": "Why do we insert the first item into the vase?",
+      "choices": [
+        "To start the arrangement",
+        "To test the vase",
+        "To clean the vase"
+      ],
+      "answer": 0,
+      "explain": "Inserting the first item begins the arrangement."
+    },
+    {
+      "q": "Why is it important to align each new item with the previous one?",
+      "choices": [
+        "To keep the vase balanced",
+        "To make the vase look taller",
+        "To avoid touching the vase"
+      ],
+      "answer": 0,
+      "explain": "Aligning items maintains balance in the display."
+    },
+    {
+      "q": "Why should stems be kept upright during insertion?",
+      "choices": [
+        "To prevent the vase from tipping",
+        "To ensure even spacing",
+        "To avoid damaging the stems"
+      ],
+      "answer": 2,
+      "explain": "Keeping stems upright protects them from damage."
+    }
+  ],
+  "safety": [
+    "Handle stems gently to avoid breakage.",
+    "Do not overfill the vase to prevent tipping.",
+    "Keep the work area clear of sharp objects."
+  ],
+  "motion_thumb": "/media/skills/sk_bcba9454/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/7b101141a7fc1b99e94c.wav",
+      "duration": 8.11,
+      "text": "QA Arranging dried stems in a vase. Arrange dried stems by inserting each into the vase, ensuring a neat, balanced display."
+    },
+    "st1": {
+      "audio": "/media/tts/7d763fcea8b007733dbe.wav",
+      "duration": 6.25,
+      "text": "Step 1. Insert First Item. Push the item held in the right hand into the vase on your right."
+    },
+    "st2": {
+      "audio": "/media/tts/9ce1f14f276aefcbdd4e.wav",
+      "duration": 6.85,
+      "text": "Step 2. Insert Second Item. Push the item held in the right hand into the vase on your right."
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 445,
+      "p50_ms": 57.3
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 654,
+      "p50_ms": 49.0
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 445,
+      "p50_ms": 54.0
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3477.0
+    },
+    {
+      "model": "S2 Pro",
+      "chip": 1,
+      "backend": "tt",
+      "calls": 3,
+      "p50_ms": 83177.1
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 7479.3
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 445,
+      "p50_ms": 65.6
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}

@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "type": "meta",
+    "mode": "policy",
+    "seed": 3,
+    "joints": [
+      "panda_joint1",
+      "panda_joint2",
+      "panda_joint3",
+      "panda_joint4",
+      "panda_joint5",
+      "panda_joint6",
+      "panda_joint7",
+      "panda_finger_joint1",
+      "panda_finger_joint2"
+    ],
+    "objects": [
+      "part"
+    ],
+    "targets": [
+      "vase"
+    ],
+    "dt": 0.033333,
+    "instruction": "Put the part in the vase"
+  },
+  "states": 322,
+  "cameras": {},
+  "gr00t": [],
+  "done": {
+    "type": "done",
+    "success": true,
+    "steps": 321,
+    "reason": null,
+    "seconds": 10.7,
+    "regrasps": 0,
+    "tasks_done": 1
+  },
+  "errors": [],
+  "phases": [
+    "pick part",
+    "place vase",
+    "done"
+  ],
+  "first_msg_s": 0.03,
+  "seconds": 10.8,
+  "state_hz": 30.1
+}

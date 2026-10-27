@@ -1,0 +1,130 @@
+{
+  "run_id": "solo-f4-prep",
+  "kind": "api",
+  "base": "http://127.0.0.1:8710",
+  "started": "2026-10-27T22:46:49+00:00",
+  "finished": "2026-10-27T22:48:11+00:00",
+  "git": "5786310",
+  "tests": [
+    {
+      "test": "test_2_sample_process_ready",
+      "flow": 2,
+      "outcome": "passed",
+      "seconds": 81.45,
+      "error": null,
+      "timings": [
+        {
+          "step": "create skill from sample",
+          "s": 0.008,
+          "limit_s": 2,
+          "slow": false
+        },
+        {
+          "step": "process (clip 44 s)",
+          "s": 81.188,
+          "limit_s": 180.0,
+          "slow": false
+        },
+        {
+          "step": "stage decode",
+          "s": 7.75,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage perceive",
+          "s": 53.36,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage steps",
+          "s": 0.06,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage write",
+          "s": 15.0,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage verify",
+          "s": 4.54,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage twin",
+          "s": 0.22,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage narrate",
+          "s": 0.03,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "stage ready",
+          "s": 0.01,
+          "limit_s": null,
+          "slow": false
+        },
+        {
+          "step": "GET tracks",
+          "s": 0.01,
+          "limit_s": 2.0,
+          "slow": false
+        },
+        {
+          "step": "GET twin",
+          "s": 0.003,
+          "limit_s": 2.0,
+          "slow": false
+        },
+        {
+          "step": "all narration voiced (after ready)",
+          "s": 0.002,
+          "limit_s": 120,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_vase",
+          "s": 0.001,
+          "limit_s": 60,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_jars",
+          "s": 0.001,
+          "limit_s": 60,
+          "slow": false
+        },
+        {
+          "step": "verify sample smp_fake",
+          "s": 0.001,
+          "limit_s": 60,
+          "slow": false
+        }
+      ],
+      "flags": [],
+      "notes": [
+        "skill sk_30a3a915 from sample smp_vase",
+        "verification verified score 0.90",
+        "quiz answer indexes: this skill [1, 1, 1]; 51 questions on the box",
+        "served from the cache of earlier TT results: ['S2 Pro']",
+        "445 analysed frames, 430 with hands",
+        "sample smp_vase (real): verified 0.90",
+        "sample smp_jars (real): verified 0.97",
+        "sample smp_fake (ai-generated): suspect 0.23"
+      ],
+      "evidence": ".orchestration/evidence/qa/runs/solo-f4-prep/test_2_sample_process_ready"
+    }
+  ],
+  "cleanup": [
+    "QA_KEEP set: nothing removed"
+  ]
+}

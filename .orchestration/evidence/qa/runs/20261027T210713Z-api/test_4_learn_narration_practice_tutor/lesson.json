@@ -1,0 +1,200 @@
+{
+  "skill_id": "sk_bcba9454",
+  "title": "QA Arranging dried stems in a vase",
+  "summary": "Arrange dried stems by inserting each into the vase, ensuring a neat, balanced display.",
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "video": "/media/skills/sk_bcba9454/source.mp4",
+  "intro_audio": "/media/tts/7b101141a7fc1b99e94c.wav",
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "title": "Insert First Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Place the item into the vase to begin the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_01.jpg",
+      "t_start": 6.8,
+      "t_end": 11.4,
+      "tips": [
+        "Center the item for balance",
+        "Use gentle pressure to avoid damage"
+      ],
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "narration_audio": "/media/tts/7d763fcea8b007733dbe.wav",
+      "narration_text": "Step 1. Insert First Item. Push the item held in the right hand into the vase on your right."
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "title": "Insert Second Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the second item to build the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_02.jpg",
+      "t_start": 16.0,
+      "t_end": 19.1,
+      "tips": [
+        "Align with previous item",
+        "Maintain even spacing"
+      ],
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "narration_audio": "/media/tts/9ce1f14f276aefcbdd4e.wav",
+      "narration_text": "Step 2. Insert Second Item. Push the item held in the right hand into the vase on your right."
+    },
+    {
+      "id": "st3",
+      "index": 3,
+      "title": "Insert Third Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the third item to complete the core arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_03.jpg",
+      "t_start": 22.1,
+      "t_end": 27.8,
+      "tips": [
+        "Check height consistency",
+        "Avoid overcrowding"
+      ],
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "narration_audio": "/media/tts/7eeaaf6e57db2d44c1a6.wav",
+      "narration_text": "Step 3. Insert Third Item. Push the item held in the right hand into the vase on your right."
+    },
+    {
+      "id": "st4",
+      "index": 4,
+      "title": "Insert Fourth Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the fourth item to enhance fullness.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_04.jpg",
+      "t_start": 31.3,
+      "t_end": 36.6,
+      "tips": [
+        "Ensure stability",
+        "Keep stems upright"
+      ],
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "narration_audio": "/media/tts/ed462667b033d304306c.wav",
+      "narration_text": "Step 4. Insert Fourth Item. Push the item held in the right hand into the vase on your right."
+    },
+    {
+      "id": "st5",
+      "index": 5,
+      "title": "Insert Fifth Item",
+      "instruction": "Push the item held in the right hand into the vase on your right.",
+      "why": "Add the final item to finish the arrangement.",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_bcba9454/kf_05.jpg",
+      "t_start": 41.6,
+      "t_end": 44.4,
+      "tips": [
+        "Verify overall balance",
+        "Adjust if needed"
+      ],
+      "objects": [
+        "vase on your right"
+      ],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "narration_audio": "/media/tts/b1d80ca3c98e9f22fd1c.wav",
+      "narration_text": "Step 5. Insert Fifth Item. Push the item held in the right hand into the vase on your right."
+    }
+  ],
+  "quiz": [
+    {
+      "q": "Why do we insert the first item into the vase?",
+      "choices": [
+        "To start the arrangement",
+        "To test the vase",
+        "To clean the vase"
+      ],
+      "answer": 0,
+      "explain": "Inserting the first item begins the arrangement."
+    },
+    {
+      "q": "Why is it important to align each new item with the previous one?",
+      "choices": [
+        "To keep the vase balanced",
+        "To make the vase look taller",
+        "To avoid touching the vase"
+      ],
+      "answer": 0,
+      "explain": "Aligning items maintains balance in the display."
+    },
+    {
+      "q": "Why should stems be kept upright during insertion?",
+      "choices": [
+        "To prevent the vase from tipping",
+        "To ensure even spacing",
+        "To avoid damaging the stems"
+      ],
+      "answer": 2,
+      "explain": "Keeping stems upright protects them from damage."
+    }
+  ],
+  "safety": [
+    "Handle stems gently to avoid breakage.",
+    "Do not overfill the vase to prevent tipping.",
+    "Keep the work area clear of sharp objects."
+  ],
+  "lang": "en",
+  "languages": [
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "es",
+      "name": "Spanish"
+    },
+    {
+      "code": "fr",
+      "name": "French"
+    },
+    {
+      "code": "de",
+      "name": "German"
+    },
+    {
+      "code": "zh",
+      "name": "Chinese"
+    },
+    {
+      "code": "ja",
+      "name": "Japanese"
+    },
+    {
+      "code": "ko",
+      "name": "Korean"
+    },
+    {
+      "code": "pt",
+      "name": "Portuguese"
+    },
+    {
+      "code": "hi",
+      "name": "Hindi"
+    }
+  ]
+}

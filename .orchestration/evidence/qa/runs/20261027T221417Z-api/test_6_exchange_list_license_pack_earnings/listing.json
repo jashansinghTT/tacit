@@ -1,0 +1,45 @@
+{
+  "id": "lst_7271ee60",
+  "skill_id": "sk_71c34e82",
+  "title": "QA Arranging dried stems in a vase",
+  "summary": "Place each stem into the vase to create a balanced arrangement, ensuring a stable and attractive display.",
+  "thumb": "/media/skills/sk_71c34e82/motion.jpg",
+  "preview_video": "/api/skills/sk_71c34e82/twin",
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen"
+  },
+  "plant": "Northline Assembly, Plant 2",
+  "industry": "Manufacturing",
+  "robot_types": [
+    "franka"
+  ],
+  "verified": true,
+  "verification_score": 0.901,
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "face": false,
+    "expert_confirmed": true,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T22:19:20Z"
+  },
+  "price": {
+    "training": 49,
+    "robot_deploy": 499,
+    "exclusive": 9900
+  },
+  "currency": "USD",
+  "royalty_split": {
+    "expert": 0.7,
+    "plant": 0.3
+  },
+  "licenses_sold": 0,
+  "rating": 0.0,
+  "created_at": "2026-10-27T22:19:20Z",
+  "demo": false,
+  "steps_count": 5,
+  "duration": 44.5
+}

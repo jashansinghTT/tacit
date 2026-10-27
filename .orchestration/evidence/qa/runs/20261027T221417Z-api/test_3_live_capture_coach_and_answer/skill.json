@@ -1,0 +1,227 @@
+{
+  "id": "sk_0888e62c",
+  "title": "QA Vase Placement",
+  "summary": "Place a vase into a tray, ensuring left-side parts are sorted first.",
+  "status": "ready",
+  "created_at": "2026-10-27T22:15:22Z",
+  "test": true,
+  "expert": {
+    "id": "u_maria",
+    "name": "Maria Chen",
+    "title": "Senior assembler, 22 years"
+  },
+  "source": {
+    "kind": "live",
+    "video": "/media/skills/sk_0888e62c/source.mp4",
+    "fps": 10.0,
+    "duration": 13.4,
+    "width": 960,
+    "height": 540
+  },
+  "steps": [
+    {
+      "id": "st1",
+      "index": 1,
+      "t_start": 0.0,
+      "t_end": 3.3,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_0888e62c/kf_01.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    },
+    {
+      "id": "st2",
+      "index": 2,
+      "t_start": 3.3,
+      "t_end": 6.7,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "Because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "why_source": "expert",
+      "keyframe": "/media/skills/sk_0888e62c/kf_02.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    },
+    {
+      "id": "st3",
+      "index": 3,
+      "t_start": 6.7,
+      "t_end": 13.3,
+      "title": "Continue the task",
+      "instruction": "Continue the task",
+      "why": "",
+      "why_source": "inferred",
+      "keyframe": "/media/skills/sk_0888e62c/kf_03.jpg",
+      "objects": [],
+      "hand": "right",
+      "gaze_target": "right hand",
+      "tips": []
+    }
+  ],
+  "qa": [
+    {
+      "t": 7.8,
+      "question": "Why did you choose the right hand to pick up the vase?",
+      "question_audio": "/media/tts/e7f00fd43ec0417b4e17.wav",
+      "answer": "because the parts on the left are already sorted, so I check them before I place them in the tray.",
+      "step_index": 2,
+      "step_id": "st2"
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "score": 0.914,
+    "method": "VGGT multi-view consistency",
+    "details": {
+      "views": 4,
+      "reproj_rel": 0.0162,
+      "depth_stability": 0.9985,
+      "camera_drift": 0.0008,
+      "static_pixels": 48589,
+      "score": 0.914
+    },
+    "checked_at": "2026-10-27T22:15:49Z",
+    "pointcloud": "/api/skills/sk_0888e62c/pointcloud"
+  },
+  "robot": {
+    "program": []
+  },
+  "consent": {
+    "motion": true,
+    "gaze": true,
+    "voice_text": true,
+    "raw_video": false,
+    "signed_by": "u_maria",
+    "signed_at": "2026-10-27T22:15:22Z"
+  },
+  "updated_at": "2026-10-27T22:16:06Z",
+  "thumb": "/media/skills/sk_0888e62c/thumb.jpg",
+  "sop_markdown": "# Vase Placement\n\nPlace a vase into a tray, ensuring left-side parts are sorted first.\n\n**Purpose**  \nTo position a vase correctly in a tray while keeping left-side components organized.\n\n## Before you start\n- Gather the vase and tray.\n- Ensure the work area is clean and free of obstacles.\n- Have a stable surface to place the tray.\n\n## Steps\n\n**1. Pick up the vase**  \n*Why: to hold the vase securely before moving it.*  \nWhy_source: inferred\n\n**2. Move the vase to the tray**  \n*Why: to bring the vase to its final location.*  \nWhy_source: inferred\n\n**3. Place the vase in the tray**  \n*Why: to set the vase down safely and correctly.*  \nWhy_source: inferred\n\n**4. Align left-side parts**  \n*Why: to keep the tray organized and prevent items from shifting.*  \nWhy_source: inferred\n\n**5. Adjust the vase if needed**  \n*Why: to ensure the vase is level and stable.*  \nWhy_source: inferred\n\n## Check your work\n- Verify the vase is centered in the tray.\n- Confirm left-side parts are sorted and secure.\n- Ensure the vase is stable and not tilted.",
+  "quiz": [
+    {
+      "q": "Why do we sort the left-side parts first before placing the vase into the tray?",
+      "choices": [
+        "To keep the tray organized",
+        "To prevent the vase from tipping",
+        "Because left-side parts are heavier"
+      ],
+      "answer": 1,
+      "explain": "Sorting left-side parts first ensures the vase is stable and prevents it from tipping."
+    },
+    {
+      "q": "Why is it important to place the vase gently into the tray?",
+      "choices": [
+        "To avoid damaging the vase",
+        "To make the vase look nice",
+        "To keep the tray clean"
+      ],
+      "answer": 0,
+      "explain": "Gentle placement prevents cracks or damage to the vase."
+    },
+    {
+      "q": "Why should the tray be checked after placing the vase?",
+      "choices": [
+        "To confirm the vase is secure",
+        "To ensure the vase is centered",
+        "To see if the tray is clean"
+      ],
+      "answer": 0,
+      "explain": "Checking the tray ensures the vase is secure and won't shift."
+    }
+  ],
+  "safety": [
+    "Handle the vase carefully to avoid breakage.",
+    "Keep the tray level to prevent tipping.",
+    "Ensure the workspace is clear of obstacles."
+  ],
+  "motion_thumb": "/media/skills/sk_0888e62c/motion.jpg",
+  "narration": {
+    "intro": {
+      "audio": "/media/tts/42de8931985f7d5d262a.wav",
+      "duration": 6.3,
+      "text": "QA Vase Placement. Place a vase into a tray, ensuring left-side parts are sorted first."
+    },
+    "st1": {
+      "audio": "/media/tts/1ccce246567ef5c38759.wav",
+      "duration": 3.95,
+      "text": "Step 1. Continue the task. Continue the task"
+    },
+    "st2": {
+      "audio": "/media/tts/4c85474e3ef92b9ce15f.wav",
+      "duration": 4.09,
+      "text": "Step 2. Continue the task. Continue the task"
+    },
+    "st3": {
+      "audio": "/media/tts/bfcb5874eaaa4fe9880c.wav",
+      "duration": 4.37,
+      "text": "Step 3. Continue the task. Continue the task"
+    }
+  },
+  "models_used": [
+    {
+      "model": "Gaze-LLE",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 102,
+      "p50_ms": 30.7
+    },
+    {
+      "model": "HaMeR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 152,
+      "p50_ms": 41.0
+    },
+    {
+      "model": "RF-DETR",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 102,
+      "p50_ms": 19.1
+    },
+    {
+      "model": "VGGT-1B",
+      "chip": 0,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 3183.4
+    },
+    {
+      "model": "S2 Pro",
+      "chip": 1,
+      "backend": "tt",
+      "calls": 1,
+      "p50_ms": 17125.7
+    },
+    {
+      "model": "gpt-oss-20b",
+      "chip": 2,
+      "backend": "tt",
+      "calls": 2,
+      "p50_ms": 4740.9
+    },
+    {
+      "model": "MediaPipe",
+      "chip": null,
+      "backend": "cpu",
+      "calls": 102,
+      "p50_ms": 13.4
+    },
+    {
+      "model": "S2 Pro",
+      "chip": null,
+      "backend": "cache",
+      "calls": 2,
+      "p50_ms": 0.0
+    }
+  ],
+  "listing_id": null,
+  "job_id": null
+}

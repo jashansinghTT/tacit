@@ -29,3 +29,5 @@ web/playwright-report/
 !web/public/**/*.mp4
 web/dist-mock/
 web/e2e/.media/
+# qa dev runs (timestamped runs are evidence and are committed)
+.orchestration/evidence/qa/runs/dev-*/
