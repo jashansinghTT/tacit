@@ -33,6 +33,25 @@ class _Gate:
         self._busy = False
         self._waiting: list[tuple[int, int, asyncio.Future]] = []
         self._seq = 0
+        self.live_sessions = 0           # open live captures: narration waits until they end
+        self._quiet = asyncio.Event()
+        self._quiet.set()
+
+    def session_opened(self) -> None:
+        self.live_sessions += 1
+        self._quiet.clear()
+
+    def session_closed(self) -> None:
+        self.live_sessions = max(0, self.live_sessions - 1)
+        if self.live_sessions == 0:
+            self._quiet.set()
+
+    async def wait_quiet(self, max_wait: float = 900.0) -> None:
+        """Batch narration holds off while someone is recording with the coach (at most 15 min)."""
+        try:
+            await asyncio.wait_for(self._quiet.wait(), timeout=max_wait)
+        except TimeoutError:
+            pass
 
     async def acquire(self, priority: int) -> None:
         if not self._busy and not self._waiting:
@@ -60,7 +79,7 @@ class _Gate:
         self._busy = False
 
     def waiting(self) -> dict:
-        return {"listen": sum(1 for p, _, _ in self._waiting if p == -1),
+        return {"live_sessions": self.live_sessions, "listen": sum(1 for p, _, _ in self._waiting if p == -1),
                 "interactive": sum(1 for p, _, _ in self._waiting if p == 0),
                 "batch": sum(1 for p, _, _ in self._waiting if p == 1), "busy": self._busy}
 
@@ -88,6 +107,8 @@ async def tts(text: str, voice: str = "default", batch: bool = False) -> tuple[P
         return path, wav_duration(path.read_bytes()), served(endpoints()["tts"], 0.0, "cache")
     ep = endpoints()["tts"]
     st = stats("tts")
+    if batch:
+        await GATE.wait_quiet()
     await GATE.acquire(GATE.BATCH if batch else GATE.INTERACTIVE)
     try:
         if path.exists() and path.stat().st_size > 44:  # spoken while we waited

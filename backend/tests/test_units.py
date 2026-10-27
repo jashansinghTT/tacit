@@ -186,7 +186,7 @@ async def test_tts_gate_serves_interactive_before_batch():
     gate.release()
     await asyncio.gather(*tasks)
     assert order == ["coach", "batch-2", "batch-3"]
-    assert gate.waiting() == {"listen": 0, "interactive": 0, "batch": 0, "busy": False}
+    assert gate.waiting() == {"live_sessions": 0, "listen": 0, "interactive": 0, "batch": 0, "busy": False}
 
 
 def test_sentence_split_and_wav_concat():
@@ -412,3 +412,16 @@ def test_program_names_lose_location_words():
     assert clean_name("the item") == "part" and clean_name("bottle beside the carafe") == "bottle"
     assert normalize_program([{"op": "pick", "object": "the item"}, {"op": "place", "target": "vase on your right"}]) == [
         {"op": "pick", "object": "part"}, {"op": "place", "target": "vase"}]
+
+
+
+async def test_narration_waits_while_a_capture_is_open():
+    import asyncio
+    from tacit.models.speech import _Gate
+    gate = _Gate()
+    gate.session_opened()
+    waiter = asyncio.create_task(gate.wait_quiet(max_wait=5))
+    await asyncio.sleep(0.05)
+    assert not waiter.done()          # narration holds while the expert is recording
+    gate.session_closed()
+    await asyncio.wait_for(waiter, 1)

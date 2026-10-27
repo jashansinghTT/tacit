@@ -229,6 +229,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         return
     s = CaptureSession(ws, skill_id)
     s.jpeg_ts = []
+    speech.GATE.session_opened()
     loop = asyncio.create_task(s.analysis_loop())
     try:
         while True:
@@ -261,6 +262,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         pass
     finally:
         s.closed = True
+        speech.GATE.session_closed()
         s.new_frame.set()
         loop.cancel()
         if s.prepared:
