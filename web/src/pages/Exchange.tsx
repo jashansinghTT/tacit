@@ -79,9 +79,9 @@ function ProvenanceStrip() {
 }
 
 /** Fills a sparse grid honestly: no made-up listings, just where the next ones come from. */
-function NextListing({ role, onList }: { role: string; onList: () => void }) {
+function NextListing({ role, onList, className }: { role: string; onList: () => void; className?: string }) {
   return (
-    <div className="flex min-h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-line-strong p-6 text-center" data-testid="exchange-next">
+    <div className={`${className ?? 'flex'} min-h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-line-strong p-6 text-center`} data-testid="exchange-next">
       <div className="grid size-11 place-items-center rounded-lg bg-white/[0.03] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
         <Plus className="size-5" />
       </div>
@@ -153,6 +153,7 @@ export default function ExchangePage() {
     }
   }, [all.data])
   const filtering = Boolean(params.get('q') || industry || robot || verified)
+  const empty = all.isSuccess && (all.data?.length ?? 0) === 0
   const clear = () => {
     setQ('')
     setParams({}, { replace: true })
@@ -183,66 +184,70 @@ export default function ExchangePage() {
         }
       />
 
-      <Panel className="mb-5" bodyClassName="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-5">
-        <Stat label="Skills listed" value={all.isLoading ? '–' : fmtInt(stats.listed)} />
-        <Stat label="Verified real" value={all.isLoading ? '–' : `${stats.verified}/${stats.listed}`} tone={stats.verified && stats.verified === stats.listed ? 'ok' : 'neutral'} />
-        <Stat label="Licenses sold" value={all.isLoading ? '–' : fmtInt(stats.sold)} />
-        <Stat label="Plants" value={all.isLoading ? '–' : fmtInt(stats.plants)} />
-        <Stat label="Expert share" value={fmtPct(stats.share)} tone="ion" hint="of every license fee" />
-      </Panel>
+      {!empty && (
+        <>
+          <Panel className="mb-5" bodyClassName="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-5">
+            <Stat label="Skills listed" value={all.isLoading ? '–' : fmtInt(stats.listed)} />
+            <Stat label="Verified real" value={all.isLoading ? '–' : `${stats.verified}/${stats.listed}`} tone={stats.verified && stats.verified === stats.listed ? 'ok' : 'neutral'} />
+            <Stat label="Licenses sold" value={all.isLoading ? '–' : fmtInt(stats.sold)} />
+            <Stat label="Plants" value={all.isLoading ? '–' : fmtInt(stats.plants)} />
+            <Stat label="Expert share" value={fmtPct(stats.share)} tone="ion" hint="of every license fee" />
+          </Panel>
 
-      <div className="mb-5">
-        <ProvenanceStrip />
-      </div>
+          <div className="mb-5">
+            <ProvenanceStrip />
+          </div>
 
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center" role="search">
-        <TextInput
-          placeholder="Search skills, tasks, parts"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          icon={<Search className="size-4" />}
-          className="lg:w-80"
-          aria-label="Search listings"
-          data-testid="exchange-search"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Select aria-label="Industry" value={industry} onChange={(e) => set('industry', e.target.value)} data-testid="filter-industry" className="min-w-40">
-            <option value="">All industries</option>
-            {facets.industries.map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
-            ))}
-          </Select>
-          <Select aria-label="Robot type" value={robot} onChange={(e) => set('robot', e.target.value)} data-testid="filter-robot" className="min-w-36">
-            <option value="">Any robot</option>
-            {facets.robots.map((r) => (
-              <option key={r} value={r}>
-                {robotLabel(r)}
-              </option>
-            ))}
-          </Select>
-          <label className="flex h-9 items-center gap-2 rounded-md px-2.5 text-[13px] text-fg-muted shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
-            <Switch checked={verified} onChange={(v) => set('verified', v ? '1' : '')} label="Verified only" />
-            Verified only
-          </label>
-          {filtering && (
-            <Button variant="ghost" size="sm" icon={<X className="size-3.5" />} onClick={clear}>
-              Clear
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-2 lg:ml-auto">
-          <span className="text-xs text-fg-subtle">Sort</span>
-          <Select aria-label="Sort" value={sort} onChange={(e) => set('sort', e.target.value === 'newest' ? '' : e.target.value)} data-testid="sort" className="min-w-44">
-            {SORTS.map((s) => (
-              <option key={s.key} value={s.key}>
-                {s.label}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </div>
+          <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center" role="search">
+            <TextInput
+              placeholder="Search skills, tasks, parts"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              icon={<Search className="size-4" />}
+              className="lg:w-80"
+              aria-label="Search listings"
+              data-testid="exchange-search"
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Select aria-label="Industry" value={industry} onChange={(e) => set('industry', e.target.value)} data-testid="filter-industry" className="min-w-40">
+                <option value="">All industries</option>
+                {facets.industries.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </Select>
+              <Select aria-label="Robot type" value={robot} onChange={(e) => set('robot', e.target.value)} data-testid="filter-robot" className="min-w-36">
+                <option value="">Any robot</option>
+                {facets.robots.map((r) => (
+                  <option key={r} value={r}>
+                    {robotLabel(r)}
+                  </option>
+                ))}
+              </Select>
+              <label className="flex h-9 items-center gap-2 rounded-md px-2.5 text-[13px] text-fg-muted shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+                <Switch checked={verified} onChange={(v) => set('verified', v ? '1' : '')} label="Verified only" />
+                Verified only
+              </label>
+              {filtering && (
+                <Button variant="ghost" size="sm" icon={<X className="size-3.5" />} onClick={clear}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2 lg:ml-auto">
+              <span className="text-xs text-fg-subtle">Sort</span>
+              <Select aria-label="Sort" value={sort} onChange={(e) => set('sort', e.target.value === 'newest' ? '' : e.target.value)} data-testid="sort" className="min-w-44">
+                {SORTS.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        </>
+      )}
 
       {filtered.isError ? (
         <Panel>
@@ -302,7 +307,7 @@ export default function ExchangePage() {
             {list.map((l) => (
               <ListingCard key={l.id} l={l} />
             ))}
-            {!filtering && list.length < 3 && <NextListing role={role} onList={() => setPicker(true)} />}
+            {!filtering && list.length < 3 && <NextListing role={role} onList={() => setPicker(true)} className={list.length % 2 === 0 ? 'hidden xl:flex' : 'flex'} />}
           </div>
         </>
       )}

@@ -10,7 +10,7 @@ import { personaOf, useApp } from '@/lib/store'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Avatar, Badge, Button, ButtonLink, EmptyState, ErrorState, Panel, Skeleton, Stat, Ticker } from '@/components/ui'
 import { ExchangeNav, useSwitchPersona } from '@/features/exchange/ExchangeNav'
-import { useExEarnings, useExListings } from '@/features/exchange/hooks'
+import { useAvatarOf, useExEarnings, useExListings } from '@/features/exchange/hooks'
 import { DEFAULT_PRICE, DEFAULT_SPLIT, LICENSES, royaltySplit } from '@/features/exchange/meta'
 import { SellPicker } from '@/features/exchange/SellPicker'
 
@@ -105,6 +105,7 @@ function BySkill({ data, listings }: { data: ExEarnings; listings: ExListing[] }
 }
 
 function Ledger({ data }: { data: ExEarnings }) {
+  const avatarOf = useAvatarOf()
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-[13px]" data-testid="earnings-ledger">
@@ -130,7 +131,7 @@ function Ledger({ data }: { data: ExEarnings }) {
                 </td>
                 <td className="py-3 pr-4 text-fg-muted">
                   <span className="flex items-center gap-2">
-                    <Avatar name={e.buyer || '?'} size={20} />
+                    <Avatar name={e.buyer || '?'} src={avatarOf(e.buyer)} size={20} />
                     {e.buyer}
                   </span>
                 </td>

@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import { Avatar, Badge, Spotlight } from '@/components/ui'
 import { MotionSignature } from '@/features/exchange/MotionSignature'
 import { robotLabel, verificationScore } from '@/features/exchange/meta'
+import { useAvatarOf } from '@/features/exchange/hooks'
 
 /**
  * A listing on the Skill Exchange. The preview is drawn from the expert's motion (body and hand
@@ -16,6 +17,7 @@ import { robotLabel, verificationScore } from '@/features/exchange/meta'
 export function ListingCard({ l: listing, className }: { l: Listing | ExListing; className?: string }) {
   const l = listing as ExListing
   const [hover, setHover] = useState(false)
+  const avatarOf = useAvatarOf()
   const score = verificationScore(l)
   const signed = Boolean(l.consent?.signed_at || l.consent?.expert_confirmed)
   const from = Math.min(...Object.values(l.price ?? { training: 0 }))
@@ -91,7 +93,7 @@ export function ListingCard({ l: listing, className }: { l: Listing | ExListing;
                   {l.licenses_sold ? `${fmtInt(l.licenses_sold)} licensed` : 'New'}
                 </div>
               </div>
-              <Avatar name={l.expert.name} size={28} />
+              <Avatar name={l.expert.name} src={avatarOf(l.expert.id)} size={28} />
             </div>
           </div>
         </div>

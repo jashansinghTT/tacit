@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { LicenseType } from '@/lib/api'
 import { exchangeApi, type CreateListingBody, type ListingFilter } from '@/lib/api/exchange'
-import { qk } from '@/lib/api/queries'
+import { qk, useUsers } from '@/lib/api/queries'
 import { useApp } from '@/lib/store'
 
 export function useExListings(f: ListingFilter = {}) {
@@ -58,4 +58,11 @@ export function useLicense(listingId: string) {
       void qc.invalidateQueries({ queryKey: ['earnings'] })
     },
   })
+}
+
+/** Avatar image for a user id, a person's name or an organisation (the ledger names buyers by org). */
+export function useAvatarOf() {
+  const users = useUsers()
+  return (key: string | null | undefined) =>
+    key ? users.data?.find((u) => u.id === key || u.name === key || (u as { org?: string }).org === key)?.avatar : undefined
 }
