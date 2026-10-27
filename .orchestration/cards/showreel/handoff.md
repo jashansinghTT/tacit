@@ -2,9 +2,10 @@
 
 ## What is done
 
-- **First cut**: `~/tacit/data/showreel/first-cut.mp4`, 74.3 s, 1920x1080, 30 fps, H.264 High (yuv420p,
-  BT.709, CRF 14 under a 40 Mbit/s cap) with AAC 320 kb/s. Rendered at 3840x2160 and downsampled.
-  Not a final render: the user reviews this cut first.
+- **First cut**: `~/tacit/data/showreel/first-cut.mp4`, 74.3 s, 1920x1080, 30 fps, H.264 High@4.2
+  (yuv420p, BT.709, CRF 14 under a 40 Mbit/s VBV cap; 10.5 Mbit/s average, busiest second 60 Mbit/s,
+  97 MB) with AAC 320 kb/s stereo. Rendered at 3840x2160 and downsampled. Not a final render: the user
+  reviews this cut first.
 - **Preview clips** (the review gates), encoded from the cut's own frames: `preview-1-title.mp4` (0–25 s),
   `preview-2-watch-to-check.mp4` (30.0–35.6 s), `preview-3-teach-to-do.mp4` (41.6–47.4 s),
   `preview-4-outro.mp4` (60.4–74.3 s). Copies of all five in `~/tacit/.orchestration/evidence/showreel/`
@@ -44,6 +45,15 @@ See `showreel/README.md`. In short: `cd showreel && uv sync && ./make.sh cut && 
   revised one.
 - Teach shows the nine offered languages, not nine translations: requesting the eight missing ones
   would queue their narration on chip 1, which the lead keeps free for people.
+- The same reviewer re-checked the revised render. Its remaining top three were then fixed:
+  - Teach's twin is now drawn from the skill's own cloud and 3D hand, not an upscaled screenshot.
+  - The vase-rim hand: the tracker had reported one hand twice; the reel now keeps one detection.
+  - The hands section got a visible defocused plate and depth-driven line weight.
+  - Smaller fixes: Earn's bar placement, and the policy run recaptured with the lab's labels off.
+  Still open, and judged acceptable for a first cut:
+  - The title holds centred for about 2 s.
+  - Box is clean but slide-like.
+  - Watch's latency chips are a row of pills.
 
 ## For the user's review (choices I left open)
 
