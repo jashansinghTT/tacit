@@ -22,6 +22,17 @@ from .features import ACT_DIM, CHUNK, OBS_DIM, chunk_labels, observe
 
 FORMAT = "tacit-bc-chunk-mlp/1"
 
+# Torch threads for training and inference. The model is small, so 2 threads lose little on a
+# quiet host and win big on a busy one: at load average 50 on this 16-core box, 8 threads took
+# 68 s per epoch (OpenMP threads spin waiting for cores) and 2 threads 5.5 s.
+TORCH_THREADS = int(os.environ.get("TACIT_SIM_TORCH_THREADS", "2"))
+
+
+def _set_threads(n: int | None) -> None:
+    n = max(1, n or TORCH_THREADS)
+    if torch.get_num_threads() != n:
+        torch.set_num_threads(n)
+
 
 class ChunkMLP(nn.Module):
     def __init__(self, obs_dim: int = OBS_DIM, chunk: int = CHUNK, act_dim: int = ACT_DIM,
@@ -70,9 +81,7 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
     t0 = time.time()
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
-    if threads is None:
-        threads = max(1, min(8, (os.cpu_count() or 2) // 2))
-    torch.set_num_threads(threads)
+    _set_threads(threads)
 
     obs, labels, n_eps = _load_demos(demos_path)
     n = len(obs)
@@ -146,10 +155,46 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
             "episodes": n_eps, "frames": n, "seconds": round(time.time() - t0, 2)}
 
 
+def policy_info(policy_path: str | os.PathLike) -> dict:
+    """What a policy file was trained on: {program, trained_on, loss_curve, val_loss, format}."""
+    ck = torch.load(policy_path, map_location="cpu", weights_only=False)
+    if ck.get("format") != FORMAT:
+        raise ValueError(f"{policy_path}: not a {FORMAT} checkpoint")
+    return {k: ck.get(k) for k in ("format", "program", "trained_on", "loss_curve", "val_loss")}
+
+
+class ProgramMismatch(ValueError):
+    """The policy was trained on a different program than the one it is asked to run."""
+
+
+def check_program(policy_path: str | os.PathLike, program) -> None:
+    """Raise ProgramMismatch unless `program` has the same tasks as the policy's training program.
+
+    A behaviour-cloning policy only knows the tasks it was shown: run on another program it
+    fails every trial (e.g. it was trained with places into a tray, and the program now says
+    pick and put back down). Failing loudly here beats a silent 0%.
+    """
+    from .program import parse_program
+
+    trained = policy_info(policy_path).get("program")
+    if trained is None:
+        return
+
+    def tasks(p):
+        return [(t.object.lower(), (t.target or "").lower()) for t in parse_program(p).tasks]
+
+    if tasks(trained) != tasks(program):
+        def fmt(p):
+            return ", ".join(f"{o} -> {t or 'put back'}" for o, t in tasks(p)) or "nothing"
+        raise ProgramMismatch(f"this policy was trained on [{fmt(trained)}] but the program is "
+                              f"[{fmt(program)}]; train the policy again for this program")
+
+
 class PolicyController:
     """Runs a trained policy in a SimEnv: one query per control step, temporally ensembled."""
 
     def __init__(self, policy_path: str | os.PathLike, ensemble: float = 0.25):
+        _set_threads(None)
         ck = torch.load(policy_path, map_location="cpu", weights_only=False)
         if ck.get("format") != FORMAT:
             raise ValueError(f"{policy_path}: not a {FORMAT} checkpoint")

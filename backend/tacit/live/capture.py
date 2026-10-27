@@ -11,7 +11,7 @@ import numpy as np
 from fastapi import WebSocket, WebSocketDisconnect
 
 from .. import jobs
-from ..models import speech
+from ..models import speech, vision
 from ..models.base import ModelUnavailable, decode_image
 from ..perception.frame import analyze
 from ..perception.mediapipe_runner import MediaPipeRunner
@@ -70,7 +70,7 @@ class CaptureSession:
             rgb = await asyncio.to_thread(decode_jpeg, jpeg)
             self.size = (rgb.shape[1], rgb.shape[0])
             try:
-                f = await analyze(rgb, t, self.runner)
+                f = await analyze(rgb, t, self.runner, priority=vision.LIVE)
             except Exception as e:  # noqa: BLE001
                 log.exception("analyze")
                 await self.send({"type": "error", "message": f"analysis failed: {e}"})
@@ -235,8 +235,9 @@ async def run(ws: WebSocket, skill_id: str) -> None:
             elif kind in ("answer", "say"):
                 s.spawn(s.answer(msg))
             elif kind == "stop":
-                s.closed = False
-                await asyncio.gather(*list(s.tasks), return_exceptions=True)
+                # A coach question still being voiced must not hold the recording: wait briefly, then save.
+                if s.tasks:
+                    await asyncio.wait(list(s.tasks), timeout=3.0)
                 await s.finish()
                 break
     except WebSocketDisconnect:
@@ -245,7 +246,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         s.closed = True
         s.new_frame.set()
         loop.cancel()
-        s.runner.close()
+        await asyncio.to_thread(s.runner.close)
         try:
             await ws.close()
         except RuntimeError:

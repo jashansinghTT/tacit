@@ -15,6 +15,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from ..db import LessonProgress, now, select, session
 from ..models.base import decode_image
+from ..models import vision
 from ..perception.frame import analyze
 from ..perception.mediapipe_runner import MediaPipeRunner
 from ..perception.timeline import hand_feats, near_object
@@ -172,7 +173,7 @@ async def run(ws: WebSocket, session_id: str) -> None:
                 continue
             t, jpeg = latest[0]
             rgb = await asyncio.to_thread(lambda: decode_image(base64.b64encode(jpeg).decode()))
-            f = await analyze(rgb, t, runner, kinds=("rfdetr",))
+            f = await analyze(rgb, t, runner, kinds=("rfdetr",), priority=vision.LIVE)
             await ws.send_json({"type": "analysis", "t": f["t"], "hands": f["hands"], "objects": f["objects"],
                                 "size": f["size"], "timing_ms": f["timing_ms"], "served_by": f["served_by"]})
             fb = pr.update(f)
@@ -202,10 +203,10 @@ async def run(ws: WebSocket, session_id: str) -> None:
         closed = True
         evt.set()
         task.cancel()
-        runner.close()
         prog = pr.save_progress()
-        try:
+        try:  # tell the trainee first: closing MediaPipe takes several seconds
             await ws.send_json({"type": "saved", **prog})
             await ws.close()
         except RuntimeError:
             pass
+        await asyncio.to_thread(runner.close)

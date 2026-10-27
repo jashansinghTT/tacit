@@ -1,11 +1,11 @@
-import { test, expect, REAL } from './fixtures'
+import { test, expect, REAL, studioUrl } from './fixtures'
 
 // SPEC section 9, test 3 (UI half): live capture with the fake camera, coach question, answer,
 // then processing. The mic is Chromium's fake audio file (a tone, then silence).
 
 test('live capture with the fake camera reaches the coach and processing', async ({ page }) => {
   test.setTimeout(REAL ? 240_000 : 90_000)
-  await page.goto('/studio')
+  await page.goto(studioUrl('live capture'))
   await expect(page.getByTestId('page-studio')).toBeVisible()
   await page.getByTestId('capture-start').click()
   await expect(page.getByTestId('capture-stop')).toBeVisible({ timeout: 20_000 })

@@ -1,4 +1,4 @@
-import { test, expect, openReadySkill } from './fixtures'
+import { test, expect, openReadySkill, REAL, writableSkillId } from './fixtures'
 
 test('the skills list filters and opens a skill', async ({ page }) => {
   await page.goto('/skills')
@@ -31,8 +31,15 @@ test('every skill tab renders', async ({ page }) => {
 })
 
 test('an expert can answer a pending question by typing', async ({ page }) => {
-  await openReadySkill(page)
-  await page.getByTestId('tab-answer').click()
+  if (REAL) {
+    // never write into demo data on the real stack: use a test ("QA ") skill
+    const id = await writableSkillId(page)
+    test.skip(!id, 'no test skill to write to on this box')
+    await page.goto(`/skills/${id}?tab=answer`)
+  } else {
+    await openReadySkill(page)
+    await page.getByTestId('tab-answer').click()
+  }
   const card = page.locator('[data-testid^="question-"]').first()
   test.skip((await card.count()) === 0, 'no pending questions on this skill')
   await card.getByRole('button', { name: 'Type instead' }).click()

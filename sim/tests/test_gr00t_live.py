@@ -25,3 +25,18 @@ def test_gr00t_closed_loop_streams(sort2):
     states = [m for m in msgs if m["type"] == "state"]
     q0, q1 = states[0]["qpos"], states[-1]["qpos"]
     assert max(abs(a - b) for a, b in zip(q0, q1)) > 0.01
+
+
+@live
+def test_gr00t_realtime_pipelines_queries(sort2):
+    import time
+
+    t0 = time.perf_counter()
+    msgs = list(Runner(sort2, "gr00t", seed=1, max_seconds=3).frames(realtime=True))
+    wall = time.perf_counter() - t0
+    calls = [m for m in msgs if m["type"] == "gr00t"]
+    assert len(calls) >= 3
+    # Chunks join at the step matching their observation, after the query came back.
+    assert all(c["applied_at"] >= c["step"] for c in calls)
+    assert msgs[-1]["type"] == "done"
+    assert wall < 3.0 + 3.0     # realtime pace, with room for a loaded host

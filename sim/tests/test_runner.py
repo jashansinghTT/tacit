@@ -70,6 +70,10 @@ def test_replay_follows_the_human_path(sort2):
                     0.6 + 0.1 * t / 4], axis=1)
     path = retarget_wrist_path(cam, t)
     msgs = list(Runner(sort2, "replay", seed=0, human_path=path).frames(realtime=False))
+    human = msgs[0]["human"]
+    assert human["points"] == path["points"] and human["transform"]["matrix"] == path["transform"]["matrix"]
+    phases = [m["phase"] for m in msgs if m["type"] == "state"]
+    assert phases[0] == "approach" and phases[-1] == "replay"
     done = msgs[-1]
     assert done["type"] == "done" and done["success"], done
     assert done["tracking_error_m"] < 0.02

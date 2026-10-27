@@ -13,10 +13,20 @@ Rules:
 - One action per step. Imperative mood. Instructions of at most 22 words. Step titles of at most 6 words.
 - "why": if the expert explained the step, use their words (shortened, first person turned into plain statements) and set \
 why_source to "expert". Otherwise give the most likely practical reason in one sentence and set why_source to "inferred".
+- The why gives the reason behind the action (what it protects, enables or prevents, or what goes wrong \
+otherwise), in plain words; it never just restates the instruction.
 - Every step is something the trainee DOES with their hands (pick up, place, turn, align, press, hold, hand over, set \
 down). Never write a step that only says to observe or watch.
-- When a step names no object, describe the motion concretely from the timeline: which hand, from where to where on the \
-bench, what it ends near. When consecutive timeline steps are the same action, merge them into one step.
+- Each timeline step is one observed action. Its "action" says what the hands did: "insert" put the item held in the \
+hand into a container; "pick" picked an object up and held it; "place" set it down and adjusted it; "move" carried it to \
+another place; "lift_return" lifted it, checked it and set it back; "handle" worked with it where it stands. "target" is \
+where it went, "approach" how the hand came to it, and object names say where the object is from the expert ("vase on \
+your right"): keep those words, they tell the trainee where to reach.
+- Write one step per timeline step. A repeated action ("repeat": "2 of 5") stays one step per repetition: say how many \
+times in the first ("the first of five stems"), then "the next" and "the last". Merge timeline steps only when they are \
+plainly pieces of one action on the same object.
+- An item held in the hand that the timeline does not name (it was not recognised) may be named after the recording \
+title when the title names it ("stem" for a title about stems); otherwise call it "the item".
 - Plain, friendly language. No marketing words.
 - Reply with JSON only, no prose before or after."""
 
@@ -28,8 +38,10 @@ def _timeline_summary(skill: dict, steps: list[dict], objects_seen: list[str]) -
         "duration_s": round((skill.get("source") or {}).get("duration", 0.0), 1),
         "objects_seen": objects_seen,
         "steps": [{"index": s["index"], "time_s": [round(s["t_start"], 1), round(s["t_end"], 1)], "hand": s.get("hand"),
-                   "objects": s.get("objects", []), "looked_at": s.get("gaze_target"), "observed": s.get("draft"),
-                   "moved_from": s.get("from"), "moved_to": s.get("to")} for s in steps],
+                   "action": s.get("action"), "object": s.get("object"), "target": s.get("to"),
+                   "approach": s.get("approach"), "objects": s.get("objects", []), "looked_at": s.get("gaze_target"),
+                   "repeat": f"{s['repeat']} of {s['repeats']}" if s.get("repeats", 1) > 1 else None,
+                   "observed": s.get("draft"), "moved_from": s.get("from")} for s in steps],
         "expert_answers": qa,
         "recording_title_from_user_may_be_a_placeholder": skill.get("title_hint"),
     }
@@ -48,8 +60,9 @@ Return JSON with exactly these keys:
              "tips": ["at most 2 short tips a new hire would miss"]}}],
   "robot_program": [{{"op": "pick", "object": "<object name>"}}, {{"op": "place", "target": "<object or place name>"}}],
   "pending_questions": [{{"index": <step index>, "question": "one short question to ask the expert about why"}}]}}
-Keep the timeline's order; merge repeated identical actions (renumber from 1). The robot program reproduces the pick-and-place \
-actions in order, using the object names from the timeline. Ask pending questions only for steps whose why is inferred."""
+Keep the timeline's order, one step per timeline step unless two are pieces of one action (renumber from 1). The robot \
+program reproduces the actions in order with the object names from the timeline (an insert is a pick of the held item and a \
+place into the container). Ask pending questions only for steps whose why is inferred."""
     return await llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": user}],
                                max_tokens=1800)
 
@@ -75,7 +88,7 @@ you saw. No preamble, no quotes, just the question."""
 
 
 async def coach_question(step: dict, earlier: list[str]) -> tuple[str, dict]:
-    seen = {"just_did": step.get("draft"), "hand": step.get("hand"), "objects": step.get("objects"),
+    seen = {"just_did": step.get("draft"), "action": step.get("action"), "hand": step.get("hand"), "objects": step.get("objects"),
             "looked_at": step.get("gaze_target"), "duration_s": round(step["t_end"] - step["t_start"], 1)}
     user = f"Observed step: {json.dumps(seen)}\nQuestions already asked: {json.dumps(earlier[-4:])}\nAsk your question."
     text, sb = await llm.chat([{"role": "system", "content": COACH_SYSTEM}, {"role": "user", "content": user}],

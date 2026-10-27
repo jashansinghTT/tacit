@@ -14,8 +14,12 @@ from .mediapipe_runner import MediaPipeRunner
 KINDS = ("hamer", "gaze", "rfdetr")
 
 
+NOT_TARGETS = {"person", "dining table", "chair", "bench", "couch", "bed"}  # the expert's own body, the table itself
+
+
 def label_point(x: float, y: float, objects: list[dict], hands: list[dict]) -> str:
     """Name what a gaze point lands on: the smallest object box containing it, else the nearest object or a hand."""
+    objects = [o for o in objects if o["label"] not in NOT_TARGETS]
     inside = [o for o in objects if o["box"][0] <= x <= o["box"][2] and o["box"][1] <= y <= o["box"][3]]
     if inside:
         return min(inside, key=lambda o: (o["box"][2] - o["box"][0]) * (o["box"][3] - o["box"][1]))["label"]
@@ -33,7 +37,8 @@ def label_point(x: float, y: float, objects: list[dict], hands: list[dict]) -> s
     return "workbench"
 
 
-async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS) -> dict:
+async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS,
+                  priority: int = vision.BATCH) -> dict:
     """Analyse one RGB frame at time `t` (seconds). Shapes match API.md's Tracks frame plus timing and served_by."""
     t0 = time.perf_counter()
     det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
@@ -42,12 +47,12 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
 
     jobs: dict[str, asyncio.Future] = {}
     if "rfdetr" in kinds:
-        jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale))
+        jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale, priority=priority))
     if "gaze" in kinds and det["head"]:
-        jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]]))
+        jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]], priority=priority))
     if "hamer" in kinds:
         for hd in det["hands"]:
-            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right"))
+            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right", priority=priority))
     results = dict(zip(jobs, await asyncio.gather(*jobs.values(), return_exceptions=True)))
 
     served, timing, errors = [], {"mediapipe": round(t_mp, 1)}, []

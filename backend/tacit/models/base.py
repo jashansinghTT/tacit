@@ -50,6 +50,49 @@ class Stats:
 STATS: dict[str, Stats] = {}
 
 
+class PriorityGate:
+    """At most `capacity` requests in flight to a chip; lower priority numbers go first.
+
+    The chip runs one request at a time anyway (a co-host takes turns), so this only decides the
+    order: a live overlay frame must not queue behind a backlog of offline work.
+    """
+
+    def __init__(self, capacity: int):
+        import heapq as _heapq
+        self._heapq = _heapq
+        self.capacity, self.inflight = capacity, 0
+        self._waiting: list = []
+        self._seq = 0
+
+    async def acquire(self, priority: int) -> None:
+        if self.inflight < self.capacity and not self._waiting:
+            self.inflight += 1
+            return
+        fut = asyncio.get_running_loop().create_future()
+        self._seq += 1
+        self._heapq.heappush(self._waiting, (priority, self._seq, fut))
+        try:
+            await fut
+        except asyncio.CancelledError:
+            if fut.done() and not fut.cancelled():
+                self.release()
+            else:
+                self._waiting = [w for w in self._waiting if w[2] is not fut]
+                self._heapq.heapify(self._waiting)
+            raise
+
+    def release(self) -> None:
+        while self._waiting:
+            _, _, fut = self._heapq.heappop(self._waiting)
+            if not fut.done():
+                fut.set_result(None)   # hand the slot over directly
+                return
+        self.inflight -= 1
+
+    def snapshot(self) -> dict:
+        return {"inflight": self.inflight, "waiting": len(self._waiting)}
+
+
 def stats(key: str) -> Stats:
     return STATS.setdefault(key, Stats())
 
@@ -58,8 +101,15 @@ def served(ep: Endpoint, ms: float, backend: str = "tt") -> dict:
     return {"model": ep.name, "chip": ep.chip if backend == "tt" else None, "backend": backend, "ms": round(ms, 1)}
 
 
-async def post_json(key: str, path: str, payload: dict, timeout: float = 30.0, retries: int = 1) -> tuple[Any, float]:
+async def post_json(key: str, path: str, payload: dict, timeout: float = 30.0, retries: int = 1,
+                    gate: "PriorityGate | None" = None, priority: int = 1) -> tuple[Any, float]:
     """POST JSON to a model; returns (response json, wall ms). Raises ModelUnavailable."""
+    if gate is not None:
+        await gate.acquire(priority)
+        try:
+            return await post_json(key, path, payload, timeout, retries)
+        finally:
+            gate.release()
     ep = endpoints()[key]
     st = stats(key)
     last: Exception | None = None

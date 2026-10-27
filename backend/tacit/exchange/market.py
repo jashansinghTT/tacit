@@ -35,7 +35,9 @@ def listing_dict(l: Listing) -> dict:
     skill = load_skill(l.skill_id) or {}
     ver = (skill.get("verification") or {})
     thumb = skill.get("motion_thumb", "") if l.thumb.endswith("/thumb.jpg") or not l.thumb else l.thumb
-    return {"id": l.id, "skill_id": l.skill_id, "title": l.title, "summary": l.summary, "thumb": thumb,
+    # The skill's current text: a reprocessed skill updates its listing too.
+    return {"id": l.id, "skill_id": l.skill_id, "title": skill.get("title") or l.title, "summary": skill.get("summary") or l.summary,
+            "thumb": thumb,
             "preview_video": l.preview_video, "expert": {"id": expert["id"], "name": expert["name"]}, "plant": l.plant,
             "industry": l.industry, "robot_types": json.loads(l.robot_types), "verified": ver.get("status") == "verified",
             "verification_score": ver.get("score"), "consent": json.loads(l.consent or "{}"), "price": json.loads(l.price),
@@ -228,3 +230,34 @@ def build_pack(license_id: str) -> tuple[bytes, str]:
 
 __all__ = ["list_listings", "get_listing", "create_listing", "license_listing", "library", "earnings", "build_pack",
            "ListingError", "SkillRow"]
+
+
+def delete_listing(listing_id: str, require_test: bool = True) -> dict:
+    with session() as s:
+        l = s.get(Listing, listing_id)
+        if not l:
+            raise ListingError("No such listing.")
+        row = s.get(SkillRow, l.skill_id)
+        if require_test and not (row and row.test):
+            raise ListingError("Only listings of test skills can be deleted.")
+        lics = s.exec(select(License).where(License.listing_id == listing_id)).all()
+        for e in s.exec(select(LedgerEntry).where(LedgerEntry.listing_id == listing_id)).all():
+            s.delete(e)
+        for lic in lics:
+            s.delete(lic)
+        s.delete(l)
+        s.commit()
+    skill = load_skill(l.skill_id)
+    if skill and skill.get("listing_id") == listing_id:
+        skill["listing_id"] = None
+        save_skill(skill)
+    return {"ok": True, "licenses_removed": len(lics)}
+
+
+def delete_listings_of(skill_id: str) -> int:
+    """When a skill is deleted, its listings, licenses and royalties go with it."""
+    with session() as s:
+        ids = [l.id for l in s.exec(select(Listing).where(Listing.skill_id == skill_id)).all()]
+    for lid in ids:
+        delete_listing(lid, require_test=False)
+    return len(ids)

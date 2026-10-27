@@ -1,0 +1,258 @@
+{
+ "sk_c28f1461": {
+  "title": "Arrange dried stems in vase",
+  "summary": "Place stems into a vase to create a finished floral arrangement.",
+  "steps": [
+   {
+    "index": 1,
+    "covers": [
+     1
+    ],
+    "title": "Insert first stem",
+    "instruction": "Insert the item held in the right hand into the vase on your right.",
+    "why": "Place stem into vase to build arrangement.",
+    "why_source": "inferred",
+    "tips": [
+     "Hold stem steady while inserting.",
+     "Push gently to avoid bending the stem."
+    ]
+   },
+   {
+    "index": 2,
+    "covers": [
+     2
+    ],
+    "title": "Insert second stem",
+    "instruction": "Insert the item held in the right hand into the vase on your right.",
+    "why": "Place stem into vase to build arrangement.",
+    "why_source": "inferred",
+    "tips": [
+     "Align stem with previous ones for balance.",
+     "Keep insertion angle consistent."
+    ]
+   },
+   {
+    "index": 3,
+    "covers": [
+     3
+    ],
+    "title": "Insert third stem",
+    "instruction": "Insert the item held in the right hand into the vase on your right.",
+    "why": "Place stem into vase to build arrangement.",
+    "why_source": "inferred",
+    "tips": [
+     "Check spacing between stems.",
+     "Avoid overcrowding the vase."
+    ]
+   },
+   {
+    "index": 4,
+    "covers": [
+     4
+    ],
+    "title": "Insert fourth stem",
+    "instruction": "Insert the item held in the right hand into the vase on your right.",
+    "why": "Place stem into vase to build arrangement.",
+    "why_source": "inferred",
+    "tips": [
+     "Maintain even depth for visual appeal.",
+     "Ensure stems are upright."
+    ]
+   },
+   {
+    "index": 5,
+    "covers": [
+     5
+    ],
+    "title": "Insert fifth stem",
+    "instruction": "Insert the item held in the right hand into the vase on your right.",
+    "why": "Place stem into vase to build arrangement.",
+    "why_source": "inferred",
+    "tips": [
+     "Finish arrangement with a focal stem.",
+     "Check overall symmetry."
+    ]
+   }
+  ],
+  "robot_program": [
+   {
+    "op": "pick",
+    "object": "the item"
+   },
+   {
+    "op": "place",
+    "target": "vase on your right"
+   },
+   {
+    "op": "pick",
+    "object": "the item"
+   },
+   {
+    "op": "place",
+    "target": "vase on your right"
+   },
+   {
+    "op": "pick",
+    "object": "the item"
+   },
+   {
+    "op": "place",
+    "target": "vase on your right"
+   },
+   {
+    "op": "pick",
+    "object": "the item"
+   },
+   {
+    "op": "place",
+    "target": "vase on your right"
+   },
+   {
+    "op": "pick",
+    "object": "the item"
+   },
+   {
+    "op": "place",
+    "target": "vase on your right"
+   }
+  ],
+  "pending_questions": [
+   {
+    "index": 1,
+    "question": "Why do we insert the stem into the vase?"
+   },
+   {
+    "index": 2,
+    "question": "Why do we insert the stem into the vase?"
+   },
+   {
+    "index": 3,
+    "question": "Why do we insert the stem into the vase?"
+   },
+   {
+    "index": 4,
+    "question": "Why do we insert the stem into the vase?"
+   },
+   {
+    "index": 5,
+    "question": "Why do we insert the stem into the vase?"
+   }
+  ]
+ },
+ "sk_3b7c613d": {
+  "title": "Cup Placement and Bottle Check",
+  "summary": "Arrange cups correctly and verify bottle condition to maintain an organized work area.",
+  "steps": [
+   {
+    "index": 1,
+    "covers": [
+     1
+    ],
+    "title": "Pick up front cup",
+    "instruction": "Pick up the cup in front of you with both hands.",
+    "why": "To reposition the cup for later placement.",
+    "why_source": "inferred",
+    "tips": [
+     "Hold cup steady",
+     "Check cup is upright"
+    ]
+   },
+   {
+    "index": 2,
+    "covers": [
+     2
+    ],
+    "title": "Place cup on right",
+    "instruction": "Place the cup on your right down with the right hand and straighten it.",
+    "why": "Align cup to designated spot.",
+    "why_source": "inferred",
+    "tips": [
+     "Use right hand for stability",
+     "Ensure cup is level"
+    ]
+   },
+   {
+    "index": 3,
+    "covers": [
+     3
+    ],
+    "title": "Pick up left cup",
+    "instruction": "Pick up the cup on your left with the right hand.",
+    "why": "Prepare to reposition the cup.",
+    "why_source": "inferred",
+    "tips": [
+     "Reach left comfortably",
+     "Hold cup firmly"
+    ]
+   },
+   {
+    "index": 4,
+    "covers": [
+     4
+    ],
+    "title": "Place cup front",
+    "instruction": "Place the cup in front of you down with the right hand and straighten it.",
+    "why": "Return cup to original spot.",
+    "why_source": "inferred",
+    "tips": [
+     "Align with front cup",
+     "Check straightness"
+    ]
+   },
+   {
+    "index": 5,
+    "covers": [
+     5
+    ],
+    "title": "Check bottle",
+    "instruction": "Lift the bottle on your left, hold it up to inspect, then set it back.",
+    "why": "Verify bottle condition.",
+    "why_source": "inferred",
+    "tips": [
+     "Hold bottle upright",
+     "Look for cracks"
+    ]
+   }
+  ],
+  "robot_program": [
+   {
+    "op": "pick",
+    "object": "cup in front of you"
+   },
+   {
+    "op": "place",
+    "target": "cup on your right"
+   },
+   {
+    "op": "pick",
+    "object": "cup on your left"
+   },
+   {
+    "op": "place",
+    "target": "cup in front of you"
+   },
+   {
+    "op": "pick",
+    "object": "bottle on your left"
+   },
+   {
+    "op": "place",
+    "target": "bottle on your left"
+   }
+  ],
+  "pending_questions": [
+   {
+    "index": 1,
+    "question": "Why is the cup moved to the right?"
+   },
+   {
+    "index": 3,
+    "question": "Why is the left cup moved to the front?"
+   },
+   {
+    "index": 5,
+    "question": "What specific condition is checked on the bottle?"
+   }
+  ]
+ }
+}

@@ -66,7 +66,11 @@ def _llm(request: httpx.Request) -> httpx.Response:
     if body.get("stream"):
         chunks = "".join(f"data: {json.dumps({'choices': [{'delta': {'content': w}}]})}\n\n" for w in ["Maria ", "says ", "hold it by the body. ", "Then place it."])
         return httpx.Response(200, text=chunks + "data: [DONE]\n\n", headers={"content-type": "text/event-stream"})
-    if "pending_questions" in prompt:
+    if "translate" in body["messages"][0]["content"]:
+        content = prompt  # identity "translation": same JSON back
+    elif "quality lead" in body["messages"][0]["content"]:
+        content = "You did the first step well. Do not skip setting the cup in the bowl."
+    elif "pending_questions" in prompt:
         content = json.dumps(STRUCTURE)
     elif "sop_markdown" in prompt:
         content = "```json\n" + json.dumps(DOCS) + "\n```"
@@ -187,3 +191,46 @@ def test_listing_preview_never_shows_video_pixels(api):
     lst = api.post("/api/exchange/listings", json={"skill_id": sid, "consent": {"expert_confirmed": True}}, headers=H).json()
     assert lst["thumb"] == sk["motion_thumb"]
     assert all(l["thumb"] != sk["thumb"] for l in api.get("/api/exchange/listings").json())
+
+
+
+def test_audit_and_translated_lesson(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    vid = config.SAMPLES / "unit.mp4"
+    r = api.post(f"/api/skills/{sid}/audit", files={"file": ("run.mp4", vid.read_bytes(), "video/mp4")}, data={"worker": "Sam Okafor"}).json()
+    job = _wait(api, r["job_id"])
+    assert job["status"] == "done", job
+    rep = api.get(f"/api/skills/{sid}/audits/{r['audit_id']}").json()
+    assert rep["summary"]["steps_total"] == len(api.get(f"/api/skills/{sid}").json()["steps"])
+    assert {row["status"] for row in rep["steps"]} <= {"done", "missing", "out_of_order"}
+    assert rep["narrative"].startswith("You did")
+    assert api.get(f"/api/skills/{sid}/audits").json()[0]["id"] == r["audit_id"]
+    les = api.get(f"/api/learn/lessons/{sid}?lang=es").json()
+    assert les["lang"] == "es" and les["steps"] and any(l["code"] == "es" for l in les["languages"])
+
+
+def test_rename_during_processing_survives(api):
+    from tacit.storage import load_skill, save_skill
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    stale = load_skill(sid)                       # a job's copy, loaded before the rename
+    api.patch(f"/api/skills/{sid}", json={"title": "QA renamed mid-run"})
+    stale["title"] = "Writer's title"
+    save_skill(stale)                             # the job saves its stale copy
+    sk = load_skill(sid)
+    assert sk["title"] == "QA renamed mid-run" and sk["test"] is True
+
+
+def test_test_listings_can_be_cleaned_up(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit", "title": "QA cleanup"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    lst = api.post("/api/exchange/listings", json={"skill_id": sid, "consent": {"expert_confirmed": True}}, headers=H).json()
+    api.post(f"/api/exchange/listings/{lst['id']}/license", json={"license_type": "training"}, headers={"X-Tacit-User": "u_atlas"})
+    before = api.get("/api/earnings", headers=H).json()["total"]
+    r = api.delete(f"/api/exchange/listings/{lst['id']}").json()
+    assert r["licenses_removed"] == 1
+    assert api.get("/api/earnings", headers=H).json()["total"] == pytest.approx(before - 34.3)
+    real = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{real}/process").json()["job_id"])
+    real_lst = api.post("/api/exchange/listings", json={"skill_id": real, "consent": {"expert_confirmed": True}}, headers=H).json()
+    assert api.delete(f"/api/exchange/listings/{real_lst['id']}").status_code == 400   # never a real listing
