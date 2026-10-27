@@ -59,7 +59,7 @@ function Body({ frame }: { frame: MutableRefObject<TwinFrame | undefined> }) {
       </lineSegments>
       <mesh ref={head}>
         <sphereGeometry args={[0.085, 24, 18]} />
-        <meshStandardMaterial color="#9aa6b2" transparent opacity={0.22} roughness={0.4} />
+        <meshBasicMaterial color="#c9d3dd" transparent opacity={0.14} depthWrite={false} />
       </mesh>
     </group>
   )

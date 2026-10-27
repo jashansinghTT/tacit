@@ -37,7 +37,7 @@ export function normalizeSkill(raw: Partial<Skill> & { id: string }): Skill {
       status: v.status ?? 'pending',
       score: v.score ?? null,
       method: v.method ?? 'VGGT multi-view consistency',
-      details: { views: 0, reproj_px: NaN, depth_stability: NaN, ...(v.details ?? {}) },
+      details: { views: 0, ...(v.details ?? {}) },
       checked_at: v.checked_at ?? null,
       pointcloud: v.pointcloud ?? null,
       served_by: v.served_by,

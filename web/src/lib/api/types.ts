@@ -87,6 +87,19 @@ export interface Sample {
   kind: 'real' | 'ai-generated'
 }
 
+export interface SampleVerification {
+  sample_id: string
+  kind: Sample['kind']
+  status: VerificationStatus
+  score: number | null
+  method: string
+  details: Record<string, number>
+  times?: number[]
+  pointcloud: string | null
+  points?: number
+  served_by?: ServedBy[]
+}
+
 // Skills
 
 export type SkillStatus = 'draft' | 'processing' | 'ready' | 'failed'
@@ -158,7 +171,8 @@ export interface Verification {
   status: VerificationStatus
   score: number | null
   method: string
-  details: { views: number; reproj_px: number; depth_stability: number; [k: string]: unknown }
+  /** Known keys: views, reproj_px or reproj_rel, depth_stability, camera_drift, static_pixels. */
+  details: { views: number; reproj_px?: number; reproj_rel?: number; depth_stability?: number; camera_drift?: number; [k: string]: unknown }
   checked_at: string | null
   pointcloud: string | null
   served_by?: ServedBy[]

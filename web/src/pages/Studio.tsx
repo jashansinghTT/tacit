@@ -205,7 +205,7 @@ export default function StudioPage() {
   const latest = cap.latest
   const srcW = () => latest.current?.width ?? cap.sentSize.current.w
   const srcH = () => latest.current?.height ?? cap.sentSize.current.h
-  const segments = cap.steps.filter((s) => s.t_start != null && s.t_end != null).map((s, i) => ({ id: s.id ?? `s${i}`, label: s.title ?? `Step ${i + 1}`, t0: s.t_start!, t1: s.t_end!, done: true }))
+  const segments = cap.steps.filter((s) => s.t_start != null && s.t_end != null).map((s, i) => ({ id: s.id ?? `s${i}`, label: s.title ?? (s as { draft?: string }).draft ?? `Step ${i + 1}`, t0: s.t_start!, t1: s.t_end!, done: true }))
   const showStage = cap.phase !== 'idle' || (source === 'webcam' && cam.stream) || (source === 'sample' && sample)
 
   if (finishedJob && finishedSkill) {
