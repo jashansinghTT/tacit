@@ -279,7 +279,7 @@ test.describe('with the capture camera', () => {
       void page
         .evaluate(() => ({
           q: document.querySelectorAll('[data-testid="coach-question"]').length,
-          coming: [...document.querySelectorAll('[data-testid="coach-question"]')].filter((e) => /voice coming/.test(e.textContent ?? '')).length,
+          coming: Array.from(document.querySelectorAll('[data-testid="coach-question"]')).filter((e) => /voice coming/.test(e.textContent ?? '')).length,
           a: document.querySelectorAll('[data-testid="expert-answer"]').length,
           rec: document.querySelector('[data-testid="talk-button"]')?.getAttribute('aria-pressed') === 'true',
         }))
