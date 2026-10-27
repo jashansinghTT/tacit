@@ -58,7 +58,7 @@ export default function TeamPage() {
             <Stat label="Robot-ready" value={robotReady} unit={`/ ${ready.length}`} tone={robotReady ? 'ok' : 'neutral'} hint={`${trained} trained · target ${ROBOT_TARGET * 100}% in sim`} />
           </section>
 
-          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
             <Panel title="Trainee progress" eyebrow="Per trainee and skill" pad={false} data-testid="team-progress">
               {ready.length === 0 ? (
                 <EmptyState icon={<Users className="size-5" />} title="No lessons yet">

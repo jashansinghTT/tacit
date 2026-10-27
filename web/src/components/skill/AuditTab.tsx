@@ -177,7 +177,7 @@ function AuditReport({ skill, audit }: { skill: Skill; audit: Audit }) {
       </Panel>
 
       <Panel title="Step by step" eyebrow={`${audit.steps.length} expert steps`} pad={false} data-testid="audit-steps">
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[820px] text-[13px]">
             <thead>
               <tr className="border-b border-line text-left text-[10px] tracking-wider text-fg-faint uppercase">

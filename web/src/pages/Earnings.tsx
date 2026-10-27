@@ -109,7 +109,7 @@ function Ledger({ data, listings }: { data: ExEarnings; listings: ExListing[] })
   const avatarOf = useAvatarOf()
   const titleOf = (e: ExEarnings['entries'][number]) => listings.find((l) => l.id === e.listing_id)?.title ?? e.skill_title
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className="w-full min-w-[640px] text-[13px]" data-testid="earnings-ledger">
         <thead>
           <tr className="border-b border-line text-left text-[11px] text-fg-subtle">

@@ -61,7 +61,7 @@ function Cell({ row }: { row: ProgressEntry | undefined }) {
 export function ProgressMatrix({ trainees, skills, rows }: { trainees: Trainee[]; skills: SkillSummary[]; rows: ProgressEntry[] }) {
   const at = (t: string, s: string) => rows.find((r) => r.trainee.id === t && r.skill_id === s)
   return (
-    <div className="overflow-x-auto" data-testid="progress-matrix">
+    <div className="relative overflow-x-auto" data-testid="progress-matrix">
       <table className="w-full border-separate border-spacing-0 bg-ink-800 text-left">
         <thead>
           <tr>
@@ -191,7 +191,7 @@ export function SkillsTable({
   robot: Map<string, { data: RobotReadiness | undefined; loading: boolean }>
 }) {
   return (
-    <div className="overflow-x-auto" data-testid="skills-table">
+    <div className="relative overflow-x-auto" data-testid="skills-table">
       <table className="w-full min-w-[980px] text-left">
         <thead>
           <tr className="eyebrow border-b border-line">
