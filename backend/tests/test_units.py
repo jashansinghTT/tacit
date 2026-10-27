@@ -216,3 +216,14 @@ def test_audit_compare_marks_done_missing_and_order():
     statuses = [r["status"] for r in rep["steps"]]
     assert statuses[0] == "done" and statuses[1] == "done" and statuses[2] == "missing"
     assert rep["summary"]["missing"] == 1
+
+
+def test_normalize_program_pairs_picks_with_places():
+    from tacit.robot.lab import normalize_program
+    assert normalize_program([{"op": "pick", "object": "knife"}, {"op": "pick", "object": "cup"}]) == [
+        {"op": "pick", "object": "knife"}, {"op": "place", "target": "tray"},
+        {"op": "pick", "object": "cup"}, {"op": "place", "target": "tray"}]
+    assert normalize_program([{"op": "place", "target": "bin"}, {"op": "pick", "object": "cup"},
+                              {"op": "place", "target": "bowl"}, {"op": "pick", "object": "fork"}]) == [
+        {"op": "pick", "object": "cup"}, {"op": "place", "target": "bowl"},
+        {"op": "pick", "object": "fork"}, {"op": "place", "target": "bowl"}]
