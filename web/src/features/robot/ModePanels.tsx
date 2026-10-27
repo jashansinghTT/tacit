@@ -35,12 +35,12 @@ function RunButton({ mode, label, onRun, disabled, title, variant = 'primary' }:
   const busy = mine && (ui.status === 'starting' || ui.status === 'streaming')
   if (busy)
     return (
-      <Button variant="danger" icon={<Square className="size-3.5 fill-current" />} onClick={stopRun} className="w-full" data-testid={`stop-${mode}`}>
+      <Button key="stop" variant="danger" icon={<Square className="size-3.5 fill-current" />} onClick={stopRun} className="w-full" data-testid={`stop-${mode}`}>
         Stop {ui.status === 'starting' ? '(starting…)' : 'run'}
       </Button>
     )
   return (
-    <Button variant={variant} icon={<Play className="size-4" />} onClick={onRun} disabled={disabled} title={title} className="w-full" data-testid={`run-${mode}`}>
+    <Button key="run" variant={variant} icon={<Play className="size-4" />} onClick={onRun} disabled={disabled} title={title} className="w-full" data-testid={`run-${mode}`}>
       {label}
     </Button>
   )

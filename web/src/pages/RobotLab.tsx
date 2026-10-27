@@ -101,7 +101,13 @@ function RunHistory({ status }: { status: RobotStatus | undefined }) {
         <ul className="divide-y divide-line" data-testid="run-history">
           {runs.map((r) => (
             <li key={r.id} className="flex items-center gap-3 px-4 py-2.5 text-[12.5px]">
-              {r.success === null ? <span className="size-4" /> : r.success ? <CheckCircle2 className="size-4 text-ok" /> : <XCircle className="size-4 text-fault" />}
+              {r.success === null ? (
+                <span className="size-4" />
+              ) : r.success ? (
+                <CheckCircle2 className="size-4 text-ok" />
+              ) : (
+                <XCircle className={cn('size-4', r.mode === 'gr00t' ? 'text-warn' : 'text-fault')} aria-label={r.mode === 'gr00t' ? 'did not finish (expected for the baseline)' : 'failed'} />
+              )}
               <span className="font-medium text-fg">{RUN_LABEL[r.mode] ?? r.mode}</span>
               <span className="telemetry text-[11px] text-fg-faint">{r.id}</span>
               <span className="ml-auto text-[11px] text-fg-subtle">{fmtAgo(r.at)}</span>
