@@ -1,0 +1,433 @@
+/**
+ * The seven E2E flows of SPEC section 9 through the UI, on the real stack (Chromium, fake camera and mic).
+ *
+ * Run with scripts/e2e/ui.sh (builds the merged web branches, serves them proxied to the backend on 8710,
+ * and runs scripts/e2e/playwright.config.ts). Each test attaches its timings; report.py puts them in RESULTS.md.
+ */
+import { test, expect, type Page, type TestInfo, type ConsoleMessage, type Response } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+
+const MEDIA = process.env.QA_E2E_MEDIA ?? path.join(process.env.HOME ?? '', 'tacit/data/e2e')
+const RUN_DIR = process.env.QA_UI_RUN_DIR ?? path.join(process.cwd(), 'qa-run')
+const fakeArgs = (video: string, audio: string) => [
+  '--use-fake-device-for-media-stream',
+  '--use-fake-ui-for-media-stream',
+  `--use-file-for-fake-video-capture=${path.join(MEDIA, video)}`,
+  `--use-file-for-fake-audio-capture=${path.join(MEDIA, audio)}`,
+  '--autoplay-policy=no-user-gesture-required',
+]
+
+// ------------------------------------------------------------------------------------ helpers
+type Timing = { step: string; s: number; limit_s: number | null; slow: boolean }
+
+class Run {
+  timings: Timing[] = []
+  consoleErrors: string[] = []
+  apiFailures: string[] = []
+  constructor(
+    readonly page: Page,
+    readonly info: TestInfo,
+  ) {
+    page.on('console', (m: ConsoleMessage) => {
+      if (m.type() === 'error') this.consoleErrors.push(`${m.text()} @ ${m.location().url}`)
+    })
+    page.on('pageerror', (e) => this.consoleErrors.push(`pageerror: ${e.message}`))
+    page.on('response', (r: Response) => {
+      const u = new URL(r.url())
+      if ((u.pathname.startsWith('/api/') || u.pathname.startsWith('/media/')) && r.status() >= 400) this.apiFailures.push(`${r.status()} ${r.request().method()} ${u.pathname}`)
+    })
+  }
+  async time<T>(step: string, limit_s: number | null, fn: () => Promise<T>): Promise<T> {
+    const t0 = Date.now()
+    try {
+      return await fn()
+    } finally {
+      const s = (Date.now() - t0) / 1000
+      this.timings.push({ step, s: Math.round(s * 1000) / 1000, limit_s, slow: limit_s != null && s > limit_s })
+    }
+  }
+  note(text: string) {
+    this.info.annotations.push({ type: 'note', description: text })
+    void this.info.attach('note', { body: text, contentType: 'text/plain' })
+  }
+  async shot(name: string) {
+    const dir = path.join(RUN_DIR, 'screens', this.info.title.split(' ')[0])
+    fs.mkdirSync(dir, { recursive: true })
+    await this.page.screenshot({ path: path.join(dir, `${name}.png`) })
+  }
+  async finish() {
+    await this.info.attach('timings', { body: JSON.stringify(this.timings), contentType: 'application/json' })
+    if (this.apiFailures.length) this.note(`API errors seen by the page: ${[...new Set(this.apiFailures)].join(', ')}`)
+  }
+}
+
+async function persona(page: Page, id: 'u_maria' | 'u_sam' | 'u_priya' | 'u_atlas') {
+  await page.addInitScript((p) => {
+    try {
+      localStorage.setItem('tacit.persona', p)
+      localStorage.setItem('tacit.tour.seen', '1')
+    } catch {
+      /* ignore */
+    }
+  }, id)
+}
+
+const words = (s: string) => new Set(s.toLowerCase().split(/\s+/).map((w) => w.replace(/[.,!?;:'"]/g, '')).filter((w) => w.length > 2))
+const overlap = (a: string, b: string) => [...words(a)].filter((w) => words(b).has(w)).length / Math.max(1, words(b).size)
+
+async function api<T>(page: Page, url: string, init?: { method?: string; data?: unknown; user?: string }): Promise<T> {
+  const r = await page.request.fetch(url, { method: init?.method ?? 'GET', data: init?.data, headers: { 'X-Tacit-User': init?.user ?? 'u_maria' } })
+  expect(r.ok(), `${init?.method ?? 'GET'} ${url} -> ${r.status()}`).toBeTruthy()
+  return (await r.json()) as T
+}
+
+async function qaTitle(page: Page, skillId: string) {
+  const sk = await api<{ title: string }>(page, `/api/skills/${skillId}`)
+  if (!sk.title.startsWith('QA ')) await api(page, `/api/skills/${skillId}`, { method: 'PATCH', data: { title: `QA ${sk.title}` } })
+}
+
+/** The skill the later flows share: the newest ready QA skill made from a sample (F2 makes one). */
+async function sharedSkill(page: Page): Promise<string> {
+  const fromEnv = process.env.QA_SKILL_ID
+  if (fromEnv) return fromEnv
+  const file = path.join(RUN_DIR, 'shared-skill.txt')
+  if (fs.existsSync(file)) return fs.readFileSync(file, 'utf8').trim()
+  const list = await api<{ id: string; title: string; status: string; source_kind: string }[]>(page, '/api/skills?status=ready&include_test=1')
+  const qa = list.find((s) => s.title.startsWith('QA ') && s.source_kind !== 'live')
+  expect(qa, 'no ready QA skill: run F2 first').toBeTruthy()
+  return qa!.id
+}
+
+function zipNames(file: string): string[] {
+  const out = execFileSync('python3', ['-c', 'import sys, zipfile; print("\\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))', file])
+  return out.toString().trim().split('\n')
+}
+
+// Not serial mode: a failing flow must not skip the others. workers=1 keeps them in file order.
+
+// ------------------------------------------------------------------------------------ F1
+// The config's browser has the capture camera (capture.y4m) and the spoken answer (answer.wav).
+test.describe('with the capture camera', () => {
+  test('F1 landing and navigation render with no console errors', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_maria')
+    await run.time('landing page', 3, async () => {
+      await page.goto('/')
+      await expect(page.getByTestId('landing-hero')).toBeVisible()
+    })
+    await page.waitForLoadState('networkidle').catch(() => {})
+    await run.shot('landing')
+    for (const sec of ['landing-flow', 'landing-box', 'landing-moat', 'landing-exchange']) {
+      await expect(page.getByTestId(sec), `landing section ${sec}`).toBeAttached()
+    }
+    const pages: [string, string][] = [
+      ['studio', '/studio'],
+      ['skills', '/skills'],
+      ['learn', '/learn'],
+      ['robot', '/robot'],
+      ['exchange', '/exchange'],
+      ['team', '/team'],
+      ['box', '/box'],
+    ]
+    let lastHeading = ''
+    for (const [key, url] of pages) {
+      await run.time(`navigate to ${url}`, 2, async () => {
+        await page.getByTestId(`nav-${key}`).first().click()
+        await expect(page).toHaveURL(new RegExp(`${url}(\\?|$)`))
+        // The new page's own heading, not the old page fading out.
+        await expect(page.locator('h1')).toHaveCount(1)
+        await expect(page.locator('h1')).not.toHaveText(lastHeading === '' ? /^$/ : lastHeading)
+        await expect(page.locator('h1')).toBeVisible()
+      })
+      lastHeading = (await page.locator('h1').innerText()).trim()
+      await page.waitForLoadState('networkidle').catch(() => {})
+      await page.waitForTimeout(800)
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(wide, `${url} scrolls horizontally by ${wide}px`).toBeLessThanOrEqual(1)
+      await run.shot(key)
+    }
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/')
+    const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(wide, `landing scrolls horizontally at 1280 px by ${wide}px`).toBeLessThanOrEqual(1)
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+
+  // ---------------------------------------------------------------------------------- F2
+  test('F2 sample video is processed into a ready skill with steps, verification and SOP', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_maria')
+    const samples = await api<{ id: string; kind: string; title: string }[]>(page, '/api/samples')
+    const sample = samples.find((s) => s.id === process.env.QA_SAMPLE) ?? samples.find((s) => s.kind === 'real')
+    expect(sample, 'no real sample in /api/samples').toBeTruthy()
+    await page.goto('/studio?source=sample')
+    await page.getByTestId(`sample-${sample!.id}`).click()
+    await run.shot('sample-picked')
+    const t0 = Date.now()
+    await page.getByTestId('sample-offline').click()
+    await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
+    await run.shot('processing')
+    const open = page.getByTestId('open-skill')
+    await run.time('process the sample (UI)', 300, async () => {
+      await expect(page.getByTestId('stage-ready')).toHaveAttribute('data-status', 'done', { timeout: 20 * 60_000 }).catch(async () => {
+        await expect(open).toBeVisible({ timeout: 20 * 60_000 })
+      })
+    })
+    run.note(`processing took ${((Date.now() - t0) / 1000).toFixed(0)} s`)
+    await run.shot('processed')
+    await open.click()
+    await expect(page).toHaveURL(/\/skills\/sk_/)
+    const skillId = page.url().split('/skills/')[1].split(/[?#]/)[0]
+    fs.mkdirSync(RUN_DIR, { recursive: true })
+    fs.writeFileSync(path.join(RUN_DIR, 'shared-skill.txt'), skillId)
+    await qaTitle(page, skillId)
+    await page.reload()
+    const steps = page.getByTestId('steps-list').locator('[data-testid^="step-"]')
+    await expect(steps.first()).toBeVisible()
+    expect(await steps.count(), 'steps shown').toBeGreaterThanOrEqual(3)
+    await run.shot('skill-overview')
+    const sk = await api<{ verification: { status: string; score: number }; steps: unknown[]; sop_markdown: string }>(page, `/api/skills/${skillId}`)
+    run.note(`skill ${skillId}: ${sk.steps.length} steps, verification ${sk.verification.status} ${sk.verification.score}`)
+    await expect(page.getByText(/verified/i).first()).toBeVisible()
+    await page.getByTestId('tab-sop').click()
+    await expect(page.getByTestId('sop-panel')).toBeVisible()
+    await expect(page.getByTestId('sop-panel')).toContainText(sk.sop_markdown.split('\n').find((l) => l.startsWith('#'))!.replace(/^#+\s*/, '').slice(0, 20))
+    await run.shot('skill-sop')
+    await page.getByTestId('tab-verify').click()
+    await expect(page.getByTestId('verify-summary')).toBeVisible()
+    await run.shot('skill-verify')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+
+  // ---------------------------------------------------------------------------------- F3
+  test('F3 live capture with the fake camera gets a spoken coach question and a transcribed answer', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_maria')
+    const answerText = fs.readFileSync(path.join(MEDIA, 'answer.txt'), 'utf8').trim()
+    await page.goto('/studio?source=webcam')
+    await page.getByTestId('camera-preview').click()
+    await run.time('camera preview', 5, async () => {
+      await expect.poll(async () => page.locator('video').first().evaluate((v: HTMLVideoElement) => v.videoWidth), { timeout: 10_000 }).toBeGreaterThan(0)
+    })
+    await page.getByTestId('capture-start').click()
+    await expect(page.getByTestId('overlay-canvas')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('latency-hud')).toBeVisible()
+    await page.waitForTimeout(3000)
+    await run.shot('live-analysis')
+    const question = page.getByTestId('coach-question').first()
+    await run.time('first coach question (from start)', 60, async () => {
+      await expect(question).toBeVisible({ timeout: 120_000 })
+    })
+    run.note(`coach asked: ${await question.innerText()}`)
+    await run.shot('coach-question')
+    const answer = page.getByTestId('expert-answer').first()
+    await run.time('spoken answer transcribed (from question)', 30, async () => {
+      await expect(answer).toBeVisible({ timeout: 90_000 })
+    })
+    const heard = await answer.innerText()
+    run.note(`transcript: ${heard}`)
+    expect(overlap(heard, answerText), `transcript "${heard}" vs "${answerText}"`).toBeGreaterThanOrEqual(0.5)
+    await run.shot('answer')
+    await page.getByTestId('capture-stop').click()
+    await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
+    const open = page.getByTestId('open-skill')
+    await expect(open).toBeVisible({ timeout: 60_000 })
+    const href = await open.getAttribute('href')
+    const skillId = href!.split('/skills/')[1]
+    await run.time('process the capture (UI)', 180, async () => {
+      await expect
+        .poll(async () => (await api<{ status: string }>(page, `/api/skills/${skillId}`)).status, { timeout: 15 * 60_000, intervals: [3000] })
+        .toMatch(/ready|failed/)
+    })
+    await qaTitle(page, skillId)
+    const sk = await api<{ status: string; qa: { answer: string | null; step_index: number | null }[]; steps: { index: number; why: string; why_source: string }[] }>(
+      page,
+      `/api/skills/${skillId}`,
+    )
+    expect(sk.status).toBe('ready')
+    const kept = sk.qa.find((q) => q.answer && overlap(q.answer, answerText) >= 0.5)
+    expect(kept, `answer not kept: ${JSON.stringify(sk.qa)}`).toBeTruthy()
+    const step = sk.steps.find((s) => s.index === kept!.step_index)
+    expect(step?.why_source, 'the answer is not attached to a step').toBe('expert')
+    await open.click()
+    await run.shot('captured-skill')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+})
+
+// ------------------------------------------------------------------------------------ F4
+test.describe('with the practice camera', () => {
+  test('F4 learn: narration plays, practice scores with a hint, tutor answers by text and voice', async ({ playwright, baseURL }, info) => {
+    // A browser of its own: the trainee's camera (practice.y4m) and a spoken question (question.wav).
+    const browser = await playwright.chromium.launch({ args: fakeArgs('practice.y4m', 'question.wav') })
+    const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 }, permissions: ['camera', 'microphone'] })
+    const page = await context.newPage()
+    const run = new Run(page, info)
+    try {
+      await learnFlow(page, run)
+    } catch (e) {
+      await run.shot('failure').catch(() => {})
+      throw e
+    } finally {
+      await run.finish()
+      await browser.close()
+    }
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+})
+
+async function learnFlow(page: Page, run: Run) {
+  {
+    await persona(page, 'u_sam')
+    const skillId = await sharedSkill(page)
+    await page.goto(`/learn/${skillId}`)
+    await expect(page.locator('h1').first()).toBeVisible()
+    await run.shot('lesson')
+    // Narration: a playing <audio> element with real duration.
+    await page.getByTestId('narration-play').first().click()
+    await run.time('narration starts playing', 3, async () => {
+      await expect
+        .poll(async () => page.evaluate(() => [...document.querySelectorAll('audio')].some((a) => !a.paused && a.currentTime > 0.2)), { timeout: 15_000 })
+        .toBeTruthy()
+    })
+    // Practice with the fake camera.
+    await page.getByTestId('practice-start').click()
+    const score = page.getByTestId('practice-score')
+    await run.time('first practice score', 5, async () => {
+      await expect(score).toBeVisible({ timeout: 30_000 })
+    })
+    await expect(page.getByTestId('practice-hint')).not.toBeEmpty({ timeout: 30_000 })
+    await page.waitForTimeout(4000)
+    run.note(`practice score ${await score.innerText()}, hint "${await page.getByTestId('practice-hint').innerText()}"`)
+    await run.shot('practice')
+    await page.getByTestId('practice-stop').click().catch(() => {})
+    // Tutor by text.
+    await page.getByTestId('tutor-input').fill('Why does the first step matter?')
+    await page.getByTestId('tutor-send').click()
+    const reply = page.getByTestId('tutor-answer').last()
+    await run.time('tutor text answer starts', 3, async () => {
+      await expect(reply).not.toBeEmpty({ timeout: 30_000 })
+    })
+    await expect(page.getByTestId('tutor-answer-done').last()).toBeVisible({ timeout: 60_000 })
+    await run.shot('tutor-text')
+    // Tutor by voice (fake mic plays question.wav).
+    const questionText = fs.readFileSync(path.join(MEDIA, 'question.txt'), 'utf8').trim()
+    const before = await page.getByTestId('tutor-question').count()
+    await page.getByTestId('tutor-mic').click()
+    await page.waitForTimeout(6000)
+    await page.getByTestId('tutor-mic').click().catch(() => {})
+    await run.time('voice question transcribed and answered', 20, async () => {
+      await expect(page.getByTestId('tutor-question')).toHaveCount(before + 1, { timeout: 60_000 })
+    })
+    const asked = await page.getByTestId('tutor-question').last().innerText()
+    run.note(`voice question heard as: ${asked}`)
+    expect(overlap(asked, questionText)).toBeGreaterThanOrEqual(0.5)
+    await expect(page.getByTestId('tutor-answer-done').last()).toBeVisible({ timeout: 60_000 })
+    await run.shot('tutor-voice')
+  }
+}
+
+// ------------------------------------------------------------------------------------ F5, F6, F7
+test.describe('the rest', () => {
+  test('F5 robot lab: train, evaluate at least 80% over 20 trials, GR00T run streams frames', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_priya')
+    const skillId = await sharedSkill(page)
+    await page.goto(`/robot/${skillId}`)
+    await expect(page.getByTestId('robot-viewer')).toBeVisible({ timeout: 30_000 })
+    await run.shot('robot-lab')
+    await page.getByTestId('robot-train').click()
+    await run.time('train the policy (UI)', 300, async () => {
+      await expect(page.getByTestId('policy-status')).toContainText(/trained/i, { timeout: 30 * 60_000 })
+    })
+    await expect(page.getByTestId('loss-curve')).toBeVisible()
+    await run.shot('trained')
+    await page.getByTestId('robot-evaluate').click()
+    await run.time('evaluate 20 trials (UI)', 180, async () => {
+      await expect(page.getByTestId('eval-result')).toBeVisible({ timeout: 30 * 60_000 })
+    })
+    const pct = Number((await page.getByTestId('eval-result').innerText()).match(/(\d+)\s*%/)?.[1] ?? 0)
+    run.note(`evaluation shows ${pct}%`)
+    expect(pct).toBeGreaterThanOrEqual(80)
+    await run.shot('evaluated')
+    await page.getByTestId('mode-gr00t').click()
+    await page.getByTestId('robot-run').click()
+    await run.time('GR00T camera frames appear', 10, async () => {
+      await expect(page.getByTestId('gr00t-camera').first()).toBeVisible({ timeout: 60_000 })
+    })
+    await page.waitForTimeout(5000)
+    await run.shot('gr00t-run')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+
+  test('F6 exchange: list, license as buyer, download the pack, earnings show the royalty', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_maria')
+    const skillId = await sharedSkill(page)
+    const expert = (await api<{ expert: { id: string } }>(page, `/api/skills/${skillId}`)).expert.id
+    const before = await api<{ total: number }>(page, '/api/earnings', { user: expert })
+    await page.goto(`/exchange/sell/${skillId}`)
+    await expect(page.locator('h1').first()).toBeVisible()
+    await run.shot('sell')
+    await page.getByTestId('consent-confirm').check()
+    await page.getByTestId('sell-publish').click()
+    await expect(page).toHaveURL(/\/exchange\/lst_/, { timeout: 20_000 })
+    const listingId = page.url().split('/exchange/')[1].split(/[?#]/)[0]
+    await run.shot('listed')
+    // Buyer
+    await page.evaluate(() => localStorage.setItem('tacit.persona', 'u_atlas'))
+    await page.goto(`/exchange/${listingId}`)
+    await page.getByTestId('license-robot_deploy').click()
+    await page.getByTestId('license-confirm').click()
+    await expect(page.getByTestId('license-receipt')).toBeVisible({ timeout: 20_000 })
+    await run.shot('licensed')
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.getByTestId('download-pack').click()])
+    const file = path.join(RUN_DIR, 'pack.zip')
+    await dl.saveAs(file)
+    const names = zipNames(file)
+    fs.unlinkSync(file)
+    run.note(`pack: ${names.length} files`)
+    for (const n of ['skill.json', 'SOP.md', 'motion/tracks.json', 'certificates/verification.json', 'LICENSE.txt']) {
+      expect(names.some((x) => x.endsWith(n)), `pack lacks ${n}`).toBeTruthy()
+    }
+    expect(names.filter((n) => /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(n)), 'video in the pack').toEqual([])
+    // Expert earnings
+    await page.evaluate((e) => localStorage.setItem('tacit.persona', e), expert)
+    await page.goto('/earnings')
+    const after = await api<{ total: number }>(page, '/api/earnings', { user: expert })
+    expect(after.total - before.total).toBeCloseTo(349.3, 1)
+    await expect(page.getByTestId('earnings-total')).toBeVisible()
+    await expect(page.getByText(/349\.3/).first()).toBeVisible()
+    await run.shot('earnings')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+
+  test('F7 box page shows all nine models healthy on four chips', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_priya')
+    await run.time('box page', 3, async () => {
+      await page.goto('/box')
+      await expect(page.getByTestId('chip-map')).toBeVisible()
+    })
+    for (const id of [0, 1, 2, 3]) {
+      await expect(page.getByTestId(`chip-panel-${id}`)).toBeVisible()
+      await expect(page.getByTestId(`chip-panel-${id}`).getByText(/^ok$/i).first(), `chip ${id} status badge`).toBeVisible()
+    }
+    const rows = page.locator('[data-testid^="model-"]')
+    await expect(rows).toHaveCount(9)
+    const box = await api<{ chips: { models: { name: string; healthy: boolean }[] }[] }>(page, '/api/box')
+    const unhealthy = box.chips.flatMap((c) => c.models).filter((m) => !m.healthy)
+    expect(unhealthy, 'unhealthy models').toEqual([])
+    await page.waitForTimeout(2500)
+    await run.shot('box')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+})

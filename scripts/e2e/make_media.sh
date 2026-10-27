@@ -51,7 +51,11 @@ to_y4m() {  # src dst: letterbox into 640x360, 15 fps, yuv420p (what Chromium's 
     -f yuv4mpegpipe "$2"
 }
 
-speak() {  # text dst pad_before pad_after
+speak() {  # text dst pad_before pad_after (kept if the same text was spoken before; E2E_FORCE_SPEECH=1 redoes it)
+  if [[ -z "${E2E_FORCE_SPEECH:-}" && -f "$2" && "$(cat "${2%.wav}.txt" 2>/dev/null)" == "$1" ]]; then
+    echo "  keep $2"
+    return
+  fi
   local url
   url="$(curl -fsS -X POST "$BASE/api/speech/tts" -H 'content-type: application/json' \
           -d "$(python3 -c 'import json,sys; print(json.dumps({"text": sys.argv[1], "voice": "default", "lang": "en"}))' "$1")" |

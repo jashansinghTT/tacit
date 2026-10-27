@@ -99,7 +99,9 @@ def processed(api) -> SkillRun:
                          headers={"X-Tacit-User": "u_maria"})
     else:
         sample = lib.pick_sample(api)
-        r = api.post("/api/skills", json={"source": "sample", "sample_id": sample["id"]}, headers={"X-Tacit-User": "u_maria"})
+        # A "QA " title marks the skill as a test skill, hidden from the demo's lists.
+        r = api.post("/api/skills", json={"source": "sample", "sample_id": sample["id"], "title": lib.QA_PREFIX + sample["title"]},
+                     headers={"X-Tacit-User": "u_maria"})
     r.raise_for_status()
     sid = r.json()["skill_id"]
     created_s = time.perf_counter() - t0
@@ -111,4 +113,19 @@ def processed(api) -> SkillRun:
     sk = api.get(f"/api/skills/{sid}").json()
     if sk.get("title") and not sk["title"].startswith(lib.QA_PREFIX):
         api.patch(f"/api/skills/{sid}", json={"title": lib.QA_PREFIX + sk["title"]})
-    return SkillRun(sid, job, created_s, process_s, sample)
+    run = SkillRun(sid, job, created_s, process_s, sample)
+    PROCESSED.append(run)
+    return run
+
+
+PROCESSED: list[SkillRun] = []
+
+
+@pytest.fixture
+def ready_skill(processed, api) -> SkillRun:
+    """The shared skill for flows 4 to 6; they cannot say anything useful about a skill that is not ready."""
+    st = api.get(f"/api/skills/{processed.skill_id}").json().get("status")
+    if processed.job.get("status") != "done" or st != "ready":
+        pytest.fail(f"the shared skill {processed.skill_id} is not ready (job {processed.job.get('status')}: "
+                    f"{processed.job.get('error')}; skill {st}), so this flow cannot run", pytrace=False)
+    return processed

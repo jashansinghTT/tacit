@@ -124,10 +124,26 @@ def test_2_sample_process_ready(api, rec, processed):
     with_hands = sum(1 for f in tracks["frames"] if f.get("hands"))
     rec.note(f"{len(tracks['frames'])} analysed frames, {with_hands} with hands")
     assert with_hands > 0.2 * len(tracks["frames"]), f"hands found in only {with_hands}/{len(tracks['frames'])} frames"
-    lesson = api.get(f"/api/learn/lessons/{sid}").json()
+    # Narration: the intro and first steps are voiced before ready, the rest in the background.
+    t0, deadline = time.perf_counter(), time.monotonic() + float(os.environ.get("QA_NARRATION_TIMEOUT", 600))
+    while True:
+        lesson = api.get(f"/api/learn/lessons/{sid}").json()
+        narrated = [s for s in lesson["steps"] if s.get("narration_audio")]
+        if (lesson.get("intro_audio") and len(narrated) == len(lesson["steps"])) or time.monotonic() > deadline:
+            break
+        time.sleep(3)
+    rec.mark("all narration voiced (after ready)", time.perf_counter() - t0, limit_s=120)
     assert lesson.get("intro_audio"), "no intro narration"
-    narrated = [s for s in lesson["steps"] if s.get("narration_audio")]
-    assert len(narrated) == len(lesson["steps"]), f"narration for {len(narrated)}/{len(lesson['steps'])} steps"
+    assert len(narrated) == len(lesson["steps"]), f"narration for {len(narrated)}/{len(lesson['steps'])} steps after {time.perf_counter() - t0:.0f} s"
+    # F3, the Check page: VGGT tells a real recording from an AI-made clip.
+    for smp in api.get("/api/samples").json():
+        with rec.time(f"verify sample {smp['id']}", limit_s=60):
+            r = api.get(f"/api/samples/{smp['id']}/verify", timeout=300)
+        assert r.status_code == 200, f"sample verify {smp['id']} -> {r.status_code} {r.text[:200]}"
+        sv = r.json()
+        rec.note(f"sample {smp['id']} ({smp.get('kind')}): {sv['status']} {sv['score']:.2f}")
+        want = "verified" if smp.get("kind", "real") == "real" else "suspect"
+        assert sv["status"] == want, f"sample {smp['id']} ({smp.get('kind')}) judged {sv['status']} ({sv['score']:.2f})"
 
 
 # ------------------------------------------------------------------------------------ 3. live capture
@@ -229,7 +245,7 @@ def test_3_live_capture_coach_and_answer(api, rec, scratch):
     wav, tts = lib.tts_wav(api, ANSWER, scratch / "answer.wav", rec, pad_before=0.3, pad_after=0.5)
     rec.note(f"capture video {video.name}, {len(frames)} frames; answer wav {lib.wav_seconds(wav):.1f} s")
     with rec.time("create live skill", limit_s=2):
-        sid = api.post("/api/skills", json={"source": "live", "title": "QA live capture"},
+        sid = api.post("/api/skills", json={"source": "live", "title": lib.QA_PREFIX + "live capture"},
                        headers={"X-Tacit-User": "u_maria"}).json()["skill_id"]
     log = lib.run(_capture(sid, frames, wav.read_bytes(), rec, max_s=float(os.environ.get("QA_CAPTURE_MAX_S", 150))))
     summary = {k: (v if not isinstance(v, list) else len(v)) for k, v in log.items()}
@@ -345,13 +361,18 @@ def _sse(api, path: str, rec: lib.Recorder, label: str, **kw) -> dict:
 
 
 @pytest.mark.flow(4)
-def test_4_learn_narration_practice_tutor(api, rec, scratch, processed):
+def test_4_learn_narration_practice_tutor(api, rec, scratch, ready_skill):
     """F4: narration plays, practice gives a score and a hint, the tutor answers by text and by voice."""
-    sid = processed.skill_id
+    sid = ready_skill.skill_id
     sam = {"X-Tacit-User": "u_sam"}
     with rec.time("GET /api/learn/lessons", limit_s=1):
-        lessons = api.get("/api/learn/lessons", headers=sam).json()
-    assert any(x["skill_id"] == sid for x in lessons), "the ready skill is not offered as a lesson"
+        lessons = api.get("/api/learn/lessons", params={"include_test": 1}, headers=sam).json()
+    offered = {x["skill_id"] for x in lessons}
+    if sid not in offered:
+        # QA skills are test skills, hidden from the trainee's list; every real ready skill must be offered.
+        ready = {x["id"] for x in api.get("/api/skills", params={"status": "ready"}).json() if not x.get("test")}
+        assert ready and ready <= offered, f"ready skills not offered as lessons: {sorted(ready - offered)}"
+        rec.note(f"the QA skill is hidden from /api/learn/lessons (test skill); {len(ready)} real ready skills are offered")
     with rec.time("GET lesson", limit_s=1):
         lesson = api.get(f"/api/learn/lessons/{sid}").json()
     rec.save("lesson.json", lesson)
@@ -460,9 +481,9 @@ async def _robot_run(run_id: str, timeout_s: float) -> dict:
 
 
 @pytest.mark.flow(5)
-def test_5_robot_lab_train_evaluate_run(api, rec, processed):
+def test_5_robot_lab_train_evaluate_run(api, rec, ready_skill):
     """F5: train a BC policy, evaluate (>= 80% over 20 trials), run it, and run GR00T N1.7 on chip 3."""
-    sid = processed.skill_id
+    sid = ready_skill.skill_id
     with rec.time("GET robot", limit_s=2):
         info = api.get(f"/api/robot/{sid}").json()
     assert info["program"], "no robot program"
@@ -518,9 +539,9 @@ def test_5_robot_lab_train_evaluate_run(api, rec, processed):
 
 # ------------------------------------------------------------------------------------ 6. exchange
 @pytest.mark.flow(6)
-def test_6_exchange_list_license_pack_earnings(api, rec, processed):
+def test_6_exchange_list_license_pack_earnings(api, rec, ready_skill):
     """F6: list the verified skill, license it as a buyer, download the pack (no video), royalty in earnings."""
-    sid = processed.skill_id
+    sid = ready_skill.skill_id
     maria, atlas = {"X-Tacit-User": "u_maria"}, {"X-Tacit-User": "u_atlas"}
     sk = api.get(f"/api/skills/{sid}").json()
     expert = sk["expert"]["id"]
@@ -535,7 +556,7 @@ def test_6_exchange_list_license_pack_earnings(api, rec, processed):
     rec.save("listing.json", listing)
     assert listing["verified"] and listing["consent"]["raw_video"] is False
     with rec.time("browse verified listings", limit_s=1):
-        found = api.get("/api/exchange/listings", params={"verified": "true", "q": "QA"}).json()
+        found = api.get("/api/exchange/listings", params={"verified": "true", "q": "QA", "include_test": 1}).json()
     assert any(x["id"] == listing["id"] for x in found), "the new listing is not in the verified listings"
     with rec.time("open listing", limit_s=2):
         detail = api.get(f"/api/exchange/listings/{listing['id']}").json()
