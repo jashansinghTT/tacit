@@ -53,6 +53,19 @@ export function raster(parent) {
         }
       }
     },
+    /** Write one channel only (for chromatic separation), keeping the brighter value. */
+    splatCh(x, y, ch, v, s = 2) {
+      const x0 = Math.round(x - s / 2), y0 = Math.round(y - s / 2)
+      for (let yy = y0; yy < y0 + s; yy++) {
+        if (yy < 0 || yy >= H) continue
+        for (let xx = x0; xx < x0 + s; xx++) {
+          if (xx < 0 || xx >= W) continue
+          const o = (yy * W + xx) * 4
+          if (v > px[o + ch]) px[o + ch] = v
+          px[o + 3] = 255
+        }
+      }
+    },
     flush() { g.putImageData(img, 0, 0) },
   }
 }

@@ -4,8 +4,15 @@ import coldOpen from './sections/coldopen.js'
 import hands from './sections/hands.js'
 import title from './sections/title.js'
 import watch from './sections/watch.js'
+import check from './sections/check.js'
+import teach from './sections/teach.js'
+import act from './sections/do.js'
+import earn from './sections/earn.js'
+import box from './sections/box.js'
+import tagline from './sections/tagline.js'
+import endcard from './sections/endcard.js'
 
-export const MUSIC = { take: 'take_11', offset: 0 }
+export const MUSIC = { take: 'take_11', offset: 0, end: 74.3 } // end: the master's length (stop + tail)
 
 export async function buildTimeline(R) {
   const a = await R.json(`/data/music/${MUSIC.take}.analysis.json`)
@@ -35,11 +42,18 @@ export async function buildTimeline(R) {
     [hands, 3, 9],
     [title, 9, 10],
     [watch, 10, 13],
+    [check, 13, 16],
+    [teach, 16, 18],
+    [act, 18, 21],
+    [earn, 21, 23],
+    [box, 23, 25],
+    [tagline, 25, 28],
+    [endcard, 28, 'end'],
   ]
   for (const [make, b0, b1] of plan) {
     const s = make(T)
     s.start = b0 === 0 ? 0 : T.bar(b0)
-    s.end = T.bar(b1)
+    s.end = b1 === 'end' ? MUSIC.end - MUSIC.offset : T.bar(b1)
     T.sections.push(s)
   }
   T.duration = T.sections[T.sections.length - 1].end

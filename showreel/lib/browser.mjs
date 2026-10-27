@@ -65,6 +65,7 @@ export async function recordFrames(page, { dir, frames, fps = 30, clip, step, qu
       animations: 'allow',
       caret: 'hide',
       scale: 'device',
+      timeout: 180000,
     })
     if (i % 30 === 0) console.log(`  ${dir.split('/').pop()} frame ${i}/${frames} ${((Date.now() - t0) / 1000).toFixed(0)}s`)
   }
