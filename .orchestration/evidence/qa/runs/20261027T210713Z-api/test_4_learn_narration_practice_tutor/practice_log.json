@@ -1,0 +1,359 @@
+{
+  "analysis": 48,
+  "feedback": [
+    {
+      "step_index": 1,
+      "score": 0.949,
+      "phase": 0.085,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.934,
+      "phase": 0.128,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.91,
+      "phase": 0.149,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.898,
+      "phase": 0.191,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.88,
+      "phase": 0.213,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.871,
+      "phase": 0.277,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.866,
+      "phase": 0.277,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.876,
+      "phase": 0.319,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.879,
+      "phase": 0.34,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.879,
+      "phase": 0.383,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.884,
+      "phase": 0.404,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.889,
+      "phase": 0.426,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.896,
+      "phase": 0.447,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.9,
+      "phase": 0.489,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.904,
+      "phase": 0.511,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.906,
+      "phase": 0.511,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.907,
+      "phase": 0.511,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.909,
+      "phase": 0.532,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.909,
+      "phase": 0.553,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.912,
+      "phase": 0.574,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.913,
+      "phase": 0.617,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.916,
+      "phase": 0.638,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.918,
+      "phase": 0.66,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.921,
+      "phase": 0.681,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.923,
+      "phase": 0.702,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.924,
+      "phase": 0.723,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.924,
+      "phase": 0.745,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.922,
+      "phase": 0.787,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.922,
+      "phase": 0.809,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.924,
+      "phase": 0.809,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.925,
+      "phase": 0.83,
+      "hint": "Center the item for balance",
+      "done": false
+    },
+    {
+      "step_index": 1,
+      "score": 0.927,
+      "phase": 0.851,
+      "hint": "Center the item for balance",
+      "done": true
+    },
+    {
+      "step_index": 2,
+      "score": 0.826,
+      "phase": 0.656,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.816,
+      "phase": 0.719,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.823,
+      "phase": 0.656,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.822,
+      "phase": 0.656,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.81,
+      "phase": 0.562,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.768,
+      "phase": 0.562,
+      "hint": "Align with previous item",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.717,
+      "phase": 0.562,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 2,
+      "score": 0.671,
+      "phase": 1.0,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": true
+    },
+    {
+      "step_index": 3,
+      "score": 0.562,
+      "phase": 1.0,
+      "hint": "Check height consistency",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.0,
+      "phase": 1.0,
+      "hint": "Use your right hand for this step.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.0,
+      "phase": 0.0,
+      "hint": "Show both hands to the camera.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.001,
+      "phase": 1.0,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.003,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.003,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.004,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    },
+    {
+      "step_index": 3,
+      "score": 0.005,
+      "phase": 0.982,
+      "hint": "Move your hand to your right, toward the work area.",
+      "done": false
+    }
+  ],
+  "step_done": [
+    {
+      "type": "step_done",
+      "step_index": 1,
+      "score": 0.949
+    },
+    {
+      "type": "step_done",
+      "step_index": 2,
+      "score": 0.826
+    }
+  ],
+  "errors": [],
+  "saved": {
+    "type": "saved",
+    "steps_done": 3,
+    "best_score": 0.779
+  }
+}

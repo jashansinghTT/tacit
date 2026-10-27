@@ -140,3 +140,26 @@ it is fixed.
 - 21:08Z browser F3 (fake camera, vase clip looping): "0 closed" after 2:04 with hands, gaze and parts tracked,
   while the API run processed a sample in parallel (live analysis 2.5 fps, round trip 405 ms). Runs before and
   after (21:00Z, 21:04Z, 21:10Z) got their first question at about 9 s. Not filed; QA watches the release runs.
+
+## QA-10 web: the guided tour's "Teach" stop has nothing to highlight
+
+- Owner: web (tacit-web, the tour) with web-learn (the Lesson page). State: open. Found 2026-10-27 21:22Z.
+- Seen: browser F1, release run UI #1 (`runs/20261027T211440Z-ui`): "Show me" → stop 3 (Teach) opens
+  `/learn/sk_3b7c613d` (the lesson renders well) but waits in vain for `[data-tour="lesson-player"]`; no element on
+  main carries it any more (only `Tour.tsx` names it), so the spotlight has no target. Screenshot
+  `findings/QA-10-tour-teach-no-target.png`. Stops 1 (studio-source) and 2 (verify-panel) were fine.
+- Expected: each tour stop highlights its part of the page.
+- Fix: put `data-tour="lesson-player"` on the Lesson page's player (the `lesson-main` stage), or point the tour
+  at an element the page has.
+
+## QA-11 backend: a skill can come out of processing with no quiz (and no safety notes)
+
+- Owner: backend (lead). State: open (after the freeze). Found 2026-10-27 21:24Z.
+- Seen: seeded `sk_3b7c613d` ("Candle Jar and Bottle Check", processed by `job_b1da2fd4`, all stages done) has
+  `quiz: []` and `safety: []`, while its SOP is there; the Lesson shows "Quiz and certificate: 0 questions", so
+  a trainee cannot earn the certificate. `writer.write_documents` retries the quiz once and then returns an empty
+  list without marking anything; the write stage says done.
+- Expected: a ready skill always has its quiz (3 questions) and safety notes; if the LLM fails twice, the job says
+  so (stage detail or a warning) and the quiz is retried in the background, like narration.
+- Note: the API release run's own skill got 3 questions, so this is intermittent (LLM output that does not parse,
+  or the 1000-token budget running out on reasoning).

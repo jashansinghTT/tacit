@@ -1,0 +1,84 @@
+{
+  "id": "job_0b0284f1",
+  "kind": "process",
+  "skill_id": "sk_f4f1c3f9",
+  "status": "done",
+  "progress": 1.0,
+  "stage": "ready",
+  "stages": [
+    {
+      "name": "decode",
+      "status": "done",
+      "detail": "960x540, 21.9 s",
+      "progress": 1.0,
+      "ms": 223
+    },
+    {
+      "name": "perceive",
+      "status": "done",
+      "models": [
+        "captured live"
+      ],
+      "detail": "129 frames",
+      "progress": 1.0,
+      "ms": 18
+    },
+    {
+      "name": "steps",
+      "status": "done",
+      "detail": "2 steps; objects: vase",
+      "progress": 1.0,
+      "ms": 30
+    },
+    {
+      "name": "write",
+      "status": "done",
+      "models": [
+        "gpt-oss-20b@2"
+      ],
+      "progress": 1.0,
+      "detail": "\"QA Insert Item into Vase\"",
+      "ms": 14258
+    },
+    {
+      "name": "verify",
+      "status": "done",
+      "models": [
+        "VGGT-1B@0"
+      ],
+      "progress": 1.0,
+      "ms": 4520,
+      "detail": "score 0.90: verified"
+    },
+    {
+      "name": "twin",
+      "status": "done",
+      "detail": "129 frames, 60000 points",
+      "progress": 1.0,
+      "ms": 148
+    },
+    {
+      "name": "narrate",
+      "status": "done",
+      "models": [
+        "S2 Pro@1"
+      ],
+      "progress": 1.0,
+      "detail": "3 of 3 lines now, the rest in the background",
+      "ms": 38196
+    },
+    {
+      "name": "ready",
+      "status": "done",
+      "progress": 1.0,
+      "ms": 8,
+      "detail": "2 steps, verification verified"
+    }
+  ],
+  "error": null,
+  "result": {
+    "skill_id": "sk_f4f1c3f9",
+    "steps": 2,
+    "verification": "verified"
+  }
+}
