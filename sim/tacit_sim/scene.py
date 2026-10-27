@@ -135,6 +135,15 @@ def build_spec(layout: Layout) -> mujoco.MjSpec:
     for name in ROBOT_BODIES:
         spec.body(name).gravcomp = 1.0
 
+    # Joint torque limits: Menagerie uses the real Panda's 87 / 12 Nm. Its servos (kp 2000 to
+    # 4500, kv 200 to 450) hit those limits on about 12% of control steps in normal motion, and
+    # near the shoulder singularity (joint 2 near 0, joints 1 and 3 coaxial) the saturated
+    # damping term sustains a substep-rate limit cycle that freezes the arm. Three times the
+    # headroom removes the stall and keeps contact forces bounded.
+    for i in range(1, 8):
+        act = spec.actuator(f"{PREFIX}actuator{i}")
+        act.forcerange = [3.0 * act.forcerange[0], 3.0 * act.forcerange[1]]
+
     grip = spec.actuator(f"{PREFIX}actuator8")
     grip.gainprm = [GRIPPER_KP * 0.04 / 255.0] + [0.0] * 9
     grip.biasprm = [0.0, -GRIPPER_KP, -GRIPPER_KV] + [0.0] * 7

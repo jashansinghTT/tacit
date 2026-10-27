@@ -51,3 +51,21 @@ def test_retarget_drops_missing_frames():
     assert len(out["points"]) == len(t) - 1 and len(out["grip"]) == len(t) - 1
     with pytest.raises(ValueError):
         retarget_wrist_path(pts[:1], t[:1])
+
+
+def test_transform_maps_any_camera_point():
+    pts, t, _ = _camera_path(tilt_deg=25.0)
+    out = retarget_wrist_path(pts, t)
+    tf = out["transform"]
+    M = np.array(tf["matrix"])
+    # The path is the smoothed wrist mapped by this affine: raw points land within the smoothing.
+    mapped = np.c_[pts, np.ones(len(pts))] @ M.T
+    mapped[:, 2] = np.clip(mapped[:, 2], *tf["z_clip"])
+    assert np.abs(mapped - np.array(out["points"]))[3:-3].max() < 0.02
+    # The component form agrees with the matrix.
+    p = pts[10]
+    X = p - np.array(tf["origin_cam"])
+    comp = [tf["x_mid"] + (X @ tf["v"] - tf["v_mid"]) * tf["scale"],
+            tf["y_mid"] - (X @ tf["u"] - tf["u_mid"]) * tf["scale"],
+            tf["z_lift"] + (X @ tf["n"] - tf["h_min"]) * tf["scale"]]
+    assert np.allclose(comp, M @ np.r_[p, 1.0], atol=1e-5)
