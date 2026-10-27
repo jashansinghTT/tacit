@@ -58,12 +58,12 @@ Second program, `kit3.json` (three parts, two sharing a bin), trained the same w
 
 ## GR00T N1.7 closed loop (chip 3, port 21030)
 
-Full episode (seed 1, 40.0 s of sim, 55.3 s wall): 75 queries, success False (timed out during pick bracket).
+Measured 2026-10-27T22:36:57Z at host load average 8.8. Full episode (seed 1, 40.0 s of sim, 11.3 s wall): 75 queries, success False (timed out during pick bracket).
 
 | Latency per query | p50 | p90 | max | mean |
 |---|---:|---:|---:|---:|
-| round trip from the sim (ms) | 592.8 | 904.4 | 1488.8 | 586.0 |
-| server total (ms) | 577.9 | 893.8 | 1484.3 | 577.2 |
-| device (ms) | 420.1 | 687.2 | 1110.0 | 411.7 |
+| round trip from the sim (ms) | 70.9 | 118.2 | 163.0 | 81.1 |
+| server total (ms) | 67.5 | 114.9 | 158.9 | 77.8 |
+| device (ms) | 58.2 | 65.8 | 145.8 | 63.3 |
 
 Two cameras x two frames (t-15, t) at 320x180 JPEG, DROID state, re-query every 8 action steps (0.53 s). GR00T is the foundation-model baseline; the sim is off its training distribution, so it is not expected to finish the task.

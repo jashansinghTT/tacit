@@ -7,9 +7,10 @@ instruction; one closed-loop episode of 40 s sim (75 queries), synchronous queri
 |---|---:|---:|---:|---:|
 | 19:28 (first evidence run) | quiet | 67.6 / 72.7 ms | 65.1 ms | 57.8 / 58.4 ms |
 | 19:52 | ~30 | 89.9 / 312.6 ms | 85.7 ms | 63.7 / 224.2 ms |
-| 21:12 (final evidence run, `gr00t_latency.json`) | ~53 | 592.8 / 904.4 ms | 577.9 ms | 420.1 / 687.2 ms |
+| 21:12 (final evidence run) | ~53 | 592.8 / 904.4 ms | 577.9 ms | 420.1 / 687.2 ms |
+| 22:36 (quiet-host re-measure, `gr00t_latency.json`) | 6.5 to 8.8 | 70.9 / 118.2 ms | 67.5 ms | 58.2 / 65.8 ms |
 
-The quiet numbers match the model card (55.9 ms device, 69.1 ms server-side). The server log
+The quiet numbers (19:28 and 22:36) match the model card (55.9 ms device, 69.1 ms server-side). The server log
 shows a single client during the 21:12 run (only health checks besides it), so the slowdown is
 host CPU starvation: the "device" time includes host-driven upload, trace dispatch and
 readback. Realtime streams pipeline their queries (see `tacit_sim/gr00t.py`), so the 30 Hz
