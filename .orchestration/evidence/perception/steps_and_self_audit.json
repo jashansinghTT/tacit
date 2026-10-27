@@ -1,0 +1,157 @@
+{
+ "sk_c28f1461": {
+  "segment_steps_ms": 51,
+  "frames": 445,
+  "self_audit": {
+   "steps_total": 5,
+   "done": 5,
+   "out_of_order": 0,
+   "missing": 0,
+   "gaze_checks_ok": 5,
+   "score": 1.0
+  },
+  "steps": [
+   {
+    "index": 1,
+    "t_start": 6.8,
+    "t_end": 11.4,
+    "hand": "right",
+    "action": "insert",
+    "objects": [
+     "vase on your right"
+    ],
+    "approach": "reaches up",
+    "draft": "Push the item held in the right hand into the vase on your right (time 1 of 5)"
+   },
+   {
+    "index": 2,
+    "t_start": 16.0,
+    "t_end": 19.1,
+    "hand": "right",
+    "action": "insert",
+    "objects": [
+     "vase on your right"
+    ],
+    "approach": "reaches up and to your right",
+    "draft": "Push the item held in the right hand into the vase on your right (time 2 of 5)"
+   },
+   {
+    "index": 3,
+    "t_start": 22.1,
+    "t_end": 27.8,
+    "hand": "right",
+    "action": "insert",
+    "objects": [
+     "vase on your right"
+    ],
+    "approach": "reaches up and to your right",
+    "draft": "Push the item held in the right hand into the vase on your right (time 3 of 5)"
+   },
+   {
+    "index": 4,
+    "t_start": 31.3,
+    "t_end": 36.6,
+    "hand": "right",
+    "action": "insert",
+    "objects": [
+     "vase on your right"
+    ],
+    "approach": "reaches to your right",
+    "draft": "Push the item held in the right hand into the vase on your right (time 4 of 5)"
+   },
+   {
+    "index": 5,
+    "t_start": 41.7,
+    "t_end": 44.4,
+    "hand": "right",
+    "action": "insert",
+    "objects": [
+     "vase on your right"
+    ],
+    "approach": "reaches to your right",
+    "draft": "Push the item held in the right hand into the vase on your right (time 5 of 5)"
+   }
+  ]
+ },
+ "sk_3b7c613d": {
+  "segment_steps_ms": 245,
+  "frames": 380,
+  "self_audit": {
+   "steps_total": 5,
+   "done": 5,
+   "out_of_order": 0,
+   "missing": 0,
+   "gaze_checks_ok": 5,
+   "score": 1.0
+  },
+  "steps": [
+   {
+    "index": 1,
+    "t_start": 0.1,
+    "t_end": 6.9,
+    "hand": "both",
+    "action": "pick",
+    "objects": [
+     "cup in front of you",
+     "bottle in front of you"
+    ],
+    "approach": null,
+    "draft": "Pick up the cup in front of you with both hands and hold it up"
+   },
+   {
+    "index": 2,
+    "t_start": 7.0,
+    "t_end": 11.8,
+    "hand": "right",
+    "action": "place",
+    "objects": [
+     "cup in front of you",
+     "bottle in front of you",
+     "cup on your right"
+    ],
+    "approach": null,
+    "draft": "Set the cup in front of you down with the right hand by the bottle in front of you and straighten it"
+   },
+   {
+    "index": 3,
+    "t_start": 14.5,
+    "t_end": 21.8,
+    "hand": "right",
+    "action": "pick",
+    "objects": [
+     "cup on your left"
+    ],
+    "approach": "reaches to your left",
+    "draft": "Pick up the cup on your left with the right hand and hold it up"
+   },
+   {
+    "index": 4,
+    "t_start": 21.9,
+    "t_end": 25.6,
+    "hand": "right",
+    "action": "place",
+    "objects": [
+     "cup on your left",
+     "cup in front of you"
+    ],
+    "approach": "reaches down",
+    "draft": "Set the cup on your left down with the right hand by the cup in front of you and straighten it"
+   },
+   {
+    "index": 5,
+    "t_start": 28.5,
+    "t_end": 37.5,
+    "hand": "left",
+    "action": "lift_return",
+    "objects": [
+     "bottle on your left",
+     "remote",
+     "cup on your left",
+     "cup in front of you"
+    ],
+    "approach": null,
+    "draft": "Lift the bottle on your left with the left hand, hold it up to check it, and set it back"
+   }
+  ]
+ }
+}

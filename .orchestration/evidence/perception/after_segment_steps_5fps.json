@@ -1,0 +1,186 @@
+{
+ "smp_vase": {
+  "detected": 5,
+  "ground_truth": 6,
+  "matched": 5,
+  "precision": 1.0,
+  "recall": 0.833,
+  "f1": 0.909,
+  "boundary_err_s": 0.84,
+  "start_err_s": 0.5,
+  "end_err_s": 1.18,
+  "hand_agree": 1.0,
+  "objects_agree": 0.5,
+  "pairs": [
+   {
+    "det": 0,
+    "gt": 1,
+    "iou": 0.551
+   },
+   {
+    "det": 1,
+    "gt": 2,
+    "iou": 0.714
+   },
+   {
+    "det": 2,
+    "gt": 3,
+    "iou": 0.536
+   },
+   {
+    "det": 3,
+    "gt": 4,
+    "iou": 0.577
+   },
+   {
+    "det": 4,
+    "gt": 5,
+    "iou": 0.867
+   }
+  ],
+  "skill": "sk_c28f1461",
+  "steps": [
+   {
+    "t_start": 6.8,
+    "t_end": 11.4,
+    "hand": "right",
+    "objects": [
+     "vase on your right"
+    ],
+    "draft": "Push the item held in the right hand into the vase on your right (time 1 of 5)"
+   },
+   {
+    "t_start": 16.0,
+    "t_end": 19.0,
+    "hand": "right",
+    "objects": [
+     "vase on your right"
+    ],
+    "draft": "Push the item held in the right hand into the vase on your right (time 2 of 5)"
+   },
+   {
+    "t_start": 22.2,
+    "t_end": 27.8,
+    "hand": "right",
+    "objects": [
+     "vase on your right"
+    ],
+    "draft": "Push the item held in the right hand into the vase on your right (time 3 of 5)"
+   },
+   {
+    "t_start": 31.4,
+    "t_end": 36.6,
+    "hand": "right",
+    "objects": [
+     "vase on your right"
+    ],
+    "draft": "Push the item held in the right hand into the vase on your right (time 4 of 5)"
+   },
+   {
+    "t_start": 41.8,
+    "t_end": 44.4,
+    "hand": "right",
+    "objects": [
+     "vase on your right"
+    ],
+    "draft": "Push the item held in the right hand into the vase on your right (time 5 of 5)"
+   }
+  ]
+ },
+ "smp_jars": {
+  "detected": 6,
+  "ground_truth": 5,
+  "matched": 4,
+  "precision": 0.667,
+  "recall": 0.8,
+  "f1": 0.727,
+  "boundary_err_s": 1.31,
+  "start_err_s": 1.3,
+  "end_err_s": 1.33,
+  "hand_agree": 0.75,
+  "objects_agree": 1.0,
+  "pairs": [
+   {
+    "det": 0,
+    "gt": 0,
+    "iou": 0.535
+   },
+   {
+    "det": 2,
+    "gt": 1,
+    "iou": 0.829
+   },
+   {
+    "det": 3,
+    "gt": 2,
+    "iou": 0.694
+   },
+   {
+    "det": 5,
+    "gt": 4,
+    "iou": 0.369
+   }
+  ],
+  "skill": "sk_3b7c613d",
+  "steps": [
+   {
+    "t_start": 1.4,
+    "t_end": 6.6,
+    "hand": "right",
+    "objects": [
+     "cup in front of you",
+     "bottle in front of you"
+    ],
+    "draft": "Pick up the cup in front of you with the right hand and set it down by the bottle in front of you"
+   },
+   {
+    "t_start": 8.4,
+    "t_end": 10.8,
+    "hand": "right",
+    "objects": [
+     "cup on your right"
+    ],
+    "draft": "Handle the cup on your right with the right hand"
+   },
+   {
+    "t_start": 14.4,
+    "t_end": 21.8,
+    "hand": "right",
+    "objects": [
+     "cup on your left"
+    ],
+    "draft": "Pick up the cup on your left with the right hand and hold it up"
+   },
+   {
+    "t_start": 22.0,
+    "t_end": 25.6,
+    "hand": "right",
+    "objects": [
+     "cup on your left",
+     "cup in front of you"
+    ],
+    "draft": "Set the cup on your left down with the right hand by the cup on your left and straighten it"
+   },
+   {
+    "t_start": 28.6,
+    "t_end": 33.4,
+    "hand": "left",
+    "objects": [
+     "cup on your left",
+     "cup in front of you"
+    ],
+    "draft": "Handle the cup on your left with the left hand"
+   },
+   {
+    "t_start": 35.0,
+    "t_end": 37.4,
+    "hand": "both",
+    "objects": [
+     "bottle on your left",
+     "remote"
+    ],
+    "draft": "Handle the bottle on your left with both hands"
+   }
+  ]
+ }
+}

@@ -1,0 +1,62 @@
+# eval_steps.py on the cached tracks (2026-10-27T20:23:21Z, branch work/perception 0c2fd56)
+baseline (main's segment_steps, recorded before any change): see baseline_segment_steps.json
+
+## after: segment_steps, 10 fps (what process.py runs)
+smp_vase (sk_c28f1461): 5 detected / 6 ground truth, precision 1.00, recall 0.83, F1 0.91, boundary error 0.86 s, hand 1.0, objects 0.5
+   det  1 [  6.8,  11.4] right = gt 2 (IoU 0.55)      ['vase on your right'] | Push the item held in the right hand into the vase on your right (time 1 of 5)
+   det  2 [ 16.0,  19.1] right = gt 3 (IoU 0.69)      ['vase on your right'] | Push the item held in the right hand into the vase on your right (time 2 of 5)
+   det  3 [ 22.1,  27.8] right = gt 4 (IoU 0.53)      ['vase on your right'] | Push the item held in the right hand into the vase on your right (time 3 of 5)
+   det  4 [ 31.3,  36.6] right = gt 5 (IoU 0.57)      ['vase on your right'] | Push the item held in the right hand into the vase on your right (time 4 of 5)
+   det  5 [ 41.7,  44.4] right = gt 6 (IoU 0.90)      ['vase on your right'] | Push the item held in the right hand into the vase on your right (time 5 of 5)
+   gt   1 [  0.0,   4.0] both  MISSED   ['stems'] | gather the loose dried stems lying on the table into a bundle
+   gt   2 [  6.5,   9.5] right matched  ['stem', 'black vase'] | pull one stem from the bundle and push it into the black vase
+   gt   3 [ 15.5,  18.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   4 [ 23.5,  26.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   5 [ 31.5,  34.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   6 [ 41.5,  44.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+smp_jars (sk_3b7c613d): 5 detected / 5 ground truth, precision 0.80, recall 0.80, F1 0.80, boundary error 1.36 s, hand 0.75, objects 1.0
+   det  1 [  0.1,   6.9] both  = gt 1 (IoU 0.49)      ['cup in front of you', 'bottle in front of you'] | Pick up the cup in front of you with both hands and hold it up
+   det  2 [  7.0,  11.8] right   (no match)           ['cup in front of you', 'bottle in front of you', 'cup on your right'] | Set the cup in front of you down with the right hand by the bottle in front of you and straighten it
+   det  3 [ 14.5,  21.8] right = gt 2 (IoU 0.84)      ['cup on your left'] | Pick up the cup on your left with the right hand and hold it up
+   det  4 [ 21.9,  25.6] right = gt 3 (IoU 0.68)      ['cup on your left', 'cup in front of you'] | Set the cup on your left down with the right hand by the cup in front of you and straighten it
+   det  5 [ 28.5,  37.5] left  = gt 5 (IoU 0.63)      ['bottle on your left', 'remote', 'cup on your left', 'cup in front of you'] | Lift the bottle on your left with the left hand, hold it up to check it, and set it back
+   gt   1 [  2.0,  10.0] right matched  ['cup', 'bottle'] | lift the small glass beaker from beside the corked carafe, hold it up, set it back
+   gt   2 [ 15.5,  22.0] right matched  ['cup'] | pick up the white-labelled candle jar and raise it to the nose with both hands
+   gt   3 [ 22.0,  24.5] right matched  ['cup'] | set the candle jar down left of the yellow candle and nudge it straight
+   gt   4 [ 26.0,  28.0] both  MISSED   ['cup'] | handle a second small jar
+   gt   5 [ 31.5,  38.0] left  matched  ['bottle'] | reach right, lift the white bottle and inspect it with both hands
+mean over 2 clips: precision 0.90, recall 0.82
+
+## after: segment_steps, tracks subsampled to 5 fps
+smp_vase (sk_c28f1461): 5 detected / 6 ground truth, precision 1.00, recall 0.83, F1 0.91, boundary error 0.84 s, hand 1.0, objects 0.5
+smp_jars (sk_3b7c613d): 6 detected / 5 ground truth, precision 0.67, recall 0.80, F1 0.73, boundary error 1.31 s, hand 0.75, objects 1.0
+mean over 2 clips: precision 0.83, recall 0.82
+
+## after: LiveSegmenter fed frame by frame (10 fps)
+smp_vase (sk_c28f1461): 5 detected / 6 ground truth, precision 1.00, recall 0.83, F1 0.91, boundary error 0.86 s, hand 1.0, objects 0.5
+   det  1 [  6.8,  11.4] right = gt 2 (IoU 0.55)      ['vase on your right'] | Push the item held in the right hand into the vase on your right
+   det  2 [ 16.0,  19.1] right = gt 3 (IoU 0.69)      ['vase on your right'] | Push the item held in the right hand into the vase on your right
+   det  3 [ 22.1,  27.8] right = gt 4 (IoU 0.53)      ['vase on your right'] | Push the item held in the right hand into the vase on your right
+   det  4 [ 31.3,  36.6] right = gt 5 (IoU 0.57)      ['vase on your right'] | Push the item held in the right hand into the vase on your right
+   det  5 [ 41.7,  44.4] right = gt 6 (IoU 0.90)      ['vase on your right'] | Push the item held in the right hand into the vase on your right
+   gt   1 [  0.0,   4.0] both  MISSED   ['stems'] | gather the loose dried stems lying on the table into a bundle
+   gt   2 [  6.5,   9.5] right matched  ['stem', 'black vase'] | pull one stem from the bundle and push it into the black vase
+   gt   3 [ 15.5,  18.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   4 [ 23.5,  26.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   5 [ 31.5,  34.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+   gt   6 [ 41.5,  44.5] right matched  ['stem', 'black vase'] | pull one stem and push it into the black vase
+smp_jars (sk_3b7c613d): 3 detected / 5 ground truth, precision 1.00, recall 0.60, F1 0.75, boundary error 1.88 s, hand 0.333, objects 1.0
+   det  1 [  0.0,  12.0] both  = gt 1 (IoU 0.67)      ['cup on your right', 'bottle on your right', 'cup in front of you'] | Pick up the cup on your right with both hands and set it down by the bottle on your right
+   det  2 [ 15.0,  25.6] right = gt 2 (IoU 0.61)      ['cup in front of you', 'bottle on your left', 'potted plant on your left'] | Lift the cup in front of you with the right hand, hold it up to check it, and set it back
+   det  3 [ 28.4,  37.9] right = gt 5 (IoU 0.67)      ['bottle on your left', 'cup in front of you', 'cup on your left', 'potted plant on your left', 'remote'] | Lift the bottle on your left with the right hand, hold it up to check it, and set it back
+   gt   1 [  2.0,  10.0] right matched  ['cup', 'bottle'] | lift the small glass beaker from beside the corked carafe, hold it up, set it back
+   gt   2 [ 15.5,  22.0] right matched  ['cup'] | pick up the white-labelled candle jar and raise it to the nose with both hands
+   gt   3 [ 22.0,  24.5] right MISSED   ['cup'] | set the candle jar down left of the yellow candle and nudge it straight
+   gt   4 [ 26.0,  28.0] both  MISSED   ['cup'] | handle a second small jar
+   gt   5 [ 31.5,  38.0] left  matched  ['bottle'] | reach right, lift the white bottle and inspect it with both hands
+mean over 2 clips: precision 1.00, recall 0.72
+
+## before (main) for comparison
+smp_vase: P 0.40 R 0.33 (5 detected / 6), hand 0.5, objects 0.0
+smp_jars: P 0.00 R 0.00 (8 detected / 5)
+stored steps after the writer (old pipeline): vase P 0.50 R 0.33, jars P 0.00 R 0.00
