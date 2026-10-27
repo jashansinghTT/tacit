@@ -161,8 +161,9 @@ def test_merge_groups_follows_covers_and_falls_back():
     written = [{"index": 1, "covers": [1, 2], "title": "A"}, {"index": 2, "covers": [3], "title": "B"},
                {"index": 3, "covers": [5], "title": "C"}]
     groups = merge_groups(written, obs)
-    assert [w["title"] for w, _ in groups] == ["A", "B", "C"]
-    assert [[s["index"] for s in g] for _, g in groups] == [[1, 2], [3, 4], [5]]   # 4 joins the nearest earlier group
+    # Every observed step stays its own step; a written step covering several is numbered.
+    assert [w["title"] for w, _ in groups] == ["A (1 of 2)", "A (2 of 2)", "B (1 of 2)", "B (2 of 2)", "C"]
+    assert [[s["index"] for s in g] for _, g in groups] == [[1], [2], [3], [4], [5]]   # 4 joined B, then split
     fallback = merge_groups([{"index": 1, "title": "A"}], obs)
     assert len(fallback) == 5 and fallback[0][0]["title"] == "A" and fallback[1][0] == {}
 
@@ -186,7 +187,7 @@ async def test_tts_gate_serves_interactive_before_batch():
     gate.release()
     await asyncio.gather(*tasks)
     assert order == ["coach", "batch-2", "batch-3"]
-    assert gate.waiting() == {"listen": 0, "interactive": 0, "batch": 0, "busy": False}
+    assert gate.waiting() == {"live_sessions": 0, "listen": 0, "interactive": 0, "batch": 0, "busy": False}
 
 
 def test_sentence_split_and_wav_concat():
@@ -412,3 +413,65 @@ def test_program_names_lose_location_words():
     assert clean_name("the item") == "part" and clean_name("bottle beside the carafe") == "bottle"
     assert normalize_program([{"op": "pick", "object": "the item"}, {"op": "place", "target": "vase on your right"}]) == [
         {"op": "pick", "object": "part"}, {"op": "place", "target": "vase"}]
+
+
+
+async def test_narration_waits_while_a_capture_is_open():
+    import asyncio
+    from tacit.models.speech import _Gate
+    gate = _Gate()
+    gate.session_opened()
+    waiter = asyncio.create_task(gate.wait_quiet(max_wait=5))
+    await asyncio.sleep(0.05)
+    assert not waiter.done()          # narration holds while the expert is recording
+    gate.session_closed()
+    await asyncio.wait_for(waiter, 1)
+
+
+def test_episode_count_reads_both_meta_formats(tmp_path):
+    import json
+    from tacit.exchange.market import _count_episodes
+    (tmp_path / "meta.json").write_text(json.dumps({"episodes": [{"i": 0}, {"i": 1}, {"i": 2}]}))
+    assert _count_episodes(tmp_path) == 3
+    (tmp_path / "meta.json").write_text(json.dumps({"episodes": 7}))
+    assert _count_episodes(tmp_path) == 7
+
+
+async def test_quiz_is_retried_and_broken_questions_dropped(monkeypatch):
+    from tacit.models import llm
+    from tacit.pipeline import writer
+    answers = [{"quiz": [], "safety": ["Hold the base"]},
+               {"quiz": [{"q": "Why?", "choices": ["a", "b"], "answer": 1, "explain": "b"},
+                         {"q": "One choice", "choices": ["a"], "answer": 0},
+                         {"q": "Out of range", "choices": ["a", "b"], "answer": 5}]}]
+
+    async def fake(msgs, max_tokens=0, **kw):
+        return answers.pop(0), {"model": "gpt-oss-20b"}
+    monkeypatch.setattr(llm, "chat_json", fake)
+    out, _ = await writer.write_quiz({"title": "T", "steps": []})
+    assert [q["q"] for q in out["quiz"]] == ["Why?"] and out["safety"] == ["Hold the base"] and not answers
+
+
+async def test_a_missing_quiz_is_filled_in_the_background(monkeypatch):
+    from tacit.pipeline import process, writer
+    store = {"sk_q1": {"id": "sk_q1", "title": "T", "steps": [{"index": 1, "title": "A"}], "quiz": [], "safety": []}}
+    monkeypatch.setattr(process, "load_skill", lambda sid: json.loads(json.dumps(store[sid])) if sid in store else None)
+    monkeypatch.setattr(process, "save_skill", lambda sk: store.__setitem__(sk["id"], sk))
+    tries = []
+
+    async def fake_quiz(structure):
+        tries.append(structure["steps"])
+        ok = {"quiz": [{"q": "Why?", "choices": ["a", "b"], "answer": 0, "explain": ""}], "safety": ["s"]}
+        return (ok if len(tries) > 1 else {"quiz": [], "safety": []}), None
+    monkeypatch.setattr(writer, "write_quiz", fake_quiz)
+    await process.fill_quiz("sk_q1", tries=3, wait=0)
+    assert len(tries) == 2 and store["sk_q1"]["quiz"][0]["q"] == "Why?" and store["sk_q1"]["safety"] == ["s"]
+
+
+def test_gr00t_calls_from_the_sim_count_on_the_box():
+    from tacit.models.base import stats
+    from tacit.robot.lab import note_gr00t
+    before = stats("gr00t").calls
+    note_gr00t({"type": "gr00t", "ms": 112.5})
+    note_gr00t({"type": "state", "ms": 3})
+    assert stats("gr00t").calls == before + 1 and stats("gr00t").latencies[-1] == 112.5

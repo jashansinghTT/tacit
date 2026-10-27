@@ -85,7 +85,8 @@ def get_listing(listing_id: str) -> dict | None:
 def _count_episodes(demos: Path) -> int:
     meta = demos / "meta.json"
     if meta.exists():
-        return int(read_json(meta, {}).get("episodes", 0))
+        eps = read_json(meta, {}).get("episodes", 0)
+        return len(eps) if isinstance(eps, list) else int(eps or 0)  # the sim lists episodes; older metas counted them
     return len(list(demos.glob("episode_*"))) if demos.exists() else 0
 
 

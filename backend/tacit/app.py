@@ -74,9 +74,9 @@ async def _startup() -> None:
 
 
 async def backfill_ready_skills() -> None:
-    """Finish what a restart cut short for ready skills: motion previews and background narration."""
+    """Finish what a restart cut short for ready skills: motion previews, a missing quiz and background narration."""
     from .pipeline import preview
-    from .pipeline.process import narrate_rest, narration_lines
+    from .pipeline.process import fill_quiz, narrate_rest, narration_lines
     from .storage import media_dir
     with session() as s:
         ids = [r.id for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if not r.test]
@@ -92,6 +92,10 @@ async def backfill_ready_skills() -> None:
                 sk = load_skill(sid)
                 sk["motion_thumb"] = media_url(mt)
                 save_skill(sk)
+    for sid in ids:
+        sk = load_skill(sid)
+        if sk and not sk.get("quiz"):
+            await fill_quiz(sid, tries=1)
     for sid in ids:
         sk = load_skill(sid)
         missing = [(k, t) for k, t in narration_lines(sk) if k not in (sk.get("narration") or {})] if sk else []

@@ -26,6 +26,9 @@ FORMAT = "tacit-bc-chunk-mlp/1"
 # quiet host and win big on a busy one: at load average 50 on this 16-core box, 8 threads took
 # 68 s per epoch (OpenMP threads spin waiting for cores) and 2 threads 5.5 s.
 TORCH_THREADS = int(os.environ.get("TACIT_SIM_TORCH_THREADS", "2"))
+# Frames per training epoch (a random sample each epoch). 200 sort2 demos have about 110k
+# frames, a five-part program 280k; capping keeps training within minutes on a busy host.
+EPOCH_SAMPLES = 60_000
 
 
 def _set_threads(n: int | None) -> None:
@@ -72,10 +75,12 @@ def _load_demos(demos_path: str | os.PathLike):
 
 def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epochs: int = 30,
                  on_epoch=None, batch_size: int = 512, lr: float = 1e-3, seed: int = 0,
-                 threads: int | None = None) -> dict:
+                 threads: int | None = None, epoch_samples: int | None = EPOCH_SAMPLES) -> dict:
     """Train on the successful episodes in `demos_path`; save to `out_path`.
 
-    `on_epoch(epoch, loss)` is called after every epoch (epochs count from 1).
+    `on_epoch(epoch, loss)` is called after every epoch (epochs count from 1). An epoch is a
+    pass over a fresh random sample of at most `epoch_samples` frames (None: all of them), which
+    bounds training time for long programs: neighbouring 30 Hz frames are nearly identical.
     Returns {policy_path, loss_curve: [[epoch, loss]], val_loss, episodes, frames, seconds}.
     """
     t0 = time.time()
@@ -101,7 +106,8 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
 
     model = ChunkMLP()
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
-    steps_per_epoch = math.ceil(len(tr_idx) / batch_size)
+    per_epoch = len(tr_idx) if not epoch_samples else min(len(tr_idx), int(epoch_samples))
+    steps_per_epoch = math.ceil(per_epoch / batch_size)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=lr, total_steps=epochs * steps_per_epoch,
                                                 pct_start=0.1)
     # Near-future steps matter most; later ones regularise.
@@ -117,7 +123,7 @@ def train_policy(demos_path: str | os.PathLike, out_path: str | os.PathLike, epo
     curve = []
     for epoch in range(1, epochs + 1):
         model.train()
-        order = tr_idx[torch.randperm(len(tr_idx))]
+        order = tr_idx[torch.randperm(len(tr_idx))[:per_epoch]]
         total, count = 0.0, 0
         for b in range(steps_per_epoch):
             bi = order[b * batch_size:(b + 1) * batch_size]

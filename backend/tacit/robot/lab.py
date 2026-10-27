@@ -14,6 +14,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from .. import jobs
 from ..config import SKILLS, endpoints
 from ..db import now
+from ..models.base import stats
 from .. import reflex
 from ..storage import load_skill, new_id, read_json, save_skill, twin_path
 
@@ -231,6 +232,14 @@ def start_run(skill_id: str, mode: str, seed: int, realtime: bool = True) -> str
     return rid
 
 
+def note_gr00t(msg: dict) -> None:
+    """The sim queries GR00T itself; count its calls so the Box shows chip 3 at work."""
+    if msg.get("type") == "gr00t" and isinstance(msg.get("ms"), (int, float)):
+        st = stats("gr00t")
+        st.calls += 1
+        st.latencies.append(float(msg["ms"]))
+
+
 async def stream(ws: WebSocket, run_id: str) -> None:
     await ws.accept()
     meta = RUNS.get(run_id)
@@ -287,6 +296,7 @@ async def stream(ws: WebSocket, run_id: str) -> None:
             msg = await q.get()
             if msg is None:
                 break
+            note_gr00t(msg)
             await ws.send_json(msg)
             if msg.get("type") == "done":
                 skill = load_skill(meta["skill_id"])
