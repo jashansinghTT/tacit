@@ -53,6 +53,7 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
   const sock = useRef<LearnSocket | null>(null)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const hintAt = useRef(0)
+  const smooth = useRef<number | null>(null)
   const startedAt = useRef(0)
   const stepRef = useRef(step)
   stepRef.current = step
@@ -75,7 +76,9 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
     } else if (m.type === 'feedback') {
       if (m.step_index !== stepRef.current) return
       const now = performance.now()
-      setFeedback({ score: m.score, phase: m.phase, hint: m.hint, at: now })
+      // Smooth the ring a little: one frame without hands should not flash it to zero.
+      smooth.current = smooth.current === null ? m.score : smooth.current * 0.55 + m.score * 0.45
+      setFeedback({ score: smooth.current, phase: m.phase, hint: m.hint, at: now })
       L.recordScore(m.step_index, m.score)
       if (m.hint && now - hintAt.current > HINT_HOLD_MS) {
         hintAt.current = now
@@ -89,6 +92,7 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
       setFeedback(null)
       setHint(null)
       hintAt.current = 0
+      smooth.current = null
       if (m.step_index >= L.stepCount) {
         toast.ok('Every step practised', 'Take the quiz to earn the certificate.')
       } else if (L.autoAdvance) {
@@ -181,6 +185,7 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
     setFeedback(null)
     setHint(null)
     hintAt.current = 0
+    smooth.current = null
     sock.current?.send({ type: 'step', index: step })
   }, [step])
 
