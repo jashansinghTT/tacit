@@ -102,7 +102,13 @@ const words = (s: string) => new Set(s.toLowerCase().split(/\s+/).map((w) => w.r
 const overlap = (a: string, b: string) => [...words(a)].filter((w) => words(b).has(w)).length / Math.max(1, words(b).size)
 
 async function api<T>(page: Page, url: string, init?: { method?: string; data?: unknown; user?: string }): Promise<T> {
-  const r = await page.request.fetch(url, { method: init?.method ?? 'GET', data: init?.data, headers: { 'X-Tacit-User': init?.user ?? 'u_maria' } })
+  const go = () => page.request.fetch(url, { method: init?.method ?? 'GET', data: init?.data, headers: { 'X-Tacit-User': init?.user ?? 'u_maria' } })
+  // A reused keep-alive connection can race the server closing it (uvicorn's 5 s idle timeout): browsers retry
+  // such a request on their own, Playwright's request client does not, so retry once.
+  const r = await go().catch(async (e: Error) => {
+    if (!/ECONNRESET|socket hang up|EPIPE/.test(e.message)) throw e
+    return go()
+  })
   expect(r.ok(), `${init?.method ?? 'GET'} ${url} -> ${r.status()}`).toBeTruthy()
   return (await r.json()) as T
 }
@@ -213,7 +219,7 @@ test.describe('with the capture camera', () => {
     await run.shot('processing')
     await run.time('process the sample (UI)', 300, async () => {
       await expect
-        .poll(async () => (await api<{ status: string }>(page, `/api/skills/${skillId}`)).status, { timeout: 30 * 60_000, intervals: [5000] })
+        .poll(async () => (await api<{ status: string }>(page, `/api/skills/${skillId}`)).status, { timeout: 30 * 60_000, intervals: [3000] })
         .toMatch(/^(ready|failed)$/)
     })
     run.note(`processing took ${((Date.now() - t0) / 1000).toFixed(0)} s`)

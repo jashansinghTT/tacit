@@ -78,7 +78,8 @@ class Recorder:
 
 # ------------------------------------------------------------------------------------ http and jobs
 def client() -> httpx.Client:
-    return httpx.Client(base_url=BASE, timeout=httpx.Timeout(120.0, connect=5.0))
+    # Drop idle connections before uvicorn's 5 s keep-alive timeout does, so a reused one is never reset under us.
+    return httpx.Client(base_url=BASE, timeout=httpx.Timeout(120.0, connect=5.0), limits=httpx.Limits(keepalive_expiry=4.0))
 
 
 def wait_job(api: httpx.Client, job_id: str, timeout_s: float, on_change=None) -> dict:

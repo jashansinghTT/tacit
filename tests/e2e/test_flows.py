@@ -111,7 +111,15 @@ def test_2_sample_process_ready(api, rec, processed):
     assert len(quiz) >= 3, f"quiz has {len(quiz)} questions"
     for q in quiz:
         assert q.get("q") and len(q.get("choices") or []) >= 2 and 0 <= q.get("answer", -1) < len(q["choices"]), f"bad quiz item {q}"
-    assert len({q["answer"] for q in quiz}) > 1, f"every quiz answer is choice {quiz[0]['answer']}: a trainee can pass by always picking it"
+    # The writer puts the right choice first and the backend shuffles each question (seeded by its text), so one
+    # skill can legitimately have all answers at one index; across every quiz on the box they must not all be 0.
+    answers = [q["answer"] for q in quiz]
+    for other in api.get("/api/skills", params={"status": "ready", "include_test": 1}).json():
+        if other["id"] != sid:
+            answers += [q.get("answer") for q in (api.get(f"/api/skills/{other['id']}").json().get("quiz") or [])]
+    rec.note(f"quiz answer indexes: this skill {[q['answer'] for q in quiz]}; {len(answers)} questions on the box")
+    if len(answers) >= 6:
+        assert any(a != 0 for a in answers), f"all {len(answers)} quiz answers on the box are the first choice"
     assert sk.get("safety") is not None
     assert (sk.get("robot") or {}).get("program"), "no robot program"
     used = {m["model"]: m for m in sk.get("models_used", [])}
