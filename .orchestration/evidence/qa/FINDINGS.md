@@ -107,3 +107,16 @@ it is fixed.
 - Caveat: much of the load today is development (several workers' tests at once, including QA's own headless
   Chromium rendering 3D pages in software). In the demo the browser runs on a laptop, but MediaPipe, training and
   sim rendering still share the host with the models.
+
+## QA-8 web (Studio): the processing panel stays "Failed" after a restart although the job re-ran and finished
+
+- Owner: web (tacit-web). State: open. Found 2026-10-27 20:55Z.
+- Seen: browser F2 on the merged web branches. The backend restarted while the sample's process job was in
+  `narrate`; the backend marked it failed ("interrupted by a backend restart") and re-ran it under a new job id,
+  and the skill became `ready` (5 steps, verified). The Studio still showed the old job as **Failed** with the
+  red "interrupted by a backend restart" banner 20 minutes later: screenshot
+  `findings/QA-8-studio-stale-failed.png`.
+- Expected: when a job fails with `interrupted by a backend restart`, the page follows the skill's new job
+  (`GET /api/skills/{id}` returns `job_id` of the re-run) and keeps showing progress; or at least it says
+  "restarted, continuing" and switches to "Open the skill" when the skill is ready.
+- Repro: start processing in the Studio, restart the backend mid-job (`deploy/stack.sh restart-backend`), wait.

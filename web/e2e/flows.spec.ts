@@ -207,6 +207,7 @@ test.describe('with the capture camera', () => {
 
   // ---------------------------------------------------------------------------------- F2
   test('F2 sample video is processed into a ready skill with steps, verification and SOP', async ({ page }, info) => {
+    test.setTimeout(40 * 60_000)
     const run = new Run(page, info)
     await persona(page, 'u_maria')
     const samples = await api<{ id: string; kind: string; title: string }[]>(page, '/api/samples')
@@ -216,23 +217,28 @@ test.describe('with the capture camera', () => {
     await page.getByTestId(`sample-${sample!.id}`).click()
     await run.shot('sample-picked')
     const t0 = Date.now()
+    // Tag the new skill as a QA test skill the moment it exists, so a failed run never leaves it in the demo.
+    const created = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/skills' && r.request().method() === 'POST')
     await page.getByTestId('sample-offline').click()
-    await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
-    await run.shot('processing')
-    const open = page.getByTestId('open-skill')
-    await run.time('process the sample (UI)', 300, async () => {
-      await expect(page.getByTestId('stage-ready')).toHaveAttribute('data-status', 'done', { timeout: 20 * 60_000 }).catch(async () => {
-        await expect(open).toBeVisible({ timeout: 20 * 60_000 })
-      })
-    })
-    run.note(`processing took ${((Date.now() - t0) / 1000).toFixed(0)} s`)
-    await run.shot('processed')
-    await open.click()
-    await expect(page).toHaveURL(/\/skills\/sk_/)
-    const skillId = page.url().split('/skills/')[1].split(/[?#]/)[0]
+    const skillId = ((await (await created).json()) as { skill_id: string }).skill_id
+    await qaTitle(page, skillId)
     fs.mkdirSync(RUN_DIR, { recursive: true })
     fs.writeFileSync(path.join(RUN_DIR, 'shared-skill.txt'), skillId)
-    await qaTitle(page, skillId)
+    await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
+    await run.shot('processing')
+    await run.time('process the sample (UI)', 300, async () => {
+      await expect
+        .poll(async () => (await api<{ status: string }>(page, `/api/skills/${skillId}`)).status, { timeout: 30 * 60_000, intervals: [5000] })
+        .toMatch(/^(ready|failed)$/)
+    })
+    run.note(`processing took ${((Date.now() - t0) / 1000).toFixed(0)} s`)
+    expect((await api<{ status: string }>(page, `/api/skills/${skillId}`)).status).toBe('ready')
+    // The page must follow the job to the end (also across a backend restart, which re-runs it under a new id).
+    const open = page.getByTestId('open-skill')
+    await expect(open, 'the Studio does not show the finished job').toHaveText(/^Open the skill$/, { timeout: 60_000 })
+    await run.shot('processed')
+    await open.click()
+    await expect(page).toHaveURL(new RegExp(`/skills/${skillId}`))
     await page.reload()
     const steps = page.getByTestId('steps-list').locator('[data-testid^="step-"]')
     await expect(steps.first()).toBeVisible()
@@ -254,6 +260,7 @@ test.describe('with the capture camera', () => {
 
   // ---------------------------------------------------------------------------------- F3
   test('F3 live capture with the fake camera gets a spoken coach question and a transcribed answer', async ({ page }, info) => {
+    test.setTimeout(30 * 60_000)
     const run = new Run(page, info)
     await persona(page, 'u_maria')
     const answerText = fs.readFileSync(path.join(MEDIA, 'answer.txt'), 'utf8').trim()
@@ -262,7 +269,10 @@ test.describe('with the capture camera', () => {
     await run.time('camera preview', 5, async () => {
       await expect.poll(async () => page.locator('video').first().evaluate((v: HTMLVideoElement) => v.videoWidth), { timeout: 10_000 }).toBeGreaterThan(0)
     })
+    const created = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/skills' && r.request().method() === 'POST')
     await page.getByTestId('capture-start').click()
+    const skillId = ((await (await created).json()) as { skill_id: string }).skill_id
+    await qaTitle(page, skillId)
     await expect(page.getByTestId('overlay-canvas')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('latency-hud')).toBeVisible()
     await page.waitForTimeout(3000)
@@ -285,14 +295,11 @@ test.describe('with the capture camera', () => {
     await expect(page.getByTestId('processing-panel')).toBeVisible({ timeout: 20_000 })
     const open = page.getByTestId('open-skill')
     await expect(open).toBeVisible({ timeout: 60_000 })
-    const href = await open.getAttribute('href')
-    const skillId = href!.split('/skills/')[1]
     await run.time('process the capture (UI)', 180, async () => {
       await expect
         .poll(async () => (await api<{ status: string }>(page, `/api/skills/${skillId}`)).status, { timeout: 15 * 60_000, intervals: [3000] })
         .toMatch(/ready|failed/)
     })
-    await qaTitle(page, skillId)
     const sk = await api<{ status: string; qa: { answer: string | null; step_index: number | null }[]; steps: { index: number; why: string; why_source: string }[] }>(
       page,
       `/api/skills/${skillId}`,
