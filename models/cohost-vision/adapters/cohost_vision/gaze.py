@@ -45,7 +45,7 @@ class GazeMember(AppMember):
         self.buckets = [b for b in model.fused_cfg.trace_heads if b <= cfg["max_heads"]] or [1]
         self.model, self.cfg, self.srv = model, cfg, srv
         srv.STATE.update(cfg=cfg, device=mesh, weights=winfo)
-        self.t_load = time.perf_counter() - t0
+        self.t_start = t0
         note(mesh, self.member.name, "load")
 
     def _mask(self, n: int):
@@ -124,7 +124,7 @@ class GazeMember(AppMember):
             m._x_base = None
 
     def asgi_app(self):
-        self.srv.STATE.update(model=StepModel(self.host, self.member.name, self.model), boot_s=self.t_load)
+        self.srv.STATE.update(model=StepModel(self.host, self.member.name, self.model), boot_s=time.perf_counter() - self.t_start)
         return without_lifespan(self.srv.app)
 
 

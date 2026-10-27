@@ -74,7 +74,7 @@ class HamerMember(AppMember):
         self.x_a, self.x_b = sample_input(batch=1, seed=0), sample_input(batch=1, seed=1)
         srv.STATE.update(mano=mano, mano_path=str(mano_path) if mano_path else None, cfg=cfg,
                          weights={**winfo, "ckpt": str(ck), "mean_params": str(mean), "report": report})
-        self.t_load = time.perf_counter() - t0
+        self.t_start = t0
         note(mesh, self.member.name, "load")
 
     def warmup(self):
@@ -117,7 +117,7 @@ class HamerMember(AppMember):
 
     def asgi_app(self):
         self.srv.STATE.update(model=StepModel(self.host, self.member.name, self.model),
-                              boot_seconds=round(self.t_load, 1), ready=True)
+                              boot_seconds=round(time.perf_counter() - self.t_start, 1), ready=True)
         return without_lifespan(self.srv.app)
 
 

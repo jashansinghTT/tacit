@@ -30,7 +30,6 @@ class RfDetrMember(AppMember):
 
         srv._setup_logging()
         torch.set_grad_enabled(False)
-        t0 = time.perf_counter()
         cfg = srv._config_from_env()
         if cfg["torch_threads"]:
             torch.set_num_threads(int(cfg["torch_threads"]))
@@ -52,7 +51,6 @@ class RfDetrMember(AppMember):
             weights={"repo": None if cfg["weights_dir"] else cfg["hf_model"],
                      "revision": None if cfg["weights_dir"] else cfg["revision"],
                      "files": {"model.safetensors": weights_path, "config.json": config_path}})
-        self.t_load = time.perf_counter() - t0
         note(mesh, self.member.name, "load")
 
     def warmup(self):

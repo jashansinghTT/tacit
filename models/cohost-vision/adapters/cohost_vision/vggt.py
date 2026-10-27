@@ -48,7 +48,6 @@ class VggtMember(AppMember):
         from models.server import app as srv
 
         torch.set_grad_enabled(False)
-        t0 = time.perf_counter()
         cfg = srv.load_config()
         if cfg.torch_threads:
             torch.set_num_threads(cfg.torch_threads)
@@ -68,7 +67,6 @@ class VggtMember(AppMember):
         self.seqs = tuple(range(1, s_canon + 1)) if s_canon > 1 else tuple(sorted(set(cfg.prewarm_seqs or (1,))))
         self.srv, self.ttnn_vggt = srv, ttnn_vggt
         srv.STATE.update(config=cfg, weights_path=str(weights_path), device=mesh)
-        self.t_load = time.perf_counter() - t0
         note(mesh, self.member.name, "load")
 
     def warmup(self):
