@@ -1,50 +1,35 @@
 # Status: web-robot
 
-State: running
-Updated: 2026-10-27T20:40:00+00:00
+State: review
+Updated: 2026-10-27T21:20:00+00:00
 
-## Works (against the real backend on :8710, dev server :5713)
-- `/robot/:skillId` Robot Lab: MuJoCo scene drawn from `GET /api/robot/scene?skill_id=` (GLB Panda
-  posed by the kinematic tree, table, bins, objects, spawn region, camera frustums), runs streamed
-  over `WS /ws/robot/{id}` into a buffer sampled with interpolation in `useFrame` (no per-frame
-  React state), playback/scrub/speed once a run is recorded, joint/gripper/TCP telemetry.
-- Modes (tab bar, `data-tour="robot-modes"`): Replay the human (ghost hands of both hands + the
-  retargeted wrist path, mapped with the sim's affine), Train (demos then epochs, live log-scale
-  loss chart), Evaluate (trial grid filling in live, click a trial to watch it re-run), Run policy
-  (seeded), Run GR00T on chip 3 (both camera feeds, instruction, per-call latency).
-- Explainer strip with the skill's real numbers: steps → program → demos → loss → success rate.
-- `/robot` index: per-skill program, readiness track, success rate, runs; GR00T health.
-- Verified from the page: scripted, replay, train (200 demos/30 epochs), evaluate (20/20),
-  policy and GR00T runs (38 calls, p50 ~315 ms while the box is busy).
+## Merge gate: met
+- Replay, train, evaluate, policy and GR00T runs all work from the page against the real backend
+  (`sk_c28f1461`: replay success with 0.7 cm tracking error; 200 demos and 30 epochs, final loss
+  0.028; 20/20 evaluation; policy success; GR00T on chip 3 streams both cameras, ~30 calls a run).
+- Checks pass: `npm run typecheck`, `npm run lint`, `npm run build`.
+- `web/e2e/robot.spec.ts`: 8 passed on the real stack (twice, the second after the 21:05 security
+  deploy) and 8 passed on the mock.
+- Evidence: `.orchestration/evidence/web-robot/` (14 screenshots, `robot-lab.mp4`, README.md).
+- `handoff.md` written (what is where, test ids for QA, notes for the lead).
+
+## What is in the branch
+`/robot` index and `/robot/:skillId` lab (viewer posed from the stream, five modes, explainer,
+playback), `web/src/features/robot/**`, `web/src/lib/api/robot.ts`, `web/src/lib/mock/robot.ts`
+(real scene shape), `web/e2e/robot.spec.ts`. Nothing outside the card's scope was edited.
 
 ## Decisions
-- Robot types and calls live in `web/src/lib/api/robot.ts` (mine); the shared `types.ts`/`api` are
-  untouched. Run errors arrive as FastAPI `{detail}`; `robot.ts` reads both error shapes.
-- Ghost hands: use `meta.human.transform.matrix` when the sim sends it (sim-c4 added it on
-  work/sim); until merged the browser computes the same affine from the twin (same recipe as
-  `lab.py: wrist_path` + `retarget_wrist_path`).
-- GR00T not finishing is shown as the expected baseline result (warn), not a fault.
+- Robot types and calls are in `web/src/lib/api/robot.ts`; shared `types.ts` and `api` are untouched.
+- Ghost hands use the sim's `meta.human.transform.matrix`; the browser computes the same affine
+  from the twin when it is absent. Drawn at about hand size over the arm.
+- A GR00T run that does not finish is shown as the expected baseline (amber), not a fault.
 - Train/evaluate job ids persist in sessionStorage so a reload resumes the live view.
+- Unknown skill ids (the landing/tour use the mock's `sk_sort`) open the best ready skill with a toast.
 
-## Asked and answered
-- Lead fixed replay (`finger_track(side=)`), made evaluate push `result.trials` live and persist
-  `policy.last_eval`. Thanks.
-
-- `web/e2e/robot.spec.ts` (8 tests) passes on the mock (own server on 5723; 5712 is shared and
-  served another worktree's placeholder pages). Mock scene now uses the real sim format.
-- Unknown skill ids (landing/tour link to the mock's `sk_sort`) open the best ready skill with a
-  toast. Responsive pass at 1024 and 1920 done.
-
-## Open items for the lead
-- After a backend restart, an interrupted train job is marked failed but the skill's
-  `robot.policy` stays `{"status": "training"}` (sk_3b7c613d), so /robot shows "Training" forever.
-  Sent to the lead with a suggested fix.
-- The landing, hero and tour link to `sk_sort` (mock id); on the real box the lab redirects, but
-  the web card may want a real featured skill id.
-
-## Next
-Real-stack e2e run, evidence (screenshots + recording) on a seeded skill once its re-processing
-finishes, handoff.
+## Open items for the lead (not blockers)
+- Shapes the page uses beyond docs/API.md are listed in handoff.md; consider adding them.
+- Playwright's mock server port 5712 is shared by every worktree; branch tests can hit another
+  worktree's code.
 
 ## Blockers
 None.

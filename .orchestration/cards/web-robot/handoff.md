@@ -1,6 +1,6 @@
 # Handoff: web-robot (the Robot Lab)
 
-Branch `work/web-robot` (merged with `main` at efa5754 and later). Owner `tacit-web-robot`.
+Branch `work/web-robot` (main merged in last at 5cc4225, up to e09a580). Owner `tacit-web-robot`.
 
 ## What it is
 - `/robot` (`web/src/pages/RobotIndex.tsx`): every ready or processing skill as a row with its
@@ -47,14 +47,22 @@ Branch `work/web-robot` (merged with `main` at efa5754 and later). Owner `tacit-
 - `web/src/lib/mock/robot.ts`: the mock scene now has the real `tacit-sim-scene/1` shape (no mesh
   URLs, so mock mode never asks the backend for GLBs).
 
-## Checks
+## Checks (2026-10-27)
 - `npm run typecheck`, `npm run lint`, `npm run build`: pass.
-- `web/e2e/robot.spec.ts` (8 tests: index, lab + modes + keyboard, unknown skill, replay, train,
-  evaluate, policy, GR00T) passes in mock mode and against the real backend
-  (`TACIT_E2E_BASE=http://127.0.0.1:8710 npx playwright test e2e/robot.spec.ts --project=smoke`;
-  `TACIT_E2E_ROBOT_SKILL=<id>` picks the skill, default the first ready one). On the real stack it
-  really trains (200 demos, 30 epochs) and evaluates 20 trials, so it takes several minutes.
-- Evidence in `.orchestration/evidence/web-robot/` (see its README.md).
+- `web/e2e/robot.spec.ts`, 8 tests: index, lab + modes + keyboard, unknown skill → ready skill,
+  replay, train, evaluate, policy, GR00T.
+  - Real stack: **8 passed (4.4 min)**, then **8 passed (6.8 min)** again after the lead's 21:05
+    security deploy (the stream producer now stops on disconnect; unknown modes now get a 400). Run as
+    `TACIT_E2E_BASE=http://127.0.0.1:5713 TACIT_E2E_ROBOT_SKILL=sk_c28f1461 npx playwright test e2e/robot.spec.ts --project=smoke`.
+    That is the `work/web-robot` dev server proxying :8710. Against :8710 directly it tests whatever
+    build the backend serves. It really trains (200 demos, 30 epochs) and evaluates 20 trials:
+    20/20 on `sk_c28f1461`.
+  - Mock: 8 passed in one full run (3.6 min). Run it on its own mock server port, because 5712 is
+    shared by every worktree (see the notes below).
+- Evidence: `.orchestration/evidence/web-robot/` (14 screenshots, a 118 s recording `robot-lab.mp4`,
+  README.md with what each shows). Captured from the page on the seeded skill `sk_c28f1461`:
+  replay success (0.7 cm tracking error), 20/20 evaluation in 44 s, policy success on seed 7,
+  GR00T on chip 3 (30 calls, p50 522 ms while the box was loaded; does not finish, as expected).
 
 ## Test ids (for QA)
 `page-robotindex`, `robot-stats`, `robot-skill-list`, `robot-skill-<id>`, `page-robotlab`,
@@ -68,7 +76,17 @@ pending|running|success|fail), `eval-score`, `policy-seed`, `gr00t-feeds`, `came
 
 ## Notes for the lead
 - Nothing outside my scope was edited. The lab uses shared pieces as they are (`useSkill`,
-  `useTwin`, `useJob`, `useBox`, UI primitives).
+  `useTwin`, `useJob`, `useBox`, UI primitives). `three/FrankaArm.tsx` is unchanged (the landing
+  hero uses it).
+- Checked on the real stack: the guided tour's Do step lands on the lab and highlights the mode
+  tab bar.
+- The landing, hero and tour link to `/robot/sk_sort`, the mock's id. On a real box the lab opens
+  the best ready skill (a trained one first) with a toast, keeping `?mode=`. The tour's
+  target `[data-tour="robot-modes"]` is the lab's tab bar, which renders before any data loads.
+- Robot status shapes beyond docs/API.md that the page relies on: `sim_available`,
+  `policy.{demos, loss_curve, last_eval, evaluated_at, error}`, `meta.{mode, seed, instruction,
+  human}`, `done.{steps, seconds, tasks_done, regrasps, tracking_error_m, gr00t}`,
+  `gr00t.{server_ms, device_ms}`. You may want to add them to API.md.
 - `vite.config.ts` pins the dev server to 5710; I ran mine on 5713 with a local, uncommitted config.
 - Playwright's default mock server port 5712 is shared by every web worktree (`reuseExistingServer`),
   so a mock run can hit another worktree's code; run against an own port when testing branches.
