@@ -30,7 +30,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tacit.models import vision  # noqa: E402
-from tacit.perception.frame import analyze  # noqa: E402
+from tacit.perception.frame import LiveAnalyzer, analyze  # noqa: E402
 from tacit.perception.mediapipe_runner import MediaPipeRunner  # noqa: E402
 
 DATA = Path(os.environ.get("TACIT_DATA", Path.home() / "tacit" / "data"))
@@ -75,7 +75,7 @@ def summarize(rows: list[dict], seconds: float) -> dict:
     return out
 
 
-async def live(frames: list[np.ndarray], fps: float, seconds: float, priority: int) -> list[dict]:
+async def live(frames: list[np.ndarray], fps: float, seconds: float, priority: int, pipeline: bool = False) -> list[dict]:
     latest: dict = {}
     new = asyncio.Event()
     stop = time.perf_counter() + seconds
@@ -90,15 +90,24 @@ async def live(frames: list[np.ndarray], fps: float, seconds: float, priority: i
 
     cam = asyncio.create_task(camera())
     runner = MediaPipeRunner(video=True)
+    analyzer = LiveAnalyzer(runner, priority=priority) if pipeline else None
+    offered_at: dict[float, float] = {}
     rows = []
+
+    def keep(f: dict) -> None:
+        rows.append({"t": f["t"], "timing": f["timing_ms"], "hands": len(f["hands"]), "done": time.perf_counter(),
+                     "latency": (time.perf_counter() - offered_at.pop(f["t"])) * 1000, "unavailable": f["unavailable"]})
     try:
         while time.perf_counter() < stop:
             await new.wait()
             new.clear()
             t, rgb, offered = latest["frame"]
-            f = await analyze(rgb, t, runner, priority=priority)
-            rows.append({"t": t, "timing": f["timing_ms"], "hands": len(f["hands"]), "done": time.perf_counter(),
-                         "latency": (time.perf_counter() - offered) * 1000, "unavailable": f["unavailable"]})
+            offered_at[round(t, 3)] = offered
+            f = await (analyzer.push(rgb, t) if analyzer else analyze(rgb, t, runner, priority=priority))
+            if f is not None:
+                keep(f)
+        if analyzer is not None and (f := await analyzer.flush()) is not None:
+            keep(f)
     finally:
         cam.cancel()
         runner.close()
@@ -133,11 +142,12 @@ async def main_async(a) -> dict:
     if bg is not None:
         await asyncio.sleep(2.0)   # the job is under way before live starts
     t0 = time.perf_counter()
-    rows = await live(clip, a.fps, a.seconds, vision.LIVE)
+    rows = await live(clip, a.fps, a.seconds, vision.LIVE, a.pipeline)
     wall = time.perf_counter() - t0
     stop.set()
     bg_frames = await bg if bg is not None else 0
     res = {"clip": Path(a.clip).name, "camera_fps": a.fps, "seconds": round(wall, 1), "load": bool(a.load),
+           "pipeline": bool(a.pipeline),
            "background_frames_per_s": round(bg_frames / wall, 1) if bg is not None else None,
            "unavailable": sorted({u for r in rows for u in r["unavailable"]}), **summarize(rows, wall)}
     return res
@@ -149,18 +159,25 @@ def frame_outputs(f: dict) -> dict:
             "head": f.get("head"), "objects": f["objects"], "gaze": f.get("gaze"), "unavailable": f["unavailable"]}
 
 
-async def record(clips: list[Path], n: int) -> list[dict]:
-    """``n`` frames of each clip at 10 fps, analysed one after another from a fresh MediaPipe runner (deterministic)."""
+async def record(clips: list[Path], n: int, pipeline: bool = False) -> list[dict]:
+    """``n`` frames of each clip at 10 fps, analysed one after another from a fresh MediaPipe runner (deterministic);
+    with ``pipeline``, one frame deep through LiveAnalyzer."""
     out = []
     for clip in clips:
         frames = load_clip(clip, 10.0)[:n]
         runner = MediaPipeRunner(video=True)
+        analyzer = LiveAnalyzer(runner) if pipeline else None
+        got = []
         try:
             for k, rgb in enumerate(frames):
-                f = await analyze(rgb, k / 10.0, runner, priority=vision.LIVE)
-                out.append({"clip": clip.name, "k": k, **frame_outputs(f)})
+                f = await (analyzer.push(rgb, k / 10.0) if analyzer else analyze(rgb, k / 10.0, runner, priority=vision.LIVE))
+                if f is not None:
+                    got.append(f)
+            if analyzer is not None and (f := await analyzer.flush()) is not None:
+                got.append(f)
         finally:
             runner.close()
+        out += [{"clip": clip.name, "k": k, **frame_outputs(f)} for k, f in enumerate(got)]
     return out
 
 
@@ -201,13 +218,14 @@ def main() -> None:
     ap.add_argument("--fps", type=float, default=10.0)
     ap.add_argument("--seconds", type=float, default=60.0)
     ap.add_argument("--load", action="store_true", help="run an offline processing job alongside")
+    ap.add_argument("--pipeline", action="store_true", help="analyse one frame deep (perception.frame.LiveAnalyzer)")
     ap.add_argument("--json", help="also write the results here")
     ap.add_argument("--record", help="instead: analyse the first --frames frames of both sample clips and save the outputs")
     ap.add_argument("--compare", help="with --record: compare the new outputs with this earlier recording")
     ap.add_argument("--frames", type=int, default=60)
     a = ap.parse_args()
     if a.record:
-        outs = asyncio.run(record([Path(a.clip), Path(a.load_clip)], a.frames))
+        outs = asyncio.run(record([Path(a.clip), Path(a.load_clip)], a.frames, a.pipeline))
         Path(a.record).write_text(json.dumps(outs))
         if a.compare:
             res = compare_outputs(json.loads(Path(a.compare).read_text()), outs)
