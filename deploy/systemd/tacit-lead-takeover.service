@@ -1,0 +1,7 @@
+[Unit]
+Description=Start a Tacit lead session if the lead heartbeat is stale
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/tacit/deploy/lead-takeover.sh
+Environment=PATH=%h/.local/bin:%h/.nvm/versions/node/v24.16.0/bin:/usr/local/bin:/usr/bin:/bin
