@@ -51,14 +51,14 @@ function PoseDriver({ pose }: { pose: MutableRefObject<Pose> }) {
 }
 
 function presetPose(view: ViewPreset, scene: SimScene): { pos: THREE.Vector3; target: THREE.Vector3 } {
-  const target = new THREE.Vector3(0.42, 0.08, 0)
+  const target = new THREE.Vector3(0.3, 0.28, 0)
   switch (view) {
     case 'front':
-      return { pos: new THREE.Vector3(1.45, 0.62, 0.02), target: new THREE.Vector3(0.38, 0.12, 0) }
+      return { pos: new THREE.Vector3(1.85, 0.78, 0.02), target: new THREE.Vector3(0.32, 0.26, 0) }
     case 'side':
-      return { pos: new THREE.Vector3(0.42, 0.55, 1.35), target: new THREE.Vector3(0.36, 0.16, 0) }
+      return { pos: new THREE.Vector3(0.36, 0.72, 1.75), target: new THREE.Vector3(0.36, 0.26, 0) }
     case 'top':
-      return { pos: new THREE.Vector3(0.36, 1.75, 0.001), target: new THREE.Vector3(0.36, 0, 0) }
+      return { pos: new THREE.Vector3(0.3, 2.15, 0.001), target: new THREE.Vector3(0.3, 0, 0) }
     case 'exterior': {
       const cam = scene.cameras?.exterior
       if (cam) {
@@ -71,7 +71,7 @@ function presetPose(view: ViewPreset, scene: SimScene): { pos: THREE.Vector3; ta
       return { pos: new THREE.Vector3(0.3, 0.46, -0.66), target }
     }
     default:
-      return { pos: new THREE.Vector3(1.5, 0.95, 1.05), target }
+      return { pos: new THREE.Vector3(1.62, 1.12, 1.28), target }
   }
 }
 
@@ -189,7 +189,7 @@ export function SimViewer({ scene, pose, layers, view, viewNonce = 0, ghost, hum
         shadows
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: false }}
-        camera={{ fov: 36, near: 0.02, far: 30, position: [1.5, 0.95, 1.05] }}
+        camera={{ fov: 36, near: 0.02, far: 30, position: [1.62, 1.12, 1.28] }}
         aria-label="Robot simulation view"
       >
         <color attach="background" args={['#06080a']} />
@@ -199,7 +199,7 @@ export function SimViewer({ scene, pose, layers, view, viewNonce = 0, ghost, hum
         <hemisphereLight args={['#cfe6ff', '#0b0d10', 0.55]} />
         <directionalLight
           position={[1.4, 2.4, 1.1]}
-          intensity={2.4}
+          intensity={2}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-left={-1}
@@ -231,7 +231,7 @@ export function SimViewer({ scene, pose, layers, view, viewNonce = 0, ghost, hum
           fadeStrength={1.6}
         />
         <SceneContent scene={scene} pose={pose} layers={layers} ghost={ghost} humanPath={humanPath} />
-        <OrbitControls makeDefault enableDamping dampingFactor={0.09} minDistance={0.35} maxDistance={4.5} maxPolarAngle={Math.PI * 0.49} target={[0.42, 0.08, 0]} />
+        <OrbitControls makeDefault enableDamping dampingFactor={0.09} minDistance={0.35} maxDistance={4.5} maxPolarAngle={Math.PI * 0.49} target={[0.3, 0.28, 0]} />
         <CameraRig view={view} nonce={viewNonce} scene={scene} />
       </Canvas>
       {children}

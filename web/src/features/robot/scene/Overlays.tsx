@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Vec3 } from '@/lib/api'
 import type { SimCamera } from '@/lib/api/robot'
-import { GhostHand } from '@/three/GhostHand'
+import { HandSkeleton } from './HandSkeleton'
 import { runBuffer, useRunUi, type Pose } from '../runStream'
 import { ghostAt, type GhostTrack } from '../retarget'
 import { quat } from './frames'
@@ -68,9 +68,9 @@ export function HumanPath({ points, progress }: { points: Vec3[]; progress: Muta
     g1.setAttribute('position', new THREE.BufferAttribute(flat, 3))
     const g2 = new THREE.BufferGeometry()
     g2.setAttribute('position', new THREE.BufferAttribute(flat.slice(), 3))
-    const a = new THREE.Line(g1, new THREE.LineDashedMaterial({ color: '#a78bfa', dashSize: 0.008, gapSize: 0.006, transparent: true, opacity: 0.55, depthWrite: false }))
+    const a = new THREE.Line(g1, new THREE.LineDashedMaterial({ color: '#b9a4ff', dashSize: 0.01, gapSize: 0.006, transparent: true, opacity: 0.7, depthWrite: false }))
     a.computeLineDistances()
-    const d = new THREE.Line(g2, new THREE.LineBasicMaterial({ color: '#c4b5fd', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
+    const d = new THREE.Line(g2, new THREE.LineBasicMaterial({ color: '#d6c9ff', transparent: true, opacity: 1, depthWrite: false, toneMapped: false }))
     a.frustumCulled = d.frustumCulled = false
     return { ahead: a, done: d, doneGeo: g2 }
   }, [points])
@@ -104,12 +104,12 @@ export function GhostHands({ track, pose, progress }: { track: GhostTrack; pose:
     const tt = track.t0 + local
     left.current = ghostAt(track, 'left', tt, bufL)
     right.current = ghostAt(track, 'right', tt, bufR)
-    glow.current = start === null ? 0.35 : 0.85
+    glow.current = start === null ? 0.45 : 1
   })
   return (
     <group>
-      <GhostHand points={left} color="#3cd7ff" intensity={glow} jointScale={1.25} />
-      <GhostHand points={right} color="#a78bfa" intensity={glow} jointScale={1.25} />
+      <HandSkeleton points={left} color="#3cd7ff" dim={glow} />
+      <HandSkeleton points={right} color="#a78bfa" dim={glow} />
     </group>
   )
 }

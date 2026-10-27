@@ -100,6 +100,8 @@ export interface RobotPolicy {
   evaluated_at?: string | null
   demos?: number | null
   loss_curve?: [number, number][]
+  /** Per-trial results of the last evaluation. */
+  last_eval?: EvalTrial[]
 }
 
 export interface RobotRunRecord {

@@ -13,6 +13,7 @@ export type Affine = number[][]
 const WORKSPACE_X: [number, number] = [0.32, 0.62]
 const WORKSPACE_Y: [number, number] = [-0.26, 0.26]
 const Z_LIFT = 0.04
+const Z_CLIP: [number, number] = [0.03, 0.4]
 
 const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const norm = (a: number[]) => Math.hypot(a[0], a[1], a[2])
@@ -114,7 +115,7 @@ function smallestEigenvector(A: number[][]): Vec3 {
  * path, PCA table plane with the normal pointing up, uniform scale into the workspace).
  * Returns null when the twin has too few tracked wrist points (the backend refuses replay then).
  */
-export function computeAffine(twin: Twin): { matrix: Affine; side: 'left' | 'right'; t0: number } | null {
+export function computeAffine(twin: Twin): { matrix: Affine; side: 'left' | 'right'; t0: number; scale: number } | null {
   const side = workingSide(twin)
   const cam = twinCamera(twin)
   const raw: { t: number; p: Vec3 }[] = []
@@ -158,18 +159,20 @@ export function computeAffine(twin: Twin): { matrix: Affine; side: 'left' | 'rig
     [-s * u[0], -s * u[1], -s * u[2], s * dot(u, c) + s * uMid],
     [s * n[0], s * n[1], s * n[2], Z_LIFT - s * dot(n, c) - s * hMin],
   ]
-  return { matrix, side, t0: raw[0].t }
+  return { matrix, side, t0: raw[0].t, scale: s }
 }
 
 export interface GhostTrack {
   /** Twin time at which the robot's path starts (its first tracked wrist frame). */
   t0: number
+  /** Camera metres to workspace metres. */
+  scale: number
   side: 'left' | 'right'
   fps: number
   times: number[]
   left: (Vec3[] | null)[]
   right: (Vec3[] | null)[]
-  /** The expert's wrist, mapped: the path the robot follows (before its z clamp). */
+  /** The expert's wrist, mapped, smoothed and height-clamped: the path the robot follows. */
   wrist: Vec3[]
 }
 
@@ -193,7 +196,10 @@ export function buildGhost(twin: Twin, matrix?: Affine | null): GhostTrack | nul
     const w = (fit.side === 'left' ? l : r)?.[0]
     if (w && f.t >= fit.t0) wrist.push(w)
   }
-  return { t0: fit.t0, side: fit.side, fps: twin.fps || 10, times, left, right, wrist }
+  // The robot follows the 5-frame smoothed wrist with its height clamped to a safe band.
+  const path = smooth(wrist).map((p) => [p[0], p[1], Math.min(Z_CLIP[1], Math.max(Z_CLIP[0], p[2]))] as Vec3)
+  const scale = M === fit.matrix ? fit.scale : Math.hypot(M[0][0], M[0][1], M[0][2])
+  return { t0: fit.t0, scale, side: fit.side, fps: twin.fps || 10, times, left, right, wrist: path }
 }
 
 /** Interpolated landmarks of one hand at twin time `t` (null when the hand is not tracked). */

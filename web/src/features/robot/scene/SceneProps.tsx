@@ -8,7 +8,7 @@ import { quat, rgbaColor } from './frames'
 
 // Everything here sits inside the z-up root group, in MuJoCo coordinates.
 
-const TABLE_TOP = new THREE.MeshStandardMaterial({ color: '#171b20', roughness: 0.82, metalness: 0.05 })
+const TABLE_TOP = new THREE.MeshStandardMaterial({ color: '#0e1114', roughness: 0.9, metalness: 0.04 })
 const TABLE_EDGE = new THREE.MeshStandardMaterial({ color: '#0d1013', roughness: 0.6, metalness: 0.2 })
 const LEG = new THREE.MeshStandardMaterial({ color: '#1d2228', roughness: 0.5, metalness: 0.6 })
 
