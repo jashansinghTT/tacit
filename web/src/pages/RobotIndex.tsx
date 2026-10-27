@@ -16,6 +16,7 @@ function readiness(st: RobotStatus | undefined): { stage: Stage | null; label: s
   if (!st) return { stage: null, label: '…', tone: 'neutral' }
   const p = st.policy
   if (p.status === 'training') return { stage: 'program', label: 'Training', tone: 'ion' }
+  if (p.status === 'failed') return { stage: 'program', label: 'Training failed', tone: 'warn' }
   if (p.status === 'trained' && p.success_rate != null)
     return { stage: 'evaluated', label: p.success_rate >= 0.8 ? 'Robot-ready' : 'Below 80%', tone: p.success_rate >= 0.8 ? 'ok' : 'warn' }
   if (p.status === 'trained') return { stage: 'policy', label: 'Policy trained', tone: 'ion' }

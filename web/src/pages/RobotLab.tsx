@@ -261,7 +261,9 @@ export default function RobotLabPage() {
       ? { label: jobs.train.progress.epoch != null ? `epoch ${jobs.train.progress.epoch}` : 'demos', tone: 'ion', busy: true }
       : trained
         ? { label: 'trained', tone: 'ok' }
-        : { label: 'untrained', tone: 'neutral' },
+        : policy?.status === 'failed'
+          ? { label: 'failed', tone: 'warn' }
+          : { label: 'untrained', tone: 'neutral' },
     evaluate: jobs.evaluate.running
       ? { label: `${evalTrials.length}/${jobs.evaluate.config.trials}`, tone: 'ion', busy: true }
       : policy?.success_rate != null

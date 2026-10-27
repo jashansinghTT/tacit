@@ -239,11 +239,13 @@ export function TrainPanel({ jobs, status, onPreview }: { jobs: LabJobs; status:
               </>
             ) : policy?.status === 'training' ? (
               'Training now'
+            ) : policy?.status === 'failed' ? (
+              <span className="text-warn">Last training failed{policy.error ? `: ${policy.error}` : ''}</span>
             ) : (
               'Not trained yet'
             )}
           </span>
-          <Badge tone={policy?.status === 'trained' ? 'ok' : policy?.status === 'training' ? 'ion' : policy?.status === 'failed' ? 'fault' : 'neutral'} dot pulse={policy?.status === 'training'}>
+          <Badge tone={policy?.status === 'trained' ? 'ok' : policy?.status === 'training' ? 'ion' : policy?.status === 'failed' ? 'warn' : 'neutral'} dot pulse={policy?.status === 'training'}>
             {policy?.status ?? 'untrained'}
           </Badge>
         </div>

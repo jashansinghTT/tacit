@@ -102,6 +102,8 @@ export interface RobotPolicy {
   loss_curve?: [number, number][]
   /** Per-trial results of the last evaluation. */
   last_eval?: EvalTrial[]
+  /** Why training failed (for example a backend restart that interrupted it). */
+  error?: string | null
 }
 
 export interface RobotRunRecord {
