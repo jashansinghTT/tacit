@@ -43,6 +43,7 @@ GR00T N1.7 latency per query (two cameras x two frames at 320x180, re-query ever
 | 19:28 | quiet | 67.6 / 72.7 ms | 57.8 ms |
 | 19:52 | ~30 | 89.9 / 312.6 ms | 63.7 ms |
 | 21:12 (final evidence run) | ~53 | 592.8 / 904.4 ms | 420.1 ms |
+| 22:36 (quiet-host re-measure, current `gr00t_latency.json`) | 6.5 to 8.8 | 70.9 / 118.2 ms | 58.2 ms |
 
 The quiet numbers match the model card. GR00T had a single client in the 21:12 run, so the
 slowdown is host CPU starvation (upload, trace dispatch and readback are host-driven). Realtime
