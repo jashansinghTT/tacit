@@ -232,11 +232,14 @@ export default function RobotLabPage() {
   const showReplayLayer = mode === 'replay' || runMode === 'replay'
   const humanPath = showReplayLayer ? (runMode === 'replay' && meta?.human?.points?.length ? meta.human.points : ghost?.wrist ?? null) : null
 
+  // GR00T's cameras and feeds belong to its mode, or to a GR00T run that is still streaming.
+  const gr00tLive = runMode === 'gr00t' && (runStatus === 'streaming' || runStatus === 'starting')
+  const showGr00t = mode === 'gr00t' || gr00tLive
   const layers: ViewerLayers = {
     labels,
     trail,
     ghost: ghostOn && showReplayLayer,
-    cameras: mode === 'gr00t' || runMode === 'gr00t',
+    cameras: showGr00t,
     spawn: mode === 'train' || mode === 'evaluate' || mode === 'policy',
   }
 
@@ -276,7 +279,7 @@ export default function RobotLabPage() {
         ? { label: `${Math.round(policy.success_rate * 100)}%`, tone: policy.success_rate >= 0.8 ? 'ok' : 'warn' }
         : { label: trained ? 'not run' : 'needs policy', tone: 'neutral', disabled: !trained },
     policy: trained ? { label: 'ready', tone: 'ok' } : { label: 'needs policy', tone: 'neutral', disabled: true },
-    gr00t: runMode === 'gr00t' && (runStatus === 'streaming' || runStatus === 'starting') ? { label: 'live', tone: 'ion', busy: true } : { label: 'chip 3', tone: 'ok' },
+    gr00t: gr00tLive ? { label: 'live', tone: 'ion', busy: true } : { label: 'chip 3', tone: 'ok' },
   }
 
   if (skill.isError && (skill.error as { status?: number }).status === 404) return <UnknownSkill id={skillId} />
@@ -381,7 +384,7 @@ export default function RobotLabPage() {
                     </div>
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3">
                       <PhasePill scene={scene.data} />
-                      {(mode === 'gr00t' || runMode === 'gr00t') && (
+                      {showGr00t && (
                         <span className="flex items-center gap-1.5 rounded-xs bg-ink-950/70 px-1.5 py-0.5 text-[10px] text-data-gaze backdrop-blur">
                           <Camera className="size-3" /> GR00T&rsquo;s two cameras shown as frustums
                         </span>
@@ -400,7 +403,7 @@ export default function RobotLabPage() {
                   {scene.data && <JointTelemetry robot={scene.data.robot} pose={pose} />}
                 </div>
               </div>
-              {(mode === 'gr00t' || runMode === 'gr00t') && <Gr00tFeeds />}
+              {showGr00t && <Gr00tFeeds />}
             </div>
 
             <div className="flex min-w-0 flex-col gap-3 xl:col-span-4">
