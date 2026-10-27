@@ -22,9 +22,10 @@ export interface Turn {
   /** A spoken question is being transcribed. */
   transcribing: boolean
   answer: string
+  /** `done` once the text is final; the last sentences may still be voicing after that. */
   status: 'streaming' | 'done' | 'error'
-  /** The text has stopped arriving; the stream may still be voicing the last sentences. */
-  textDone: boolean
+  /** The stream is still open, delivering spoken sentences. */
+  voicing: boolean
   error?: string
   audio: string[]
   sources: string[]
@@ -35,8 +36,8 @@ export interface Turn {
 }
 
 let seq = 0
-/** The backend sends `done` only after every sentence is voiced; text is final once deltas pause. */
-const TEXT_DONE_MS = 1800
+/** Older backends sent `done` only after every sentence was voiced; then text is final once deltas pause. */
+const QUIET_MS = 2500
 
 /** "Ask the expert": streams the tutor's answer and speaks each sentence as it is ready. */
 export function useTutor(skillId: string) {
@@ -70,13 +71,13 @@ export function useTutor(skillId: string) {
   const ask = useCallback(
     async (input: TutorInput, lang: string) => {
       // A new question supersedes one that is still being voiced.
-      if (turnsRef.current.some((t) => t.status === 'streaming' && !t.textDone)) return
+      if (turnsRef.current.some((t) => t.status === 'streaming')) return
       abort.current?.abort()
       stopVoice()
       const id = `t${++seq}`
       const voice = 'audio' in input
       const history: ChatTurn[] = turnsRef.current
-        .filter((t) => (t.status === 'done' || t.textDone) && t.question && t.answer)
+        .filter((t) => t.status === 'done' && t.question && t.answer)
         .slice(-3)
         .flatMap((t) => [
           { role: 'user' as const, content: t.question },
@@ -84,7 +85,7 @@ export function useTutor(skillId: string) {
         ])
       setTurns((ts) => [
         ...ts,
-        { id, question: voice ? '' : (input as { question: string }).question, voice, transcribing: voice, answer: '', status: 'streaming', textDone: false, audio: [], sources: [], lang, speaking: null },
+        { id, question: voice ? '' : (input as { question: string }).question, voice, transcribing: voice, answer: '', status: 'streaming', voicing: true, audio: [], sources: [], lang, speaking: null },
       ])
       const q = new AudioQueue()
       queue.current = q
@@ -107,7 +108,7 @@ export function useTutor(skillId: string) {
             const text = (data as { text: string }).text
             patch(id, (t) => ({ answer: t.answer + text, transcribing: false }))
             if (quiet) clearTimeout(quiet)
-            quiet = setTimeout(() => patch(id, () => ({ textDone: true, ms: performance.now() - t0 - TEXT_DONE_MS })), TEXT_DONE_MS)
+            quiet = setTimeout(() => patch(id, (t) => (t.status === 'streaming' ? { status: 'done', ms: performance.now() - t0 - QUIET_MS } : {})), QUIET_MS)
           } else if (ev.event === 'audio') {
             const a = data as TutorAudioPart
             patch(id, (t) => {
@@ -117,10 +118,10 @@ export function useTutor(skillId: string) {
             })
             q.push(a.index, a.audio)
           } else if (ev.event === 'done') {
+            if (quiet) clearTimeout(quiet)
             const d = data as TutorDoneEvent
             patch(id, (t) => ({
               status: 'done',
-              textDone: true,
               answer: d.text || t.answer,
               question: t.question || d.question,
               sources: d.sources ?? [],
@@ -129,14 +130,16 @@ export function useTutor(skillId: string) {
             }))
           } else if (ev.event === 'error') {
             patch(id, () => ({ status: 'error', error: (data as { message: string }).message, transcribing: false }))
+          } else if (ev.event === 'end') {
+            break
           }
         }
-        patch(id, (t) => (t.status === 'streaming' ? { status: 'done', textDone: true, transcribing: false, ms: t.ms ?? performance.now() - t0 } : {}))
+        patch(id, (t) => ({ ...(t.status === 'streaming' ? { status: 'done' as const, ms: t.ms ?? performance.now() - t0 } : {}), voicing: false, transcribing: false }))
       } catch (e) {
         if ((e as Error).name === 'AbortError') {
-          patch(id, () => ({ status: 'done', textDone: true, transcribing: false }))
+          patch(id, (t) => ({ status: t.status === 'error' ? 'error' : 'done', voicing: false, transcribing: false }))
         } else {
-          patch(id, () => ({ status: 'error', error: (e as Error).message, transcribing: false }))
+          patch(id, () => ({ status: 'error', error: (e as Error).message, voicing: false, transcribing: false }))
         }
       } finally {
         if (quiet) clearTimeout(quiet)
@@ -161,7 +164,7 @@ export function useTutor(skillId: string) {
     queue.current?.stop()
   }, [])
 
-  const busy = turns.some((t) => t.status === 'streaming' && !t.textDone)
+  const busy = turns.some((t) => t.status === 'streaming')
   return { turns, ask, cancel, replay, stopVoice, busy }
 }
 

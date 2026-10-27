@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Loader2, Music } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { narrationAudio, useNarration } from './narration'
 
@@ -12,7 +13,7 @@ export function Captions({ className }: { className?: string }) {
   const status = useNarration((s) => s.status)
   const words = useMemo(() => (line ? line.text.split(/\s+/).filter(Boolean) : []), [line])
   const refs = useRef<(HTMLSpanElement | null)[]>([])
-  const visible = Boolean(line) && (status === 'playing' || status === 'paused' || status === 'blocked')
+  const visible = Boolean(line) && (status === 'loading' || status === 'playing' || status === 'paused' || status === 'blocked')
 
   useEffect(() => {
     if (!visible) return
@@ -23,7 +24,8 @@ export function Captions({ className }: { className?: string }) {
     const tick = () => {
       raf = requestAnimationFrame(tick)
       const a = narrationAudio()
-      const p = a && a.duration ? a.currentTime / a.duration : 0
+      const loading = useNarration.getState().status === 'loading'
+      const p = !loading && a && a.duration ? a.currentTime / a.duration : 0
       let acc = 0
       for (let i = 0; i < words.length; i++) {
         const span = refs.current[i]
@@ -47,6 +49,11 @@ export function Captions({ className }: { className?: string }) {
             transition={{ duration: 0.25 }}
             className="max-w-[min(46rem,92%)] rounded-lg bg-ink-950/80 px-4 py-2.5 text-center text-[15px] leading-relaxed text-pretty shadow-[0_0_0_1px_var(--color-line)] backdrop-blur-md"
           >
+            {status === 'loading' && (
+              <span className="mb-1 flex items-center justify-center gap-1.5 text-[10.5px] text-fg-subtle" data-testid="captions-voicing">
+                <Loader2 className="size-3 animate-spin" /> voicing on chip 1
+              </span>
+            )}
             {words.map((w, i) => (
               <span
                 key={i}
@@ -63,5 +70,26 @@ export function Captions({ className }: { className?: string }) {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/** The credit line the intro music's licence asks for, shown while it plays. */
+export function MusicCredit({ className }: { className?: string }) {
+  const music = useNarration((s) => s.music)
+  return (
+    <AnimatePresence>
+      {music && (
+        <motion.span
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className={cn('pointer-events-none inline-flex items-center gap-1.5 rounded-full bg-ink-950/80 px-2.5 py-1 text-[10.5px] text-fg-muted shadow-[0_0_0_1px_var(--color-line)] backdrop-blur', className)}
+          data-testid="music-credit"
+        >
+          <Music className="size-3 text-data-right" />
+          {music.credit}
+        </motion.span>
+      )}
+    </AnimatePresence>
   )
 }

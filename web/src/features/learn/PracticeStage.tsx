@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Camera, CameraOff, Check, Lightbulb, Lock, Square } from 'lucide-react'
+import { Camera, CameraOff, Check, Lightbulb, Loader2, Lock, Square } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { fmtMs } from '@/lib/format'
 import { Badge, Button, Meter, ScoreRing, ServedByList, Sparkline } from '@/components/ui'
@@ -100,7 +100,7 @@ export function PracticeStage() {
           <>
             <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
               <Badge tone={live ? 'fault' : 'neutral'} dot pulse={live} className="bg-ink-950/75 backdrop-blur">
-                {live ? 'Live' : p.state === 'stopping' ? 'Saving' : 'Connecting'}
+                {live ? 'Live' : 'Connecting'}
               </Badge>
               {p.latency != null && <span className="telemetry rounded-sm bg-ink-950/75 px-1.5 py-0.5 text-[10px] text-fg-muted">{fmtMs(p.latency)} per frame</span>}
             </div>
@@ -179,8 +179,14 @@ export function PracticeStage() {
                     <span className="text-fg-faint"> · </span>a step completes past 85% with a match above 55
                   </>
                 )
+              ) : p.saving ? (
+                <span className="inline-flex items-center gap-1.5" data-testid="practice-saving">
+                  <Loader2 className="size-3.5 animate-spin" /> Saving your progress…
+                </span>
               ) : p.saved ? (
-                <>Progress saved: {p.saved.steps_done} of {lesson.steps.length} steps.</>
+                <span data-testid="practice-saved">
+                  Progress saved: {p.saved.steps_done} of {lesson.steps.length} steps practised, best match {Math.round(p.saved.best_score * 100)}.
+                </span>
               ) : (
                 'Start the camera to get a live score.'
               )}
@@ -196,8 +202,8 @@ export function PracticeStage() {
                   Take the quiz
                 </Button>
               )}
-              {(live || p.state === 'stopping') && (
-                <Button size="sm" variant="danger" icon={<Square className="size-3 fill-current" />} loading={p.state === 'stopping'} onClick={p.stop} data-testid="practice-stop">
+              {live && (
+                <Button size="sm" variant="danger" icon={<Square className="size-3 fill-current" />} onClick={p.stop} data-testid="practice-stop">
                   Stop and save
                 </Button>
               )}

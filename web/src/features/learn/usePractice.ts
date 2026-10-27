@@ -7,7 +7,7 @@ import { useApp } from '@/lib/store'
 import { toast } from '@/components/ui'
 import { useLesson } from './store'
 
-export type PracticeState = 'idle' | 'starting' | 'live' | 'stopping' | 'error'
+export type PracticeState = 'idle' | 'starting' | 'live' | 'error'
 
 export interface LiveHands {
   hands: HandFrame[]
@@ -25,6 +25,7 @@ export interface Feedback {
 const FRAME_MS = 100 // about 10 frames a second
 const HINT_HOLD_MS = 2600 // one hint at a time: keep each on screen long enough to act on
 const MAX_BUFFERED = 512 * 1024
+const SAVE_WAIT_MS = 20_000
 
 type LearnSocket = TacitSocket<LearnServerMsg, { type: 'frame'; t: number; jpeg: string } | { type: 'step'; index: number } | { type: 'stop' }>
 
@@ -47,6 +48,7 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
   const [servedBy, setServedBy] = useState<ServedBy[]>([])
   const [celebrate, setCelebrate] = useState<{ step: number; score: number; at: number } | null>(null)
   const [saved, setSaved] = useState<{ steps_done: number; best_score: number } | null>(null)
+  const [saving, setSaving] = useState(false)
   const hands = useRef<LiveHands | null>(null)
   const sock = useRef<LearnSocket | null>(null)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -147,32 +149,32 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
 
   const stop = useCallback(async () => {
     const s = sock.current
-    setState('stopping')
+    // The camera stops at once; the server's confirmation can take a few seconds to arrive.
+    sock.current = null
     if (timer.current) clearInterval(timer.current)
     timer.current = null
-    if (s && s.state === 'open') {
-      // Ask the server to save progress, and give it a moment to confirm before closing.
-      const done = new Promise<void>((resolve) => {
-        const off = s.onMessage((m) => {
-          if ((m as { type: string }).type === 'saved') {
-            off()
-            resolve()
-          }
-        })
-        setTimeout(resolve, 2500)
-      })
-      sock.current = null
-      s.send({ type: 'stop' })
-      await done
-      s.close()
-    }
-    teardown()
+    hands.current = null
     camera.stop()
     setFeedback(null)
     setHint(null)
     setState('idle')
+    if (!s || s.state !== 'open') return
+    setSaving(true)
+    const done = new Promise<void>((resolve) => {
+      const off = s.onMessage((m) => {
+        if ((m as { type: string }).type === 'saved') {
+          off()
+          resolve()
+        }
+      })
+      setTimeout(resolve, SAVE_WAIT_MS)
+    })
+    s.send({ type: 'stop' })
+    await done
+    s.close()
+    setSaving(false)
     void qc.invalidateQueries({ queryKey: ['learn'] })
-  }, [camera, qc, teardown])
+  }, [camera, qc])
 
   // Tell the server which step the trainee is on.
   useEffect(() => {
@@ -184,5 +186,5 @@ export function usePractice(video: React.RefObject<HTMLVideoElement | null>) {
 
   useEffect(() => () => teardown(), [teardown])
 
-  return { state, error: error ?? camera.error, stream: camera.stream, feedback, hint, latency, servedBy, celebrate, saved, hands, start, stop }
+  return { state, error: error ?? camera.error, stream: camera.stream, feedback, hint, latency, servedBy, celebrate, saved, saving, hands, start, stop }
 }

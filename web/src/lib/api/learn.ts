@@ -47,8 +47,16 @@ export interface LessonStep {
   narration_text: string | null
 }
 
+export interface LessonLanguage {
+  code: string
+  name: string
+}
+
 export interface LessonDetail {
   skill_id: string
+  /** The language the text is in; narration in it may still be on its way. */
+  lang: string
+  languages: LessonLanguage[]
   title: string
   summary: string
   expert: PersonRef
@@ -90,19 +98,25 @@ async function fetchLessons(): Promise<LessonItem[]> {
 
 type RawLesson = Partial<LessonDetail> & { skill_id: string; steps: Partial<LessonStep>[] }
 
-/** The lesson, filled in from the skill record where the lesson endpoint leaves a field out. */
-async function fetchLesson(skillId: string): Promise<LessonDetail> {
+/**
+ * The lesson (translated when `lang` is not English), filled in from the skill record where the
+ * lesson endpoint leaves a field out.
+ */
+async function fetchLesson(skillId: string, lang = 'en'): Promise<LessonDetail> {
   const [raw, skill] = await Promise.all([
-    request<RawLesson>(`/api/learn/lessons/${skillId}`),
+    request<RawLesson>(`/api/learn/lessons/${skillId}${lang !== 'en' ? `?lang=${lang}` : ''}`),
     api.skill(skillId).catch(() => null),
   ])
+  const translated = lang !== 'en'
   const byIndex = new Map(skill?.steps.map((s) => [s.index, s]) ?? [])
   // The skill record keeps every narration line with its text; the lesson endpoint drops the intro's.
-  const narration = (skill as { narration?: Record<string, { text?: string }> } | null)?.narration ?? {}
+  const narration = translated ? {} : ((skill as { narration?: Record<string, { text?: string }> } | null)?.narration ?? {})
   const title = raw.title ?? skill?.title ?? 'Lesson'
   const summary = raw.summary ?? skill?.summary ?? ''
   return {
     skill_id: raw.skill_id,
+    lang: raw.lang ?? lang,
+    languages: raw.languages ?? [],
     title,
     summary,
     expert: raw.expert ?? skill?.expert ?? { id: '', name: 'the expert' },
@@ -131,8 +145,9 @@ async function fetchLesson(skillId: string): Promise<LessonDetail> {
         hand: s.hand ?? full?.hand ?? null,
         gaze_target: s.gaze_target ?? full?.gaze_target ?? null,
         narration_audio: s.narration_audio ?? null,
-        // Same wording the narrate stage speaks (backend/tacit/pipeline/process.py).
-        narration_text: s.narration_text ?? (s.narration_audio ? `Step ${index}. ${stepTitle}. ${instruction}` : null),
+        // Same wording the backend speaks (pipeline/process.py, learn/i18n.py), so the line can be
+        // voiced on demand while the lesson's own narration is still being made.
+        narration_text: s.narration_text ?? (translated ? `${index}. ${stepTitle}. ${instruction}` : `Step ${index}. ${stepTitle}. ${instruction}`),
       }
     }),
   }
@@ -266,7 +281,7 @@ export const learnApi = {
 
 export const learnKeys = {
   lessons: (user: string) => ['learn', 'lessons', user] as const,
-  lesson: (id: string) => ['learn', 'lesson', id] as const,
+  lesson: (id: string, lang = 'en') => ['learn', 'lesson', id, lang] as const,
   progress: ['learn', 'progress'] as const,
   robot: (id: string) => ['learn', 'robot', id] as const,
   reflex: ['reflex', 'status'] as const,
@@ -278,8 +293,31 @@ export function useLessonList() {
   return useQuery({ queryKey: learnKeys.lessons(persona), queryFn: fetchLessons })
 }
 
-export const useLessonDetail = (skillId: string | undefined) =>
-  useQuery({ queryKey: learnKeys.lesson(skillId ?? ''), queryFn: () => fetchLesson(skillId!), enabled: Boolean(skillId), staleTime: 60_000 })
+/** The lesson in `lang`. Keeps showing the previous language while a translation loads, and polls until its narration is voiced. */
+export const useLessonDetail = (skillId: string | undefined, lang = 'en') =>
+  useQuery({
+    queryKey: learnKeys.lesson(skillId ?? '', lang),
+    queryFn: () => fetchLesson(skillId!, lang),
+    enabled: Boolean(skillId),
+    staleTime: 60_000,
+    placeholderData: (prev) => (prev?.skill_id === skillId ? prev : undefined),
+    refetchInterval: (q) => {
+      const d = q.state.data
+      const waiting = d && (d.steps.some((s) => !s.narration_audio) || !d.intro_audio)
+      return waiting && q.state.dataUpdateCount < 60 ? 5000 : false
+    },
+  })
+
+export interface IntroMusic {
+  audio: string
+  duration: number
+  model: string
+  chip: number
+  credit: string
+}
+
+export const useIntroMusic = () =>
+  useQuery({ queryKey: ['music', 'intro'], queryFn: () => request<IntroMusic>('/api/music/intro'), staleTime: Infinity, retry: false })
 
 export const useTeamProgress = () => useQuery({ queryKey: learnKeys.progress, queryFn: learnApi.progress, refetchInterval: 10_000 })
 

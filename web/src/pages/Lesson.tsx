@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Camera, Clock, Eye, GraduationCap, Hand, Layers, ListChecks, ShieldAlert, Volume2 } from 'lucide-react'
+import { Camera, Clock, Eye, GraduationCap, Hand, Languages, Layers, ListChecks, Loader2, ShieldAlert, Volume2 } from 'lucide-react'
 import { Page, PageHeader } from '@/components/layout/Page'
-import { Avatar, Badge, ButtonLink, Button, EmptyState, ErrorState, Segmented, Skeleton, VerifiedBadge } from '@/components/ui'
+import { Avatar, Badge, ButtonLink, Button, EmptyState, ErrorState, Segmented, Select, Skeleton, VerifiedBadge } from '@/components/ui'
 import { ApiError, type Skill, type Tracks } from '@/lib/api'
 import { useSkill, useTracks, useUsers } from '@/lib/api/queries'
 import { useLessonDetail, useLessonList, type LessonDetail } from '@/lib/api/learn'
@@ -11,13 +11,13 @@ import { usePlayback } from '@/lib/playback'
 import { useApp } from '@/lib/store'
 import { AskExpert } from '@/features/learn/AskExpert'
 import { LessonContext, type LessonCtx } from '@/features/learn/context'
-import { useNarration } from '@/features/learn/narration'
 import { PracticeStage } from '@/features/learn/PracticeStage'
 import { QuizPanel } from '@/features/learn/QuizPanel'
 import { StepDetail } from '@/features/learn/StepDetail'
 import { StepRail } from '@/features/learn/StepRail'
 import { useLesson, type LessonMode } from '@/features/learn/store'
-import { WatchStage } from '@/features/learn/WatchStage'
+import { TUTOR_LANGS } from '@/features/learn/useTutor'
+import { useIntro, WatchStage } from '@/features/learn/WatchStage'
 import { GuideStage } from '@/features/reflex/GuideStage'
 
 const MODES: { key: LessonMode; label: string; icon: React.ReactNode; hint: (name: string) => string }[] = [
@@ -43,7 +43,27 @@ function useShortcuts() {
   }, [])
 }
 
-function LessonHeader({ lesson, skill, passed }: { lesson: LessonDetail; skill: Skill | undefined; passed: boolean }) {
+/** One language for the lesson text, its narration and the tutor's answers. */
+function LanguagePicker({ lesson, translating }: { lesson: LessonDetail; translating: boolean }) {
+  const lang = useApp((s) => s.lang)
+  const setLang = useApp((s) => s.setLang)
+  const offered = lesson.languages.length ? TUTOR_LANGS.filter((l) => lesson.languages.some((x) => x.code === l.code)) : TUTOR_LANGS
+  return (
+    <label className="flex items-center gap-2" title="Lesson language: text, narration and the tutor's answers">
+      {translating ? <Loader2 className="size-4 animate-spin text-ion" aria-hidden /> : <Languages className="size-4 text-fg-subtle" aria-hidden />}
+      <span className="sr-only">Lesson language</span>
+      <Select value={lang} onChange={(e) => setLang(e.target.value)} className="w-[124px]" data-testid="lesson-lang">
+        {offered.map((l) => (
+          <option key={l.code} value={l.code}>
+            {l.label}
+          </option>
+        ))}
+      </Select>
+    </label>
+  )
+}
+
+function LessonHeader({ lesson, skill, passed, translating }: { lesson: LessonDetail; skill: Skill | undefined; passed: boolean; translating: boolean }) {
   const persona = useApp((s) => s.persona)
   const users = useUsers()
   const me = users.data?.find((u) => u.id === persona)
@@ -52,8 +72,10 @@ function LessonHeader({ lesson, skill, passed }: { lesson: LessonDetail; skill: 
   const goStep = useLesson((s) => s.goStep)
   const narrate = useLesson((s) => s.narrate)
   const setNarrate = useLesson((s) => s.setNarrate)
-  const play = useNarration((s) => s.play)
+  const playIntro = useIntro()
   const done = Object.values(practice).filter((p) => p.done != null).length
+  const voiced = lesson.steps.filter((s) => s.narration_audio).length
+  const langName = TUTOR_LANGS.find((l) => l.code === lesson.lang)?.label ?? lesson.lang
   const duration = skill?.source.duration ?? lesson.steps.at(-1)?.t_end ?? null
   return (
     <PageHeader
@@ -80,26 +102,35 @@ function LessonHeader({ lesson, skill, passed }: { lesson: LessonDetail; skill: 
               {done}/{lesson.steps.length} practised
             </Badge>
           ) : null}
+          {translating ? (
+            <Badge tone="ion" dot pulse data-testid="lesson-translating">
+              Translating with gpt-oss-20b…
+            </Badge>
+          ) : lesson.lang !== 'en' ? (
+            <Badge tone={voiced === lesson.steps.length ? 'ok' : 'neutral'} icon={<Languages className="size-3" />} data-testid="lesson-lang-status">
+              {langName}
+              {voiced < lesson.steps.length && <span className="telemetry opacity-80">· narration {voiced}/{lesson.steps.length}</span>}
+            </Badge>
+          ) : null}
           {me && <span className="text-xs text-fg-subtle">Learning as {me.name}</span>}
         </>
       }
       actions={
         <>
-          {lesson.intro_audio && (
-            <Button
-              variant="secondary"
-              icon={<Volume2 className="size-4" />}
-              onClick={() => {
-                if (!narrate) setNarrate(true)
-                setMode('watch')
-                goStep(1)
-                play({ key: 'intro', audio: lesson.intro_audio!, text: lesson.intro_text })
-              }}
-              data-testid="play-intro"
-            >
-              Play intro
-            </Button>
-          )}
+          <LanguagePicker lesson={lesson} translating={translating} />
+          <Button
+            variant="secondary"
+            icon={<Volume2 className="size-4" />}
+            onClick={() => {
+              if (!narrate) setNarrate(true)
+              setMode('watch')
+              goStep(1)
+              playIntro()
+            }}
+            data-testid="play-intro"
+          >
+            Play intro
+          </Button>
           <ButtonLink to={`/skills/${lesson.skill_id}`} variant="ghost" icon={<Layers className="size-4" />}>
             Skill record
           </ButtonLink>
@@ -139,7 +170,7 @@ function ModeBar({ expert }: { expert: string }) {
   )
 }
 
-function LessonPlayer({ lesson, skill, tracks, passed }: { lesson: LessonDetail; skill: Skill | undefined; tracks: Tracks | undefined; passed: boolean }) {
+function LessonPlayer({ lesson, skill, tracks, passed, translating }: { lesson: LessonDetail; skill: Skill | undefined; tracks: Tracks | undefined; passed: boolean; translating: boolean }) {
   const reset = useLesson((s) => s.reset)
   const stepIndex = useLesson((s) => s.step)
   const view = useLesson((s) => s.view)
@@ -166,7 +197,7 @@ function LessonPlayer({ lesson, skill, tracks, passed }: { lesson: LessonDetail;
 
   return (
     <LessonContext.Provider value={ctx}>
-      <LessonHeader lesson={lesson} skill={skill} passed={passed} />
+      <LessonHeader lesson={lesson} skill={skill} passed={passed} translating={translating} />
       <div className="grid items-start gap-4 lg:grid-cols-[232px_minmax(0,1fr)] xl:grid-cols-[248px_minmax(0,1fr)_368px]">
         <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-[calc(var(--header-h)+16px)]">
           <StepRail lesson={lesson} quizPassed={passed} />
@@ -212,7 +243,9 @@ function LessonSkeleton() {
 
 export default function LessonPage() {
   const { skillId } = useParams()
-  const lesson = useLessonDetail(skillId)
+  const lang = useApp((s) => s.lang)
+  const lesson = useLessonDetail(skillId, lang)
+  const translating = lesson.isPlaceholderData && lesson.isFetching
   const skill = useSkill(skillId)
   const tracks = useTracks(skillId)
   const lessons = useLessonList()
@@ -242,7 +275,7 @@ export default function LessonPage() {
           The skill is still being processed. Its lesson appears when the steps are written.
         </EmptyState>
       ) : lesson.data ? (
-        <LessonPlayer lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} />
+        <LessonPlayer lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} translating={translating} />
       ) : null}
     </Page>
   )
