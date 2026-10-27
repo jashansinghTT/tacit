@@ -44,10 +44,17 @@ export default defineConfig({
     chunkSizeWarningLimit: 1800,
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          charts: ['recharts'],
-          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'zustand', 'framer-motion'],
+        // Assign packages precisely. A static list let Rollup park shared dependencies (scheduler,
+        // clsx) in the three or charts chunk, which made every first load preload both.
+        manualChunks(id) {
+          // Vite's preload helper and the CommonJS interop helpers are used by every lazy route
+          if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) return 'vendor'
+          if (!id.includes('node_modules')) return undefined
+          if (/node_modules\/(three|@react-three|three-stdlib|troika-[^/]+|camera-controls|maath|meshline|stats-gl|@monogrid)\//.test(id)) return 'three'
+          if (/node_modules\/(recharts|recharts-scale|d3-[^/]+|victory-vendor|internmap)\//.test(id)) return 'charts'
+          // small helpers several chunks share (babel runtime, clsx, prop-types, react-is) live in vendor too
+          if (/node_modules\/(react|react-dom|react-is|scheduler|react-router|react-router-dom|@remix-run|@tanstack|zustand|framer-motion|motion-dom|motion-utils|@babel\/runtime|clsx|prop-types|use-sync-external-store|tiny-invariant|eventemitter3)\//.test(id)) return 'vendor'
+          return undefined
         },
       },
     },
