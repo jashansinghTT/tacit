@@ -107,7 +107,11 @@ def test_2_sample_process_ready(api, rec, processed):
     pc = api.get(v["pointcloud"])
     assert pc.status_code == 200 and int(pc.headers.get("x-points", 0)) > 1000, f"point cloud: {pc.status_code} {pc.headers.get('x-points')}"
     assert sk["sop_markdown"].lstrip().startswith("#") and len(sk["sop_markdown"]) > 200, "SOP missing or empty"
-    assert sk.get("quiz"), "no quiz"
+    quiz = sk.get("quiz") or []
+    assert len(quiz) >= 3, f"quiz has {len(quiz)} questions"
+    for q in quiz:
+        assert q.get("q") and len(q.get("choices") or []) >= 2 and 0 <= q.get("answer", -1) < len(q["choices"]), f"bad quiz item {q}"
+    assert len({q["answer"] for q in quiz}) > 1, f"every quiz answer is choice {quiz[0]['answer']}: a trainee can pass by always picking it"
     assert sk.get("safety") is not None
     assert (sk.get("robot") or {}).get("program"), "no robot program"
     used = {m["model"]: m for m in sk.get("models_used", [])}
@@ -636,6 +640,10 @@ def test_7_box_nine_models_four_chips(api, rec):
     q = box.get("speech_queue")
     assert q is not None and {"interactive", "batch", "busy"} <= set(q), f"no speech_queue in /api/box: {q}"
     rec.note(f"speech queue: {q}")
+    gr = next(m for c in box["chips"] for m in c["models"] if m["name"].startswith("GR00T"))
+    rec.note(f"GR00T on the Box: {gr['calls']} calls, p50 {gr['p50_ms']} ms")
+    if any(r["flow"] == 5 and r["outcome"] == "passed" for r in __import__("conftest").RESULTS.values()):
+        assert gr["calls"] > 0 and gr["p50_ms"], f"the Box does not count the GR00T run F5 just made: {gr}"
     idle = [m["name"] for c in box["chips"] for m in c["models"] if m.get("p50_ms") is None]
     if idle:
         rec.note(f"no latency yet (no calls since start): {idle}")

@@ -154,7 +154,9 @@ it is fixed.
 
 ## QA-11 backend: a skill can come out of processing with no quiz (and no safety notes)
 
-- Owner: backend (lead). State: open (after the freeze). Found 2026-10-27 21:24Z.
+- Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z): quiz validated and retried, filled in the
+  background if still missing; QA re-checked `sk_3b7c613d` at 21:45Z: 3 questions, 3 safety notes. Follow-up:
+  every answer index was 0 (fixed by the choice shuffle 1d97d12, next deploy; API F2 now checks it). Found 21:24Z.
 - Seen: seeded `sk_3b7c613d` ("Candle Jar and Bottle Check", processed by `job_b1da2fd4`, all stages done) has
   `quiz: []` and `safety: []`, while its SOP is there; the Lesson shows "Quiz and certificate: 0 questions", so
   a trainee cannot earn the certificate. `writer.write_documents` retries the quiz once and then returns an empty
@@ -166,7 +168,8 @@ it is fixed.
 
 ## QA-12 backend: the listing page returns 500 for every skill with a trained policy
 
-- Owner: backend (lead). State: open, blocks F6 in both suites. Found 2026-10-27 21:28Z.
+- Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z); QA re-checked `lst_49b25ff3`: 200 at
+  21:45Z. F6 re-verifies on a trained skill in the release runs. Found 2026-10-27 21:28Z.
 - Seen: API release run #1 (`runs/20261027T210713Z-api`) F6: `GET /api/exchange/listings/{id}` returned
   `500 Internal Server Error` (text/plain) after F5 had trained the skill. Reproduced on the seeded listing
   `lst_49b25ff3` (`sk_3b7c613d`). Traceback (backend.log 21:20:00Z): `market._count_episodes` does
@@ -178,7 +181,9 @@ it is fixed.
 
 ## QA-13 backend (writer): the same sample sometimes becomes a one-step skill
 
-- Owner: backend (lead). State: open. Found 2026-10-27 21:30Z.
+- Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z): observed interactions are split back into
+  their own steps ("title (n of m)"), robot program normalised; re-verify in the release runs (F2 >= 3 steps).
+  Found 2026-10-27 21:30Z.
 - Seen: smp_vase processed twice within minutes under the freeze, identical perception (445 frames, 430 with
   hands, "5 steps; objects: vase" from the step stage). API run #1's skill `sk_bcba9454`: 5 steps. UI run #1's
   skill `sk_390b7e27`: **1 step**, "Insert Stem into Vase", 6.8 to 44.4 s, so browser F2 failed (>= 3 steps).
@@ -191,7 +196,8 @@ it is fixed.
 
 ## QA-14 backend (Box): GR00T always shows 0 calls and no latency
 
-- Owner: backend (lead). State: open (low). Found 2026-10-27 21:33Z.
+- Owner: backend (lead). State: fixed in e0061bd (deployed 21:31:55Z): GR00T calls from the run stream count
+  toward chip 3; re-verify in the release runs (F7 after F5). Found 2026-10-27 21:33Z.
 - Seen: right after API run #1's F5 GR00T run (34 GR00T queries, p50 113 ms from the run's `gr00t` messages),
   `/api/box` reports `GR00T N1.7 calls 0, p50 None`. The sim's GR00T loop calls :21030 directly, so the backend's
   per-model stats never see it; the Box page (the "nine models on one box" proof) shows chip 3 idle.
