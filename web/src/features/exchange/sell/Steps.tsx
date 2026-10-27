@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Bot, Check, CircleAlert, CircleCheck, CircleX, Factory, Lock, MessageSquareQuote, Pencil, ScanEye, UserRound } from 'lucide-react'
 import type { LicenseType, Skill } from '@/lib/api'
-import { fmtDate, fmtMoney, fmtPct } from '@/lib/format'
+import { fmtDate, fmtMoney, fmtPct, fmtScorePct } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { Badge, Button, CheckRow, Field, Slider, TextInput } from '@/components/ui'
 import { DEFAULT_PRICE, INDUSTRIES, LICENSES, robotLabel, ROBOT_TYPES, royaltySplit } from '../meta'
@@ -62,7 +62,7 @@ export function CheckStep({ skill, expertName }: StepProps) {
         />
         <CheckItem
           ok={e.verified}
-          title={e.verified ? `Verified as a real recording (score ${v.score?.toFixed(2) ?? '–'})` : v?.status === 'suspect' ? 'Failed the real-camera check' : 'Not verified yet'}
+          title={e.verified ? `Verified as a real recording (score ${fmtScorePct(v.score)})` : v?.status === 'suspect' ? 'Failed the real-camera check' : 'Not verified yet'}
           detail={
             e.verified
               ? `VGGT rebuilt the scene from ${String(v.details?.views ?? 4)} views and they agree on one rigid scene.`
@@ -388,7 +388,7 @@ export function ReviewStep({ skill, draft, goto, expertName }: StepProps & { got
         <ReviewRow label="Skill" onEdit={() => goto('check')}>
           {skill.title}
           <div className="mt-1 flex flex-wrap gap-1.5">
-            <Badge tone="ok">Verified {skill.verification.score?.toFixed(2)}</Badge>
+            <Badge tone="ok">Verified {fmtScorePct(skill.verification.score)}</Badge>
             <Badge>{skill.steps.length} steps</Badge>
           </div>
         </ReviewRow>

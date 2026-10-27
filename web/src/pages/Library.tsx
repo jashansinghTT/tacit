@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Download, FileSignature, Library as LibraryIcon, ShieldCheck, Store } from 'lucide-react'
 import type { ExLibraryItem } from '@/lib/api/exchange'
-import { fmtDate, fmtInt, fmtMoney } from '@/lib/format'
+import { fmtDate, fmtInt, fmtMoney, fmtScorePct } from '@/lib/format'
 import { personaOf, useApp } from '@/lib/store'
 import { cn } from '@/lib/cn'
 import { Page, PageHeader } from '@/components/layout/Page'
@@ -28,7 +28,7 @@ function Inside({ listingId, skillId, type }: { listingId: string; skillId: stri
           <div>
             <div className="text-fg">Verification certificate</div>
             <div className="text-xs text-fg-subtle">
-              {v?.method ?? 'VGGT multi-view consistency'}: score <span className="telemetry text-fg-muted">{v?.score?.toFixed(2) ?? '–'}</span>, {v?.status ?? 'pending'}
+              {v?.method ?? 'VGGT multi-view consistency'}: score <span className="telemetry text-fg-muted">{fmtScorePct(v?.score)}</span>, {v?.status ?? 'pending'}
             </div>
           </div>
         </div>

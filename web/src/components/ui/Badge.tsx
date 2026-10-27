@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react'
+import { fmtScorePct } from '@/lib/format'
 import { Cpu, Database, FlaskConical, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Backend, ServedBy, VerificationStatus } from '@/lib/api'
@@ -64,13 +65,13 @@ export function VerifiedBadge({ status, score, size }: { status: VerificationSta
   if (status === 'verified')
     return (
       <Badge tone="ok" size={size} icon={<ShieldCheck className="size-3" aria-hidden />}>
-        Verified{score != null && <span className="telemetry opacity-80">{score.toFixed(2)}</span>}
+        Verified{score != null && <span className="telemetry opacity-80">{fmtScorePct(score)}</span>}
       </Badge>
     )
   if (status === 'suspect')
     return (
       <Badge tone="fault" size={size} icon={<ShieldAlert className="size-3" aria-hidden />}>
-        Suspect{score != null && <span className="telemetry opacity-80">{score.toFixed(2)}</span>}
+        Suspect{score != null && <span className="telemetry opacity-80">{fmtScorePct(score)}</span>}
       </Badge>
     )
   return (

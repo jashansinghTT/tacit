@@ -2,7 +2,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Download, FileText, Printer } from 'lucide-react'
 import type { Skill } from '@/lib/api'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, fmtScorePct } from '@/lib/format'
 import { Button, Panel } from '@/components/ui'
 
 function download(name: string, text: string, type = 'text/markdown') {
@@ -62,7 +62,7 @@ export function SopTab({ skill }: { skill: Skill }) {
               ['Expert', skill.expert.name],
               ['Captured', fmtDate(skill.created_at)],
               ['Steps', String(skill.steps.length)],
-              ['Verification', skill.verification.status === 'verified' ? `Verified, ${skill.verification.score?.toFixed(2)}` : skill.verification.status],
+              ['Verification', skill.verification.status === 'verified' ? `Verified, ${fmtScorePct(skill.verification.score)}` : skill.verification.status],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3">
                 <dt className="text-fg-subtle">{k}</dt>

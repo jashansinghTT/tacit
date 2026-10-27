@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Bot, Clock, FileSignature, Layers, ShieldCheck, ShieldQuestion } from 'lucide-react'
 import type { Listing } from '@/lib/api'
 import type { ExListing } from '@/lib/api/exchange'
-import { fmtDuration, fmtInt, fmtMoney } from '@/lib/format'
+import { fmtDuration, fmtInt, fmtMoney, fmtScorePct } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { Avatar, Badge, Spotlight } from '@/components/ui'
 import { MotionSignature } from '@/features/exchange/MotionSignature'
@@ -36,7 +36,7 @@ export function ListingCard({ l: listing, className }: { l: Listing | ExListing;
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {l.verified ? (
               <Badge tone="ok" icon={<ShieldCheck className="size-3" />} className="backdrop-blur" title="VGGT verified: a real camera recording">
-                Verified{score != null && <span className="telemetry opacity-80">{score.toFixed(2)}</span>}
+                Verified{score != null && <span className="telemetry opacity-80">{fmtScorePct(score)}</span>}
               </Badge>
             ) : (
               <Badge icon={<ShieldQuestion className="size-3" />} className="bg-ink-950/60 backdrop-blur">
