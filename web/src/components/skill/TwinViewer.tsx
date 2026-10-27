@@ -108,35 +108,73 @@ function Gaze({ frame }: { frame: MutableRefObject<TwinFrame | undefined> }) {
   )
 }
 
-function Objects({ frame, highlight }: { frame: MutableRefObject<TwinFrame | undefined>; highlight?: string | null }) {
+/**
+ * Object markers across the whole clip: one slot per label occurrence ("vase", "vase#2", ...),
+ * so labels stay stable while detections come and go; a slot hides on frames without it.
+ */
+function objectSlots(twin: Twin) {
+  const slots: string[] = []
+  for (const f of twin.frames) {
+    const seen = new Map<string, number>()
+    for (const o of f.objects) {
+      const n = (seen.get(o.label) ?? 0) + 1
+      seen.set(o.label, n)
+      const key = n === 1 ? o.label : `${o.label}#${n}`
+      if (!slots.includes(key)) slots.push(key)
+    }
+  }
+  return slots
+}
+
+function Objects({ twin, frame, highlight }: { twin: Twin; frame: MutableRefObject<TwinFrame | undefined>; highlight?: string | null }) {
   const group = useRef<THREE.Group>(null)
-  const labels = useMemo(() => frame.current?.objects.map((o) => o.label) ?? [], [frame])
+  const labels = useRef<(HTMLDivElement | null)[]>([])
+  const slots = useMemo(() => objectSlots(twin), [twin])
   useFrame(() => {
-    const objs = frame.current?.objects
-    if (!objs || !group.current) return
-    group.current.children.forEach((c, i) => {
-      const o = objs[i]
-      if (!o) {
-        c.visible = false
-        return
-      }
-      c.visible = true
-      c.position.set(...o.pos)
+    const objs = frame.current?.objects ?? []
+    const g = group.current
+    if (!g) return
+    const pos = new Map<string, Vec3>()
+    const seen = new Map<string, number>()
+    for (const o of objs) {
+      const n = (seen.get(o.label) ?? 0) + 1
+      seen.set(o.label, n)
+      pos.set(n === 1 ? o.label : `${o.label}#${n}`, o.pos)
+    }
+    g.children.forEach((c, i) => {
+      const p = pos.get(slots[i])
+      c.visible = Boolean(p)
+      if (p) c.position.set(...p)
+      // drei's Html keeps drawing inside hidden groups, so hide the label element too
+      const el = labels.current[i]
+      if (el) el.style.display = p ? '' : 'none'
     })
   })
   return (
     <group ref={group}>
-      {labels.map((l, i) => (
-        <group key={`${l}-${i}`}>
-          <mesh>
-            <octahedronGeometry args={[0.012]} />
-            <meshBasicMaterial color={l === highlight ? '#ffffff' : '#7cf5c4'} toneMapped={false} />
-          </mesh>
-          <Html center position={[0, 0.045, 0]} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-            <span className={`telemetry rounded-sm px-1.5 py-0.5 text-[10px] whitespace-nowrap ${l === highlight ? 'bg-white text-ink-950' : 'bg-ink-950/80 text-data-object'}`}>{l}</span>
-          </Html>
-        </group>
-      ))}
+      {slots.map((key, i) => {
+        const label = key.split('#')[0]
+        const hl = label === highlight
+        return (
+          <group key={key} visible={false}>
+            <mesh>
+              <octahedronGeometry args={[0.012]} />
+              <meshBasicMaterial color={hl ? '#ffffff' : '#7cf5c4'} toneMapped={false} />
+            </mesh>
+            <Html
+              ref={(el) => {
+                labels.current[i] = el
+              }}
+              center
+              position={[0, 0.045, 0]}
+              zIndexRange={[10, 0]}
+              style={{ pointerEvents: 'none', display: 'none' }}
+            >
+              <span className={`telemetry rounded-sm px-1.5 py-0.5 text-[10px] whitespace-nowrap ${hl ? 'bg-white text-ink-950' : 'bg-ink-950/80 text-data-object'}`}>{label}</span>
+            </Html>
+          </group>
+        )
+      })}
     </group>
   )
 }
@@ -167,7 +205,7 @@ function TwinScene({ twin, timeRef, layers, cloud, highlight }: { twin: Twin; ti
         </>
       )}
       {layers.gaze && <Gaze frame={frame} />}
-      {layers.objects && <Objects frame={frame} highlight={highlight} />}
+      {layers.objects && <Objects twin={twin} frame={frame} highlight={highlight} />}
       <CameraRig view={view} />
       <OrbitControls target={view.target} enableDamping makeDefault minDistance={0.3} maxDistance={5} />
     </>

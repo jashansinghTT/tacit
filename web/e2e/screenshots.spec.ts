@@ -37,7 +37,7 @@ for (const [name, path, testId] of STATIC) {
 test('screenshot skill tabs', async ({ page }) => {
   test.setTimeout(180_000)
   await openReadySkill(page)
-  for (const tab of ['overview', 'twin', 'sop', 'verify', 'answer']) {
+  for (const tab of ['overview', 'twin', 'sop', 'verify', 'answer', 'audit']) {
     if (tab !== 'overview') await page.getByTestId(`tab-${tab}`).click()
     await page.waitForTimeout(tab === 'twin' || tab === 'verify' ? 6000 : 2500)
     await page.screenshot({ path: `${out}skill-${tab}.png`, fullPage: true })
