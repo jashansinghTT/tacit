@@ -192,7 +192,7 @@ export default function SellPage() {
             crumbs={[{ label: 'Skill Exchange', to: '/exchange' }, { label: 'List a skill' }]}
             eyebrow="List this skill"
             title={s.title}
-            description={`Recorded by ${expertName}${expertUser?.title ? `, ${expertUser.title.toLowerCase()}` : ''}. Six steps from a verified skill to a live listing that pays its expert.`}
+            description={`Recorded by ${expertName}${expertUser?.title ? `, ${expertUser.title.toLowerCase()}` : ''}. List it in six short steps, from consent to a live listing that pays its expert.`}
           />
           {published ? (
             <Published listing={published} skill={s} />

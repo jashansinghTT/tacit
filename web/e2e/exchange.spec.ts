@@ -109,34 +109,31 @@ test.describe.serial('Skill Exchange: list, license, download, earn', () => {
     test.skip(!real, 'needs the real Tacit backend behind the base URL')
   })
 
+  // Never list or license demo data: the suite works only on Maria's test skills ("QA …", test: true),
+  // and teardown deletes the listing it made (with its licence and ledger entry) so runs repeat.
+  test.afterAll(async ({ request }) => {
+    if (!state.listedHere || !state.listing) return
+    const r = await request.delete(`/api/exchange/listings/${state.listing.id}`, { headers: { 'X-Tacit-User': EXPERT } })
+    expect(r.ok(), `teardown: delete test listing ${state.listing.id} -> ${r.status()}`).toBeTruthy()
+  })
+
   test('Maria lists a verified skill through the wizard', async ({ page, request }) => {
-    const skills = await api<SkillRow[]>(request, `/api/skills?expert_id=${EXPERT}`)
-    const listable = skills.filter((s) => s.status === 'ready' && s.verification_status === 'verified' && !s.listed && !s.test && !/^QA\b/.test(s.title))
-    // E2E_SKILL picks one; otherwise prefer a skill recorded from a sample clip over a live test capture.
+    const skills = await api<SkillRow[]>(request, `/api/skills?expert_id=${EXPERT}&include_test=1`)
+    const isTest = (s: SkillRow) => Boolean(s.test) || /^QA\b/.test(s.title)
+    const listable = skills.filter((s) => isTest(s) && s.status === 'ready' && s.verification_status === 'verified' && !s.listed)
+    // E2E_SKILL picks one; otherwise prefer a test skill recorded from a sample clip.
     const candidate = process.env.E2E_SKILL
       ? listable.find((s) => s.id === process.env.E2E_SKILL)
       : (listable.find((s) => s.source_kind === 'sample') ?? listable[0])
-    const listings = await api<ListingRow[]>(request, '/api/exchange/listings')
     state.earnedBefore = (await api<{ total: number }>(request, '/api/earnings')).total
-
-    if (!candidate) {
-      // Every verified skill is already listed (an earlier run): license one of Maria's listings.
-      const existing = listings.find((l) => l.expert.id === EXPERT)
-      test.skip(!existing, 'no ready, verified skill for Maria and no listing of hers: process a sample first')
-      state.listing = existing
-      state.skillId = existing!.skill_id
-      test.info().annotations.push({ type: 'note', description: `no unlisted verified skill; licensing existing listing ${existing!.id}` })
-      return
-    }
+    test.skip(!candidate, 'no ready, verified test ("QA …") skill of Maria\'s to list: capture or process one with a QA title first')
+    if (!candidate) return
 
     state.skillId = candidate.id
     const errors = watchConsole(page)
     await asPersona(page, EXPERT)
-    await page.goto('/exchange')
-    await expect(page.getByTestId('page-exchange')).toBeVisible()
-    await page.getByTestId('list-skill').click()
-    await expect(page.getByTestId('sell-picker')).toBeVisible()
-    await page.getByTestId(`sell-pick-${candidate.id}`).click()
+    // the picker lists public skills only; a test skill's wizard opens by id
+    await page.goto(`/exchange/sell/${candidate.id}`)
 
     // 1 check
     await expect(page.getByTestId('sell-step-check')).toBeVisible()
@@ -168,7 +165,7 @@ test.describe.serial('Skill Exchange: list, license, download, earn', () => {
     await expect(page.getByTestId('sell-published')).toBeVisible({ timeout: 30_000 })
     await shot(page, 'e2e-04-sell-published')
 
-    const after = await api<ListingRow[]>(request, '/api/exchange/listings')
+    const after = await api<ListingRow[]>(request, '/api/exchange/listings?include_test=1')
     const mine = after.find((l) => l.skill_id === candidate.id)
     expect(mine, 'the new listing is on the Exchange').toBeTruthy()
     expect(mine!.royalty_split.expert).toBeCloseTo(0.7, 2)
@@ -183,11 +180,8 @@ test.describe.serial('Skill Exchange: list, license, download, earn', () => {
     test.skip(!l, 'no listing from the previous step')
     const errors = watchConsole(page)
     await asPersona(page, BUYER)
-    await page.goto('/exchange')
-    const card = page.getByTestId(`listing-${l!.id}`)
-    await expect(card).toBeVisible()
-    await shot(page, 'e2e-05-exchange-grid')
-    await card.click()
+    // test listings stay off the public grid: open it directly
+    await page.goto(`/exchange/${l!.id}`)
 
     await expect(page.getByTestId('page-listing')).toBeVisible()
     await expect(page.getByTestId('listing-title')).toHaveText(l!.title)

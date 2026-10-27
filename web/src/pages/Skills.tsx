@@ -6,21 +6,17 @@ import type { SkillSummary } from '@/lib/api'
 import { fmtAgo, fmtDuration } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { Page, PageHeader } from '@/components/layout/Page'
-import { Badge, ButtonLink, EmptyState, ErrorState, Panel, Segmented, Skeleton, Spotlight, TextInput, VerifiedBadge } from '@/components/ui'
-
-const STATUS_TONE = { ready: 'ok', processing: 'ion', draft: 'neutral', failed: 'fault' } as const
+import { Badge, ButtonLink, EmptyState, ErrorState, Panel, Segmented, SkillStatusBadge, Skeleton, Spotlight, TextInput, VerifiedBadge } from '@/components/ui'
 
 export function SkillCard({ s }: { s: SkillSummary }) {
   return (
-    <Spotlight className="panel group overflow-hidden rounded-xl">
+    <Spotlight className="panel group overflow-hidden rounded-xl has-[:focus-visible]:shadow-[0_0_0_2px_var(--color-ion),0_0_28px_-6px_rgb(60_215_255/0.7)]">
       <Link to={`/skills/${s.id}`} className="flex h-full flex-col outline-none" data-testid={`skill-card-${s.id}`}>
         <div className="relative aspect-video overflow-hidden bg-ink-950">
           {s.thumb ? <img src={s.thumb} alt="" loading="lazy" className="size-full object-cover opacity-85 transition-transform duration-500 group-hover:scale-[1.03]" /> : <div className="size-full grid-bg" />}
           <div className="absolute inset-0 bg-gradient-to-t from-ink-850 via-ink-850/10 to-transparent" />
           <div className="absolute top-3 left-3 flex gap-1.5">
-            <Badge tone={STATUS_TONE[s.status]} dot pulse={s.status === 'processing'} className="bg-ink-950/70 backdrop-blur">
-              {s.status === 'processing' ? 'Processing' : s.status[0].toUpperCase() + s.status.slice(1)}
-            </Badge>
+            <SkillStatusBadge status={s.status} className="bg-ink-950/70 backdrop-blur" />
             {s.listed && (
               <Badge tone="violet" icon={<Store className="size-3" />} className="backdrop-blur">
                 Listed

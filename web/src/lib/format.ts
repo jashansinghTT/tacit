@@ -41,6 +41,15 @@ export function fmtPct(v: number | null | undefined, digits = 0) {
   return `${(v * 100).toFixed(digits)}%`
 }
 
+/**
+ * A verification (or match) score in 0..1 as a whole percent, rounded the same way as the score
+ * ring, so "24" on a ring and "24%" in a badge always agree.
+ */
+export function fmtScorePct(v: number | null | undefined) {
+  if (v === null || v === undefined || Number.isNaN(v)) return '–'
+  return `${Math.round(v * 100)}%`
+}
+
 export function fmtScore(v: number | null | undefined) {
   if (v === null || v === undefined) return '–'
   return v.toFixed(2)

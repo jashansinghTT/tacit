@@ -4,7 +4,7 @@ import { Award, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { api, type Skill, type VerificationStatus } from '@/lib/api'
 import { qk, usePointcloud, useJob, useSampleVerify, useSamples } from '@/lib/api/queries'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, fmtScorePct } from '@/lib/format'
 import { Badge, Button, ChipTag, Meter, Panel, ScoreRing, Skeleton, toast } from '@/components/ui'
 import { ProcessingPanel } from './ProcessingPanel'
 import { cloudView, type View } from './twinView'
@@ -177,7 +177,7 @@ export function VerifyTab({ skill }: { skill: Skill }) {
                 </div>
                 <div className="mt-6 grid grid-cols-2 gap-4 text-[13px] sm:grid-cols-4">
                   {[
-                    ['Score', v.score?.toFixed(2) ?? '–'],
+                    ['Score', fmtScorePct(v.score)],
                     ['Method', 'VGGT-1B'],
                     ['Consent', skill.consent.signed_by ? 'Signed' : 'Missing'],
                     ['Raw video', 'Not shared'],

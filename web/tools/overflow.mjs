@@ -1,10 +1,10 @@
 // Reports horizontal page overflow per route and width (the design bar: no horizontal scroll).
 import { chromium } from '@playwright/test'
 const base = process.argv[2] ?? 'http://127.0.0.1:5719'
-const routes = process.argv.slice(3).length ? process.argv.slice(3) : ['/', '/studio', '/skills', '/skills/sk_sort', '/skills/sk_sort?tab=twin', '/skills/sk_sort?tab=verify', '/skills/sk_sort?tab=audit', '/skills/sk_sort?tab=sop', '/skills/sk_sort?tab=answer', '/box', '/nope']
+const routes = process.argv.slice(3).length ? process.argv.slice(3) : ['/', '/studio', '/skills', '/skills/sk_sort', '/skills/sk_sort?tab=twin', '/skills/sk_sort?tab=verify', '/skills/sk_sort?tab=audit', '/skills/sk_sort?tab=sop', '/skills/sk_sort?tab=answer', '/learn', '/learn/sk_sort', '/team', '/robot', '/robot/sk_sort', '/exchange', '/exchange/lst_sort', '/exchange/sell/sk_bearing', '/library', '/earnings', '/box', '/nope']
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] })
 let bad = 0
-for (const width of [1024, 1280, 1920]) {
+for (const width of (process.env.WIDTHS ?? '1024,1280,1920').split(',').map(Number)) {
   const page = await browser.newPage({ viewport: { width, height: 900 } })
   for (const r of routes) {
     await page.goto(base + r, { waitUntil: 'networkidle' })

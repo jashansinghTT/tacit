@@ -330,7 +330,7 @@ export default function StudioPage() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(340px,4fr)]">
         <div className="min-w-0 space-y-4">
           {cap.phase === 'idle' && (
-            <Panel data-tour="studio-source" title="Source" actions={<Segmented<Source> label="Capture source" value={source} onChange={setSource} items={[{ key: 'webcam', label: 'Webcam', icon: <Camera className="size-3.5" /> }, { key: 'sample', label: 'Sample', icon: <Film className="size-3.5" /> }, { key: 'upload', label: 'Upload', icon: <Upload className="size-3.5" /> }]} />}>
+            <Panel data-tour="studio-source" title="Source" actions={<Segmented<Source> label="Capture source" value={source} onChange={setSource} items={[{ key: 'webcam', label: 'Webcam', icon: <Camera className="size-3.5" /> }, { key: 'sample', label: 'Use a sample', icon: <Film className="size-3.5" /> }, { key: 'upload', label: 'Upload', icon: <Upload className="size-3.5" /> }]} />}>
               <label className="mb-4 flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-fg-muted">Name this skill (optional)</span>
                 <input
@@ -443,7 +443,7 @@ export default function StudioPage() {
                 <Timeline segments={segments} duration={Math.max(cap.elapsed, segments.at(-1)?.t1 ?? 1)} time={cap.elapsed} />
               ) : (
                 <div className="flex h-9 items-center justify-center rounded-sm bg-white/[0.02] text-[11px] text-fg-faint shadow-[inset_0_0_0_1px_var(--color-line)]">
-                  {live ? 'A step closes when a grasp and release finish a movement' : 'Steps appear here as they close'}
+                  {live ? 'A step closes when a hand finishes working with a part' : 'Steps appear here as they close'}
                 </div>
               )}
             </div>

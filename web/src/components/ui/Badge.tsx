@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react'
+import { fmtScorePct } from '@/lib/format'
 import { Cpu, Database, FlaskConical, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Backend, ServedBy, VerificationStatus } from '@/lib/api'
@@ -64,18 +65,35 @@ export function VerifiedBadge({ status, score, size }: { status: VerificationSta
   if (status === 'verified')
     return (
       <Badge tone="ok" size={size} icon={<ShieldCheck className="size-3" aria-hidden />}>
-        Verified{score != null && <span className="telemetry opacity-80">{score.toFixed(2)}</span>}
+        Verified{score != null && <span className="telemetry opacity-80">{fmtScorePct(score)}</span>}
       </Badge>
     )
   if (status === 'suspect')
     return (
       <Badge tone="fault" size={size} icon={<ShieldAlert className="size-3" aria-hidden />}>
-        Suspect{score != null && <span className="telemetry opacity-80">{score.toFixed(2)}</span>}
+        Suspect{score != null && <span className="telemetry opacity-80">{fmtScorePct(score)}</span>}
       </Badge>
     )
   return (
     <Badge tone="neutral" size={size} icon={<ShieldQuestion className="size-3" aria-hidden />}>
       Not verified yet
+    </Badge>
+  )
+}
+
+const SKILL_STATUS: Record<string, { label: string; tone: Tone }> = {
+  ready: { label: 'Ready', tone: 'ok' },
+  processing: { label: 'Processing', tone: 'ion' },
+  draft: { label: 'Draft', tone: 'neutral' },
+  failed: { label: 'Failed', tone: 'fault' },
+}
+
+/** One wording and colour for a skill's status everywhere (cards, tables, headers). */
+export function SkillStatusBadge({ status, className, size }: { status: string; className?: string; size?: 'sm' | 'md' }) {
+  const m = SKILL_STATUS[status] ?? { label: status, tone: 'neutral' as Tone }
+  return (
+    <Badge tone={m.tone} dot pulse={status === 'processing'} className={className} size={size}>
+      {m.label}
     </Badge>
   )
 }
@@ -123,7 +141,7 @@ export function BackendBadge({ backend, model, chip }: { backend: Backend; model
 export function ServedByList({ served, className }: { served: ServedBy[] | undefined; className?: string }) {
   if (!served?.length) return null
   return (
-    <div className={cn('flex flex-wrap items-center gap-1.5', className)}>
+    <div className={cn('flex flex-wrap items-center gap-1.5', className)} data-testid="served-by">
       {served.map((s, i) => (
         <span key={`${s.model}-${i}`} className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-1.5 py-0.5 text-[11px] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
           <span className="text-fg-muted">{s.model}</span>

@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn'
 import type { SkillSummary, User } from '@/lib/api'
 import type { ProgressEntry, RobotReadiness } from '@/lib/api/learn'
 import { fmtAgo, fmtDuration } from '@/lib/format'
-import { Avatar, Badge, ButtonLink, Meter, Skeleton, VerifiedBadge } from '@/components/ui'
+import { Avatar, Badge, ButtonLink, Meter, SkillStatusBadge, Skeleton, VerifiedBadge } from '@/components/ui'
 import { StepSegments } from './LessonCard'
 
 export interface Trainee {
@@ -61,7 +61,7 @@ function Cell({ row }: { row: ProgressEntry | undefined }) {
 export function ProgressMatrix({ trainees, skills, rows }: { trainees: Trainee[]; skills: SkillSummary[]; rows: ProgressEntry[] }) {
   const at = (t: string, s: string) => rows.find((r) => r.trainee.id === t && r.skill_id === s)
   return (
-    <div className="overflow-x-auto" data-testid="progress-matrix">
+    <div className="relative overflow-x-auto" data-testid="progress-matrix">
       <table className="w-full border-separate border-spacing-0 bg-ink-800 text-left">
         <thead>
           <tr>
@@ -179,7 +179,6 @@ function RobotCell({ data, loading }: { data: RobotReadiness | undefined; loadin
   )
 }
 
-const STATUS_TONE = { ready: 'ok', processing: 'ion', draft: 'neutral', failed: 'fault' } as const
 
 /** Every captured skill with its verification, who has learned it, and whether a robot can do it. */
 export function SkillsTable({
@@ -192,7 +191,7 @@ export function SkillsTable({
   robot: Map<string, { data: RobotReadiness | undefined; loading: boolean }>
 }) {
   return (
-    <div className="overflow-x-auto" data-testid="skills-table">
+    <div className="relative overflow-x-auto" data-testid="skills-table">
       <table className="w-full min-w-[980px] text-left">
         <thead>
           <tr className="eyebrow border-b border-line">
@@ -229,9 +228,7 @@ export function SkillsTable({
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge tone={STATUS_TONE[s.status] ?? 'neutral'} dot={s.status === 'processing'} pulse={s.status === 'processing'}>
-                    {s.status}
-                  </Badge>
+                  <SkillStatusBadge status={s.status} />
                 </td>
                 <td className="px-4 py-3">
                   <VerifiedBadge status={s.verification_status} />

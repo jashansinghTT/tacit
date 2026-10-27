@@ -24,13 +24,19 @@ function BoxPill() {
   const box = useBox()
   const down = health.isError || box.isError
   const t = box.data?.totals
+  const models = box.data?.chips.flatMap((c) => c.models) ?? []
+  const busy = models.filter((m) => m.busy).map((m) => m.name)
+  const unhealthy = models.filter((m) => !m.healthy && !m.busy).map((m) => m.name)
   const tone = down ? 'fault' : t && t.healthy < t.models ? 'warn' : 'ok'
+  const title = down
+    ? 'The box is not answering'
+    : [unhealthy.length ? `Down: ${unhealthy.join(', ')}` : 'All models up', busy.length ? `Busy: ${busy.join(', ')}` : ''].filter(Boolean).join(' · ')
   return (
     <Link
       to="/box"
       className="hidden h-8 items-center gap-2 rounded-full bg-white/[0.03] px-3 text-xs text-fg-muted shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-white/[0.06] hover:text-fg xl:inline-flex"
       data-testid="box-pill"
-      title="Box status"
+      title={title}
     >
       <StatusDot tone={tone} pulse={!down} />
       {down ? (
