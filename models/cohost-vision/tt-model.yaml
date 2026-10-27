@@ -1,0 +1,181 @@
+# SPDX-License-Identifier: Apache-2.0
+# tt-model container manifest (schema 5.1, kind cohost): HaMeR, Gaze-LLE, RF-DETR and VGGT-1B
+# from one process on one Blackhole chip, each on its own port with its standalone HTTP API.
+#
+# tt-model builds no image for kind cohost ("built FROM an existing package image plus the
+# co-host runtime, not by tt-model package"), so build.sh builds it (Dockerfile here) and
+# renders the published manifest from this file with tt-model's own ContainerManifest.to_wire:
+#
+#   models/cohost-vision/build.sh                     # image + ~/tacit/build/cohost-vision/
+#   tt-model serve ~/tacit/build/cohost-vision/tt_kernel_manifest.json --device-id 0 --port 21000
+#   tt-model stop ~/tacit/build/cohost-vision/tt_kernel_manifest.json
+schema: "5.1"
+
+repo: tacit/cohost-vision          # local only; never pushed
+name: cohost-vision
+
+# Pointers, pinned to the revisions the four standalone packages pin. `serve` pre-fetches all of
+# them into the host HF cache (mounted read-write at /hf); nothing is baked into the image.
+weights:
+  repo: changh95/hamer-weights
+  revision: e8217b46d54b4e8afaaf0dd6efb6b62341c97d32
+  allow_patterns: ["hamer.ckpt", "mano_mean_params.npz"]
+auxiliary_weights:
+  - repo: changh95/gaze-lle-weights
+    revision: f83e53f0f17dd2175f31ceaf9fa650044147ada1
+  - repo: Roboflow/rf-detr-base
+    revision: 7b95b089788e6c7db56d5ea9b0a07ca08ea6ac0a
+    allow_patterns: ["model.safetensors", "config.json"]
+  - repo: facebook/VGGT-1B
+    revision: 860abec7937da0a4c03c41d3c269c366e82abdf9
+    allow_patterns: ["model.safetensors", "config.json"]
+
+kind: cohost
+arch: blackhole
+
+# Documentation only for this kind (build.sh does the build): the tree and code in the image.
+source:
+  tt_metal: /opt/tt-metal          # main 8b98410e730 + tt-metal-eth-dispatch.patch, from the member images
+  code:
+    - models/cohost_vision
+  ubuntu: "22.04"
+  python: "3.12"
+
+runtime:
+  # Config order is boot order and trace-capture order. Each member's env is applied only while
+  # it loads and warms up (it is the env its standalone package pins): HaMeR and Gaze-LLE both
+  # read TT_FUSED_SDPA, TT_FUSED_FIDELITY and TT_FUSED_L1 with different meanings, so none of
+  # these may be set for the whole container.
+  members:
+    - name: hamer
+      kind: app
+      model: changh95/hamer-weights
+      app: models.cohost_vision.hamer:member
+      port_offset: 0
+      env:
+        HF_MODEL: changh95/hamer-weights
+        TT_WEIGHTS_REVISION: e8217b46d54b4e8afaaf0dd6efb6b62341c97d32
+        HAMER_FORCE_TT: "1"
+        HAMER_TRACE: "1"
+        HAMER_WARMUP_ITERS: "3"
+        TT_FUSED: "1"
+        TT_FUSED_PATCH: fp32w
+        TT_FUSED_SDPA: default
+        TT_FUSED_HEAD_L1: "0"
+    - name: gaze
+      kind: app
+      model: changh95/gaze-lle-weights
+      app: models.cohost_vision.gaze:member
+      port_offset: 1
+      env:
+        HF_MODEL: changh95/gaze-lle-weights
+        TT_WEIGHTS_REVISION: f83e53f0f17dd2175f31ceaf9fa650044147ada1
+        GAZE_LLE_MAX_HEADS: "10"
+        TT_FUSED: "1"
+        TT_FUSED_SDPA_Q: "128"
+        TT_FUSED_SDPA_K: "128"
+        TT_FUSED_HEAD: separate
+    - name: rfdetr
+      kind: app
+      model: Roboflow/rf-detr-base
+      app: models.cohost_vision.rfdetr:member
+      port_offset: 2
+      env:
+        HF_MODEL: Roboflow/rf-detr-base
+        TT_WEIGHTS_REVISION: 7b95b089788e6c7db56d5ea9b0a07ca08ea6ac0a
+    - name: vggt
+      kind: app
+      model: facebook/VGGT-1B
+      app: models.cohost_vision.vggt:member
+      port_offset: 3
+      env:
+        HF_MODEL: facebook/VGGT-1B
+        TT_WEIGHTS_REVISION: 860abec7937da0a4c03c41d3c269c366e82abdf9
+        VGGT_S_MAX: "4"
+        VGGT_PREWARM_SEQS: "1,2,3,4"
+        VGGT_S_CANON: "1"
+        VGGT_TT_SCRATCH: "1"
+        VGGT_TT_PRELUDE: "0"
+        VGGT_BLOCK_TRACE: "0"
+        VGGT_TT_SCRATCH_COMPARE: "0"
+        TT_FUSED: "1"
+  profiles:
+    p150: [hamer, gaze, rfdetr, vggt]
+  # The one mesh every member shares. Standalone each opened its own chip with worker dispatch
+  # (11x10 grid), as the co-host host does. trace_region_size is the sum of the members' own
+  # regions (HaMeR 200 MiB, Gaze-LLE 64 MiB, RF-DETR 90 MB, VGGT 1536 MiB); l1_small_size holds
+  # the conv2d configs of RF-DETR (32 KiB standalone) and VGGT (64 KiB standalone).
+  tt_config:
+    l1_small_size: 98304
+    trace_region_size: 1979711488
+    num_command_queues: 1
+
+serve:
+  port: 21000
+  hardware: p150
+  mesh_device: P150
+
+serve_profiles:
+  - name: p150
+    hardware: p150
+    mesh_device: P150
+    description: "One Blackhole chip: HaMeR, Gaze-LLE, RF-DETR and VGGT-1B in one process."
+    env:
+      TT_METAL_VISIBLE_DEVICES: "0"
+      TT_MESH_GRAPH_DESC_PATH: /opt/tt-metal/tt_metal/fabric/mesh_graph_descriptors/p150_mesh_graph_descriptor.textproto
+      TT_MESH_SHAPE: "1x1"
+default_profile: p150
+
+verify:
+  - "import tt_kernel.cohost.launch, models.cohost_vision.hamer, models.cohost_vision.gaze, models.cohost_vision.rfdetr, models.cohost_vision.vggt"
+  - "import hamer.server.app, gaze_lle.server.app, rf_detr.server.app, models.server.app, scipy.sparse"
+
+card:
+  description: >
+    Four vision models served at the same time from one process on one Blackhole chip, each on
+    its own HTTP port with the API of its standalone package: HaMeR (3D hand pose from a hand
+    box), Gaze-LLE (gaze target per head box), RF-DETR-base (COCO object detection) and VGGT-1B
+    (multi-view 3D reconstruction). A Tenstorrent chip can be opened by one process at a time,
+    so models that share a chip share a process (tt-model kind `cohost`). Requests take turns on
+    the chip, first come, first served. Built for Tacit (teach a robot by showing it).
+  attribution: >
+    Serves the ports and weights of changh95/hamer-p150, changh95/gaze-lle-p150,
+    changh95/rf-detr-p150 and changh95/vggt-1b-p150 unchanged (the model code is copied byte
+    for byte from their published images).
+  prerequisites: >
+    tt-model with `kind: cohost` (branch feat/cohost-kind of tenstorrent/tt-model-manager),
+    Docker, one free Blackhole chip, and the four members' weights (fetched by `tt-model serve`).
+  quickstart: |
+    ```bash
+    models/cohost-vision/build.sh
+    tt-model serve ~/tacit/build/cohost-vision/tt_kernel_manifest.json --device-id 0 --port 21000
+    curl -s localhost:21000/predict -H 'Content-Type: application/json' -d @backend/tests/fixtures/hamer/request.json
+    curl -s localhost:21004/        # readiness, device memory and L1 per member
+    tt-model stop ~/tacit/build/cohost-vision/tt_kernel_manifest.json
+    ```
+  usage: |
+    | member | port | API |
+    | --- | --- | --- |
+    | HaMeR | base + 0 | `POST /predict` `{image, bbox, is_right}` |
+    | Gaze-LLE | base + 1 | `POST /predict` `{image, bboxes, heatmap_format}` |
+    | RF-DETR | base + 2 | `POST /predict` `{image, threshold}` |
+    | VGGT-1B | base + 3 | `POST /predict` `{images, output_format}` |
+    | status | base + 4 | `GET /` |
+  performance: See models/cohost-vision/README.md in the Tacit repo for measured numbers.
+  limitations: >
+    The models take turns on the chip: a VGGT request (about 1 s for two views) holds the chip
+    for its whole forward, and a HaMeR, Gaze-LLE or RF-DETR request that arrives meanwhile
+    waits for it. One p150 profile only.
+  licensing: >
+    Each member keeps its own terms: HaMeR (MIT code; the MANO hand model is non-commercial,
+    not redistributed), Gaze-LLE (MIT decoder, Apache-2.0 DINOv2), RF-DETR-base (Apache-2.0),
+    VGGT-1B (CC-BY-NC-4.0 weights, non-commercial). The serving code (tt-metal, tt-model's
+    co-host runtime, the adapters) is Apache-2.0.
+  license:
+    id: other
+    name: per-model
+  base_model:
+    - changh95/hamer-weights
+    - changh95/gaze-lle-weights
+    - Roboflow/rf-detr-base
+    - facebook/VGGT-1B
