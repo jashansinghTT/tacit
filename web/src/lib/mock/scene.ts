@@ -5,6 +5,7 @@
  */
 import type { Box, HandFrame, PoseFrame, TrackFrame, TwinFrame, Vec2, Vec3 } from '../api/types'
 import { clamp, lerp, smoothstep } from '../geometry'
+import { handLocal, placeHand } from '../handModel'
 
 export const SCENE_DURATION = 38.2
 export const VIDEO_W = 1280
@@ -163,58 +164,6 @@ function gazeTargetAt(t: number): { point: Vec3; label: string } {
   if (t < 30) return { point: SLOT_B, label: 'kit tray' }
   const u = (t - 30) / 8
   return { point: [lerp(-0.1, 0.1, 0.5 + 0.5 * Math.sin(u * 7)), 0.02, -0.1 - 0.06 * smoothstep(u * 2)], label: 'kit tray' }
-}
-
-// ---------------------------------------------------------------------------------------------
-// Hand model: a template in hand space (x across the knuckles, z along the fingers, y up),
-// fingers bent down by the curl amount.
-
-const FINGERS: { base: [number, number]; lens: number[]; spread: number }[] = [
-  { base: [-0.022, 0.03], lens: [0.04, 0.032, 0.028], spread: -0.75 }, // thumb (from CMC)
-  { base: [-0.024, 0.085], lens: [0.04, 0.024, 0.02], spread: -0.08 },
-  { base: [-0.002, 0.09], lens: [0.044, 0.027, 0.021], spread: 0 },
-  { base: [0.018, 0.085], lens: [0.041, 0.025, 0.02], spread: 0.08 },
-  { base: [0.035, 0.074], lens: [0.032, 0.019, 0.018], spread: 0.18 },
-]
-
-/** 21 landmarks in hand-local metres (origin at the wrist). */
-function handLocal(curl: number, mirror: number): Vec3[] {
-  const pts: Vec3[] = [[0, 0, 0]]
-  FINGERS.forEach((f, fi) => {
-    const thumb = fi === 0
-    let pos: Vec3 = [f.base[0] * mirror, 0, f.base[1]]
-    if (thumb) pts.push([f.base[0] * 0.5 * mirror, 0, f.base[1] * 0.5])
-    else pts.push(pos)
-    let pitch = thumb ? -0.2 : 0
-    const yaw = f.spread * mirror
-    f.lens.forEach((len, j) => {
-      pitch -= curl * (thumb ? 0.5 : j === 0 ? 0.9 : 1.15)
-      const dir: Vec3 = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)]
-      if (thumb) {
-        // The thumb swings across the palm as the hand closes.
-        dir[0] = Math.sin(yaw * (1 - curl * 0.7)) * mirror * -Math.sign(yaw || 1) * Math.abs(Math.cos(pitch))
-      }
-      pos = add(pos, scale(dir, len))
-      pts.push(pos)
-    })
-  })
-  return pts
-}
-
-/** Rotate hand-local points so the fingers point along `forward` and the palm faces down. */
-function placeHand(local: Vec3[], wrist: Vec3, yawRad: number, pitchDown: number): Vec3[] {
-  const cy = Math.cos(yawRad)
-  const sy = Math.sin(yawRad)
-  const cp = Math.cos(pitchDown)
-  const sp = Math.sin(pitchDown)
-  return local.map(([x, y, z]) => {
-    // pitch about x (fingers tilt down toward the table), then yaw about y
-    const y1 = y * cp - z * sp
-    const z1 = y * sp + z * cp
-    const x2 = x * cy + z1 * sy
-    const z2 = -x * sy + z1 * cy
-    return [wrist[0] + x2, wrist[1] + y1, wrist[2] + z2]
-  })
 }
 
 interface HandState {
