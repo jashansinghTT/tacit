@@ -66,8 +66,9 @@ chip 0, about 1 to 3 s).
 
 ## 6. Earn (45 s): Skill Exchange
 
-- As **Maria**: Skill → **List on Exchange** → consent (motion, gaze and text are shared; raw video and
-  faces never are) → prices → royalty split 70/30 → publish.
+- As **Maria**: open the skill you made in step 2 → **List on Exchange** → consent (motion, gaze and text
+  are shared; raw video and faces never are) → prices → royalty split 70/30 → publish. The two seeded
+  skills are already listed; if you skipped step 2, go straight to Atlas below and license one of those.
 - Switch to **Atlas Robotics, Buyer** → find the listing (the preview is motion only) → **License
   (robot deploy)** → demo checkout (no payment taken) → download the pack (motion, twin, SOP, robot
   program and policy, consent and verification certificates; no video).
