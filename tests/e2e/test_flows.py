@@ -9,6 +9,7 @@ import asyncio
 import io
 import json
 import os
+import re
 import statistics
 import time
 import zipfile
@@ -20,6 +21,7 @@ import e2e_lib as lib
 
 TT_MODELS = {"HaMeR", "Gaze-LLE", "RF-DETR", "VGGT-1B", "gpt-oss-20b", "S2 Pro"}
 VIDEO_EXT = (".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v", ".y4m")
+DECLINE = re.compile(r"not sure|don't know|do not know|ask (a|your) supervisor|can(no|')t (answer|say)", re.I)
 ANSWER = "Because the parts on the left are already sorted, so I check them before I place them in the tray."
 
 
@@ -429,14 +431,16 @@ def test_4_learn_narration_practice_tutor(api, rec, scratch, ready_skill):
     assert best > 0.3, f"the expert's own motion scored only {best:.2f}"
     assert log["saved"] is not None, "practice did not save progress on stop"
 
-    # tutor by text
-    q = "Why does the first step matter, and what should I watch out for?"
+    # tutor by text: a why question that the record answers must not be declined (QA-15)
+    q = "Why does the first step matter?"
     text = _sse(api, f"/api/tutor/{sid}/ask", rec, "tutor (text)", json={"question": q, "lang": "en"})
     rec.save("tutor_text.json", text)
     assert not text["error"], f"tutor error: {text['error']}"
     assert text["delta"] and text["done"] and len(text["done"]["text"]) > 20, "tutor gave no answer"
     assert text["audio"], "the tutor's answer was not spoken"
     assert text["end"], "the tutor stream did not send end"
+    if (sk["steps"][0].get("why") or "").strip():
+        assert not DECLINE.search(text["done"]["text"]), f"the tutor declined a question the record answers: {text['done']['text']!r}"
     assert lib.fetch(api, text["audio"][0]["audio"]).content[:4] == b"RIFF"
 
     # tutor by voice

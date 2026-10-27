@@ -365,7 +365,7 @@ async function learnFlow(page: Page, run: Run) {
   await persona(page, 'u_sam')
   await trackMedia(page)
   const skillId = await sharedSkill(page)
-  const sk = await api<{ quiz: { answer: number }[]; steps: unknown[] }>(page, `/api/skills/${skillId}`)
+  const sk = await api<{ quiz: { answer: number }[]; steps: { why?: string }[] }>(page, `/api/skills/${skillId}`)
   await page.goto(`/learn/${skillId}`)
   await expect(page.getByTestId('lesson-title')).toBeVisible({ timeout: 20_000 })
   await run.shot('lesson')
@@ -406,6 +406,10 @@ async function learnFlow(page: Page, run: Run) {
   await run.time('tutor text: answer spoken', 15, async () => {
     await expect.poll(() => playedAudio(page, '/media/tts/'), { timeout: 120_000, message: 'the tutor answer was not spoken' }).toBeGreaterThan(heardBefore + 0.3)
   })
+  if ((sk.steps[0]?.why ?? '').trim()) {
+    const said = await answers.nth(n0).getByTestId('tutor-answer-text').innerText()
+    expect(said, 'the tutor declined a question the record answers (QA-15)').not.toMatch(/not sure|don't know|do not know|ask (a|your) supervisor|can(no|')t (answer|say)/i)
+  }
   await run.shot('tutor-text')
   // Tutor by voice: the fake microphone plays question.wav.
   const questionText = fs.readFileSync(path.join(MEDIA, 'question.txt'), 'utf8').trim()

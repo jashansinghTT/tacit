@@ -19,6 +19,7 @@ RUN_ID = os.environ.get("QA_RUN_ID") or dt.datetime.now(dt.timezone.utc).strftim
 RUN_DIR = lib.EVIDENCE / "runs" / RUN_ID
 RESULTS: dict[str, dict] = {}
 RECORDERS: dict[str, lib.Recorder] = {}
+SETUP_S: dict[str, float] = {}
 STARTED = dt.datetime.now(dt.timezone.utc)
 
 
@@ -50,11 +51,14 @@ def rec(request) -> lib.Recorder:
 def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
+    if rep.when == "setup":
+        SETUP_S[item.nodeid] = rep.duration  # the shared skill is processed in F2's setup
     if rep.when == "call" or (rep.when == "setup" and rep.outcome != "passed"):
         r = RECORDERS.get(item.nodeid)
         flow = next((m.args[0] for m in item.iter_markers("flow")), None)
         RESULTS[item.nodeid] = {
-            "test": item.name, "flow": flow, "outcome": rep.outcome, "seconds": round(rep.duration, 2),
+            "test": item.name, "flow": flow, "outcome": rep.outcome,
+            "seconds": round(rep.duration + (SETUP_S.get(item.nodeid, 0) if rep.when == "call" else 0), 2),
             "error": (str(rep.longrepr.reprcrash.message) if rep.failed and hasattr(rep.longrepr, "reprcrash") else
                       (str(rep.longrepr)[-2000:] if rep.failed else None)),
             "timings": r.timings if r else [], "flags": r.flags if r else [], "notes": r.notes if r else [],
