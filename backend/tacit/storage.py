@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import secrets
 import shutil
 from pathlib import Path
@@ -17,15 +18,29 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{secrets.token_hex(4)}"
 
 
+_ID = re.compile(r"[a-z]{2,5}_[0-9a-z]{2,16}")
+
+
+class BadId(ValueError):
+    pass
+
+
+def check_id(value: str) -> str:
+    """Ids become path components: allow only our own shape (prefix_token), never '.', '..' or '/'."""
+    if not isinstance(value, str) or not _ID.fullmatch(value):
+        raise BadId(f"bad id: {value!r}")
+    return value
+
+
 def skill_dir(skill_id: str) -> Path:
-    d = SKILLS / skill_id
+    d = SKILLS / check_id(skill_id)
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def media_dir(skill_id: str) -> Path:
     """Public media for a skill (served at /media/skills/<id>/)."""
-    d = MEDIA / "skills" / skill_id
+    d = MEDIA / "skills" / check_id(skill_id)
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -48,12 +63,20 @@ def read_json(path: Path, default=None):
 
 
 def load_skill(skill_id: str) -> dict | None:
+    try:
+        check_id(skill_id)
+    except BadId:
+        return None
     return read_json(SKILLS / skill_id / "skill.json")
 
 
-def save_skill(skill: dict) -> dict:
+def save_skill(skill: dict, create: bool = False) -> dict:
     """Write the record. User intent saved meanwhile (a test flag, a title the user chose) is kept,
-    so a long job saving its older copy does not undo a rename made while it ran."""
+    so a long job saving its older copy does not undo a rename made while it ran. Without `create`,
+    a skill deleted meanwhile is not brought back."""
+    check_id(skill["id"])
+    if not create and not (SKILLS / skill["id"] / "skill.json").exists():
+        return skill
     path = skill_dir(skill["id"]) / "skill.json"
     disk = read_json(path) or {}
     if disk.get("test"):
@@ -84,6 +107,9 @@ def save_skill(skill: dict) -> dict:
 
 
 def delete_skill(skill_id: str) -> None:
+    check_id(skill_id)
+    if not (SKILLS / skill_id / "skill.json").exists():
+        raise BadId(f"no skill {skill_id}")
     shutil.rmtree(SKILLS / skill_id, ignore_errors=True)
     shutil.rmtree(MEDIA / "skills" / skill_id, ignore_errors=True)
     with session() as s:
@@ -94,15 +120,15 @@ def delete_skill(skill_id: str) -> None:
 
 
 def tracks_path(skill_id: str) -> Path:
-    return skill_dir(skill_id) / "tracks.json"
+    return skill_dir(check_id(skill_id)) / "tracks.json"
 
 
 def twin_path(skill_id: str) -> Path:
-    return skill_dir(skill_id) / "twin.json"
+    return skill_dir(check_id(skill_id)) / "twin.json"
 
 
 def pointcloud_path(skill_id: str) -> Path:
-    return skill_dir(skill_id) / "pointcloud.bin"
+    return skill_dir(check_id(skill_id)) / "pointcloud.bin"
 
 
 def dumps(obj) -> str:

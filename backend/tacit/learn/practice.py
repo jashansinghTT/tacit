@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import binascii
 import math
 import time
 
@@ -172,8 +173,12 @@ async def run(ws: WebSocket, session_id: str) -> None:
             if latest[0] is None:
                 continue
             t, jpeg = latest[0]
-            rgb = await asyncio.to_thread(lambda: decode_image(base64.b64encode(jpeg).decode()))
-            f = await analyze(rgb, t, runner, kinds=("rfdetr",), priority=vision.LIVE)
+            try:
+                rgb = await asyncio.to_thread(lambda: decode_image(base64.b64encode(jpeg).decode()))
+                f = await analyze(rgb, t, runner, kinds=("rfdetr",), priority=vision.LIVE)
+            except Exception as e:  # noqa: BLE001 - one bad frame must not end the session
+                await ws.send_json({"type": "error", "message": f"frame skipped: {e}"})
+                continue
             await ws.send_json({"type": "analysis", "t": f["t"], "hands": f["hands"], "objects": f["objects"],
                                 "size": f["size"], "timing_ms": f["timing_ms"], "served_by": f["served_by"]})
             fb = pr.update(f)
@@ -190,23 +195,28 @@ async def run(ws: WebSocket, session_id: str) -> None:
     try:
         while True:
             msg = await ws.receive_json()
-            if msg.get("type") == "frame":
-                latest[0] = (float(msg.get("t", time.time())), base64.b64decode(msg["jpeg"]))
-                evt.set()
-            elif msg.get("type") == "step":
-                pr.set_step(int(msg["index"]))
-            elif msg.get("type") == "stop":
-                break
+            try:
+                if msg.get("type") == "frame":
+                    latest[0] = (float(msg.get("t", time.time())), base64.b64decode(msg["jpeg"], validate=True))
+                    evt.set()
+                elif msg.get("type") == "step":
+                    pr.set_step(int(msg["index"]))
+                elif msg.get("type") == "stop":
+                    break
+            except (KeyError, ValueError, TypeError, binascii.Error) as e:
+                await ws.send_json({"type": "error", "message": f"ignored a malformed message: {e}"})
     except WebSocketDisconnect:
         pass
     finally:
         closed = True
         evt.set()
         task.cancel()
-        prog = pr.save_progress()
-        try:  # tell the trainee first: closing MediaPipe takes several seconds
-            await ws.send_json({"type": "saved", **prog})
-            await ws.close()
-        except RuntimeError:
-            pass
-        await asyncio.to_thread(runner.close)
+        try:
+            prog = pr.save_progress()
+            try:  # tell the trainee first: closing MediaPipe takes several seconds
+                await ws.send_json({"type": "saved", **prog})
+                await ws.close()
+            except (RuntimeError, WebSocketDisconnect):
+                pass  # the trainee already left
+        finally:
+            await asyncio.to_thread(runner.close)

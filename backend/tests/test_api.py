@@ -236,3 +236,55 @@ def test_test_listings_can_be_cleaned_up(api):
     _wait(api, api.post(f"/api/skills/{real}/process").json()["job_id"])
     real_lst = api.post("/api/exchange/listings", json={"skill_id": real, "consent": {"expert_confirmed": True}}, headers=H).json()
     assert api.delete(f"/api/exchange/listings/{real_lst['id']}").status_code == 400   # never a real listing
+
+
+def test_ids_are_never_paths(api):
+    assert api.delete("/api/skills/..").status_code in (404, 405)
+    assert api.delete("/api/skills/%2e%2e").status_code in (404, 405)
+    assert api.delete("/api/skills/%2e").status_code in (404, 405)
+    assert api.get("/api/skills/..%2f..%2fdb").status_code == 404
+    from tacit import config
+    assert (config.DATA).exists() and (config.SAMPLES / "samples.json").exists()
+
+
+def test_spa_route_never_leaves_the_web_folder(api):
+    r = api.get("/..%2f..%2f..%2f..%2fetc%2fhostname")
+    assert r.status_code in (200, 404) and "tacit" in r.text.lower() or r.status_code == 404
+    assert api.get("/x", headers={"host": "evil.example"}).status_code == 400   # trusted hosts only
+
+
+def test_reflex_file_never_runs_the_title():
+    from tacit import reflex
+    title = 'Sort parts"""\nimport os; os._exit(3)\n"""'
+    src = reflex.movement_file(title, "d", [{"pose": [0.1] * 5, "seconds": 0.5}])
+    ns: dict = {}
+    exec(compile(src, "m.py", "exec"), ns)          # would exit the test process if the title ran
+    assert ns["TITLE"] == title and ns["steps"]() == [([0.1] * 5, 0.5)]
+    ns2: dict = {}
+    exec(compile(reflex.movement_file("t", "d", []), "m.py", "exec"), ns2)
+    assert ns2["steps"]() == []
+
+
+def test_failed_processing_marks_the_skill_failed(api):
+    import pathlib
+    sid = api.post("/api/skills", files={"file": ("broken.mp4", b"not a video", "video/mp4")}, headers=H).json()["skill_id"]
+    job = _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    assert job["status"] == "failed"
+    sk = api.get(f"/api/skills/{sid}").json()
+    assert sk["status"] == "failed" and sk["error"]
+
+
+def test_review_regressions(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit", "title": "QA regressions"}, headers=H).json()["skill_id"]
+    job_id = api.post(f"/api/skills/{sid}/process").json()["job_id"]
+    assert api.delete(f"/api/skills/{sid}").status_code == 409          # never delete under a running job
+    _wait(api, job_id)
+    assert api.post("/api/skills", files={"file": ("notes.txt", b"hello", "text/plain")}, headers=H).status_code == 400
+    assert api.get(f"/api/learn/lessons/{sid}?lang=xx").status_code == 400
+    assert api.post(f"/api/robot/{sid}/run", json={"mode": "teleop"}).status_code == 400
+    lst = api.post("/api/exchange/listings", json={"skill_id": sid, "consent": {"expert_confirmed": True}}, headers=H).json()
+    assert any(l["id"] == lst["id"] for l in api.get("/api/exchange/listings?include_test=1").json())
+    api.post(f"/api/exchange/listings/{lst['id']}/license", json={"license_type": "exclusive"}, headers={"X-Tacit-User": "u_atlas"})
+    assert not any(l["id"] == lst["id"] for l in api.get("/api/exchange/listings?include_test=1").json())
+    assert api.delete(f"/api/skills/{sid}").json()["ok"] is True
+    assert api.get(f"/api/skills/{sid}").status_code == 404

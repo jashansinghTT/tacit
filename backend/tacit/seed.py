@@ -72,7 +72,7 @@ def create_skill_from_sample(sample: dict, expert_id: str = "u_maria", title: st
              "source": {"kind": "sample", "sample_id": sample["id"], "raw_path": str(SAMPLES / name)},
              "consent": {"motion": True, "gaze": True, "voice_text": True, "raw_video": False, "signed_by": expert_id, "signed_at": now()},
              "steps": [], "qa": [], "verification": {"status": "pending"}, "robot": {}}
-    return save_skill(skill)
+    return save_skill(skill, create=True)
 
 
 async def seed_sample_skills() -> None:

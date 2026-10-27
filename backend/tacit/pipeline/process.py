@@ -34,7 +34,7 @@ def source_video(skill_id: str) -> Path:
 
 async def ensure_source(skill: dict) -> Path:
     dst = source_video(skill["id"])
-    if dst.exists() and dst.stat().st_size > 0:
+    if dst.exists() and dst.stat().st_size > 0 and probe(dst)["frames"] > 0:
         return dst
     raw = Path(skill["source"]["raw_path"])
     await transcode(raw, dst)
@@ -67,10 +67,22 @@ def _fallback_structure(steps: list[dict]) -> dict:
 
 
 async def process_skill(job: jobs.Job, skill_id: str) -> dict:
+    try:
+        return await _process_skill(job, skill_id)
+    except Exception as e:
+        sk = load_skill(skill_id)
+        if sk:
+            sk["status"], sk["error"] = "failed", str(e)[:500]
+            save_skill(sk)
+        raise
+
+
+async def _process_skill(job: jobs.Job, skill_id: str) -> dict:
     skill = load_skill(skill_id)
     if not skill:
         raise ValueError(f"no skill {skill_id}")
     skill["status"] = "processing"
+    skill.pop("error", None)
     save_skill(skill)
     extra_served: list[dict] = []
 
@@ -108,7 +120,7 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
             for p in pending:
                 frames.append(await p)
         finally:
-            runner.close()
+            await asyncio.to_thread(runner.close)  # takes ~10 s; never on the event loop
         for f in frames:
             f.pop("rotmats", None)
         write_json(tracks_path(skill_id), {"fps": ANALYSIS_FPS, "width": info["width"], "height": info["height"], "frames": frames})

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 
@@ -30,20 +31,22 @@ async def translate(skill_id: str, lang: str) -> dict:
     """The lesson's text in `lang` (cached); narration fills in over time."""
     if lang not in LANGS or lang == "en":
         raise ValueError(f"unsupported language {lang}")
-    cached = read_json(_path(skill_id, lang))
-    if cached:
-        _ensure_voice(skill_id, lang, cached)
-        return cached
     skill = load_skill(skill_id)
     if not skill:
         raise ValueError(f"no skill {skill_id}")
     src = _source(skill)
+    digest = hashlib.sha1(json.dumps(src, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
+    cached = read_json(_path(skill_id, lang))
+    if cached and cached.get("source_hash") == digest:
+        _ensure_voice(skill_id, lang, cached)
+        return cached
     msgs = [{"role": "system", "content": f"You translate work instructions into {LANGS[lang]} for a new hire. Keep them short, "
                                           "plain and in the imperative. Keep the JSON structure and keys exactly; translate only "
                                           "the string values (not quiz answer indexes). Reply with JSON only."},
             {"role": "user", "content": json.dumps(src, ensure_ascii=False)}]
     out, sb = await llm.chat_json(msgs, max_tokens=2500)
     out["lang"] = lang
+    out["source_hash"] = digest
     out["narration"] = {}
     out["served_by"] = [sb]
     p = _path(skill_id, lang)

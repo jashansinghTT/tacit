@@ -111,10 +111,10 @@ def movement_name(skill_id: str, step_index: int | None) -> str:
 
 def movement_file(title: str, description: str, steps: list[dict]) -> str:
     """A Reflex movement module: TITLE, DESCRIPTION and steps() -> [(pose, seconds), ...]."""
-    lines = ",\n".join(f"        ({s['pose']}, {s['seconds']})" for s in steps)
-    return (f'"""{title}: taught by Tacit from an expert\'s recorded hand.\n\nFinger order: thumb, index, middle, '
+    poses = "".join(f"        ({[float(v) for v in s['pose']]!r}, {float(s['seconds'])!r}),\n" for s in steps)
+    return ('"""A movement taught by Tacit from an expert\'s recorded hand (title below).\n\nFinger order: thumb, index, middle, '
             f'ring, pinky; 0 = open, 1 = closed (capped at {GUIDE_MAX} for a hand inside the glove)."""\n\n'
-            f"TITLE = {title!r}\nDESCRIPTION = {description!r}\n\n\ndef steps():\n    return [\n{lines},\n    ]\n\n\n"
+            f"TITLE = {str(title)!r}\nDESCRIPTION = {str(description)!r}\n\n\ndef steps():\n    return [\n{poses}    ]\n\n\n"
             "if __name__ == \"__main__\":\n    for pose, seconds in steps():\n        print(f\"{seconds:5.2f} s  \" + "
             "\"  \".join(f\"{v:.2f}\" for v in pose))\n")
 

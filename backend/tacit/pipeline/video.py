@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import subprocess
 from pathlib import Path
 from typing import Iterator
@@ -22,13 +23,17 @@ def probe(path: Path) -> dict:
 
 
 async def transcode(src: Path, dst: Path, max_width: int = 1280) -> None:
-    """H.264 + yuv420p + faststart so every browser can play and seek it."""
+    """H.264 + yuv420p + faststart so every browser can play and seek it. Written to a .part file
+    and moved into place only when complete, so a crash never leaves a broken source behind."""
+    part = dst.with_name(dst.stem + ".part.mp4")
     cmd = ["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-vf", f"scale='min({max_width},iw)':-2,fps=30",
-           "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", str(dst)]
+           "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", str(part)]
     proc = await asyncio.create_subprocess_exec(*cmd, stderr=subprocess.PIPE)
     _, err = await proc.communicate()
-    if proc.returncode != 0:
-        raise RuntimeError(f"ffmpeg failed: {err.decode()[-400:]}")
+    if proc.returncode != 0 or probe(part)["frames"] <= 0:
+        part.unlink(missing_ok=True)
+        raise RuntimeError(f"ffmpeg could not read this video: {err.decode()[-400:] or 'no frames'}")
+    os.replace(part, dst)
 
 
 def frames(path: Path, fps: float = 10.0, max_frames: int = 900) -> Iterator[tuple[float, np.ndarray]]:

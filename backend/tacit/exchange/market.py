@@ -49,7 +49,7 @@ def listing_dict(l: Listing) -> dict:
 def list_listings(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None,
                   include_test: bool = False) -> list[dict]:
     with session() as s:
-        rows = s.exec(select(Listing)).all()
+        rows = [l for l in s.exec(select(Listing)).all() if "withdrawn_until" not in (l.consent or "")]
         if not include_test:
             test_ids = {r.id for r in s.exec(select(SkillRow).where(SkillRow.test == True)).all()}  # noqa: E712
             rows = [l for l in rows if l.skill_id not in test_ids]
@@ -151,6 +151,9 @@ def license_listing(listing_id: str, license_type: str, buyer_id: str) -> dict:
         for r in royalties:
             s.add(LedgerEntry(to_id=r["to"], listing_id=listing_id, license_id=lic.id, amount=r["amount"]))
         l.licenses_sold += 1
+        if license_type == "exclusive":
+            l.demo = True   # reused as "withdrawn": exclusive for 12 months
+            l.consent = json.dumps({**json.loads(l.consent or "{}"), "withdrawn_until": "exclusive license, 12 months"})
         s.add(l)
         s.commit()
         lic_id = lic.id

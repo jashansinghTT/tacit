@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import importlib
 import re
 import logging
@@ -118,19 +119,23 @@ def wrist_path(skill_id: str) -> tuple[list[list[float]], list[float], list[floa
     return (pts, ts, grip) if len(pts) >= 5 else None
 
 
-def _niced(fn, *args):
-    """Run sim work at low CPU priority (nice 10 for this worker thread and the processes it starts),
-    so a training never slows the live models or the coach's voice."""
+def _nice_this_thread() -> None:
     import os
     import threading
+    try:
+        os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 10)
+    except OSError:
+        pass
 
-    def go():
-        try:
-            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 10)
-        except OSError:
-            pass
-        return fn(*args)
-    return asyncio.to_thread(go)
+
+# Sim work gets its own threads (niced once, at start) so the shared pool that runs live MediaPipe and
+# JPEG decoding keeps its normal priority.
+_SIM_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="sim", initializer=_nice_this_thread)
+
+
+def _niced(fn, *args):
+    """Run sim work at low CPU priority, so a training never slows the live models or the coach's voice."""
+    return asyncio.get_running_loop().run_in_executor(_SIM_POOL, lambda: fn(*args))
 
 
 def _bridge(job: jobs.Job, loop: asyncio.AbstractEventLoop):
@@ -140,6 +145,18 @@ def _bridge(job: jobs.Job, loop: asyncio.AbstractEventLoop):
 
 
 async def train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
+    try:
+        return await _train(job, skill_id, demos, epochs)
+    except Exception as e:
+        sk = load_skill(skill_id)
+        if sk:
+            pol = (sk.get("robot") or {}).get("policy") or {}
+            sk.setdefault("robot", {})["policy"] = {**pol, "status": "failed", "error": str(e)[:500]}
+            save_skill(sk)
+        raise
+
+
+async def _train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
     ts = sim()
     skill = load_skill(skill_id)
     prog = program_for(skill)
@@ -197,8 +214,13 @@ async def evaluate(job: jobs.Job, skill_id: str, trials: int, seed: int) -> dict
     return res
 
 
+MODES = ("scripted", "policy", "replay", "gr00t")
+
+
 def start_run(skill_id: str, mode: str, seed: int, realtime: bool = True) -> str:
     sim()
+    if mode not in MODES:
+        raise ValueError(f"mode must be one of {', '.join(MODES)}")
     skill = load_skill(skill_id)
     if mode == "policy" and ((skill.get("robot") or {}).get("policy") or {}).get("status") != "trained":
         raise ValueError("Train the policy first.")
@@ -234,17 +256,29 @@ async def stream(ws: WebSocket, run_id: str) -> None:
     loop = asyncio.get_running_loop()
     stop = threading.Event()
 
+    def put(msg) -> bool:
+        """Hand a message to the socket; give up when the client has gone (never block forever)."""
+        while not stop.is_set():
+            fut = asyncio.run_coroutine_threadsafe(q.put(msg), loop)
+            try:
+                fut.result(timeout=0.5)
+                return True
+            except TimeoutError:
+                fut.cancel()
+        return False
+
     def produce():
+        gen = runner.frames(realtime=meta["realtime"])
         try:
-            for msg in runner.frames(realtime=meta["realtime"]):
-                if stop.is_set():
+            for msg in gen:
+                if stop.is_set() or not put(msg):
                     break
-                asyncio.run_coroutine_threadsafe(q.put(msg), loop).result()
         except Exception as e:  # noqa: BLE001
             log.exception("sim run")
-            asyncio.run_coroutine_threadsafe(q.put({"type": "error", "message": str(e)}), loop).result()
+            put({"type": "error", "message": str(e)})
         finally:
-            asyncio.run_coroutine_threadsafe(q.put(None), loop).result()
+            gen.close()
+            put(None)
 
     th = threading.Thread(target=produce, daemon=True)
     th.start()

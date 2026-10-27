@@ -110,7 +110,7 @@ async def run_audit(job: jobs.Job, skill_id: str, video: Path, audit_id: str, wo
         for p in pending:
             run_frames.append(await p)
     finally:
-        runner.close()
+        await asyncio.to_thread(runner.close)
     job.finish_stage("perceive", detail=f"{len(run_frames)} frames")
     job.start_stage("align")
     run_steps = segment_steps(run_frames)

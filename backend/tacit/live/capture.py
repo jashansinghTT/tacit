@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import binascii
 import logging
+import os
 import subprocess
 import time
 
@@ -23,6 +25,7 @@ from ..storage import load_skill, media_url, save_skill, tracks_path, write_json
 log = logging.getLogger("tacit.capture")
 
 MAX_QUESTIONS = 6
+MAX_FRAMES = 6000
 MIN_GAP_S = 9.0
 
 
@@ -44,6 +47,7 @@ class CaptureSession:
         self.size: tuple[int, int] | None = None
         self.prepared: dict | None = None
         self.jpeg_ts: list[float] = []
+        self.next_q = 0
 
     async def send(self, msg: dict) -> None:
         if self.closed:
@@ -67,9 +71,9 @@ class CaptureSession:
             if self.latest is None:
                 continue
             t, jpeg = self.latest
-            rgb = await asyncio.to_thread(decode_jpeg, jpeg)
-            self.size = (rgb.shape[1], rgb.shape[0])
             try:
+                rgb = await asyncio.to_thread(decode_jpeg, jpeg)
+                self.size = (rgb.shape[1], rgb.shape[0])
                 f = await analyze(rgb, t, self.runner, priority=vision.LIVE)
             except Exception as e:  # noqa: BLE001
                 log.exception("analyze")
@@ -122,7 +126,8 @@ class CaptureSession:
 
     async def deliver(self, step: dict, prepared: dict) -> None:
         """Text first (the expert can read it at once), then the voice when S2 Pro finishes."""
-        qid = f"q{len(self.questions) + 1}"
+        self.next_q += 1
+        qid = f"q{self.next_q}"
         try:
             text, _ = await prepared["text"]
         except (ModelUnavailable, ValueError, asyncio.CancelledError) as e:
@@ -161,7 +166,8 @@ class CaptureSession:
         if not text:
             return
         if q is None:
-            q = {"id": f"q{len(self.questions) + 1}", "t": msg.get("t", 0.0), "question": "(volunteered)", "answer": None, "step": None}
+            self.next_q += 1
+            q = {"id": f"q{self.next_q}", "t": msg.get("t", 0.0), "question": "(volunteered)", "answer": None, "step": None}
             self.questions.append(q)
         q["answer"] = (q["answer"] + " " + text).strip() if q.get("answer") else text
         await self.send({"type": "transcript", "question_id": q["id"], "text": text, "ms": round(ms)})
@@ -201,15 +207,18 @@ def decode_jpeg(data: bytes) -> np.ndarray:
 
 
 def write_jpegs_video(jpegs: list[bytes], fps: float, dst) -> None:
+    part = dst.with_name(dst.stem + ".part.mp4")
     proc = subprocess.Popen(["ffmpeg", "-loglevel", "error", "-y", "-f", "image2pipe", "-c:v", "mjpeg", "-framerate", f"{fps:.3f}",
                              "-i", "-", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "veryfast",
-                             "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(dst)], stdin=subprocess.PIPE)
+                             "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(part)], stdin=subprocess.PIPE)
     assert proc.stdin is not None
     for j in jpegs:
         proc.stdin.write(j)
     proc.stdin.close()
     if proc.wait() != 0:
+        part.unlink(missing_ok=True)
         raise RuntimeError("ffmpeg failed to write the capture")
+    os.replace(part, dst)
 
 
 async def run(ws: WebSocket, skill_id: str) -> None:
@@ -223,13 +232,21 @@ async def run(ws: WebSocket, skill_id: str) -> None:
     loop = asyncio.create_task(s.analysis_loop())
     try:
         while True:
-            msg = await ws.receive_json()
-            kind = msg.get("type")
+            try:
+                msg = await ws.receive_json()
+                kind = msg.get("type")
+                if kind == "frame":
+                    jpeg = base64.b64decode(msg["jpeg"], validate=True)
+                    if jpeg[:2] != b"\xff\xd8":
+                        raise ValueError("not a JPEG")
+                    t = float(msg.get("t", time.time()))
+            except (KeyError, ValueError, TypeError, binascii.Error) as e:
+                await s.send({"type": "error", "message": f"ignored a malformed message: {e}"})
+                continue
             if kind == "frame":
-                jpeg = base64.b64decode(msg["jpeg"])
-                t = float(msg.get("t", time.time()))
-                s.jpegs.append(jpeg)
-                s.jpeg_ts.append(t)
+                if len(s.jpegs) < MAX_FRAMES:   # about 10 minutes at 10 fps
+                    s.jpegs.append(jpeg)
+                    s.jpeg_ts.append(t)
                 s.latest = (t, jpeg)
                 s.new_frame.set()
             elif kind in ("answer", "say"):
@@ -246,8 +263,11 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         s.closed = True
         s.new_frame.set()
         loop.cancel()
+        if s.prepared:
+            for k in ("text", "audio"):
+                s.prepared[k].cancel()
         await asyncio.to_thread(s.runner.close)
         try:
             await ws.close()
-        except RuntimeError:
+        except (RuntimeError, WebSocketDisconnect):
             pass

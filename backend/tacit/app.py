@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import jobs, reflex, seed
 from .box import box_status
@@ -23,13 +24,15 @@ from .models.base import ModelUnavailable
 from .pipeline import writer
 from .pipeline.process import STAGES, process_skill
 from .robot import lab
-from .storage import (delete_skill, load_skill, media_url, new_id, pointcloud_path, read_json, save_skill, skill_dir,
+from .storage import (BadId, check_id, delete_skill, load_skill, media_url, new_id, pointcloud_path, read_json, save_skill, skill_dir,
                       tracks_path, twin_path)
 
 log = logging.getLogger("tacit")
 logging.basicConfig(level=os.environ.get("TACIT_LOG", "INFO"), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(title="Tacit", version=VERSION)
+_hosts = [h.strip() for h in os.environ.get("TACIT_ALLOWED_HOSTS", "127.0.0.1,localhost,[::1],testserver").split(",") if h.strip()]
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=_hosts)
 
 
 def err(status: int, code: str, message: str, detail: dict | None = None) -> JSONResponse:
@@ -44,6 +47,11 @@ async def _model_unavailable(_: Request, e: ModelUnavailable):
 @app.exception_handler(lab.SimUnavailable)
 async def _sim_unavailable(_: Request, e: lab.SimUnavailable):
     return err(503, "sim_unavailable", str(e))
+
+
+@app.exception_handler(BadId)
+async def _bad_id(_: Request, e: BadId):
+    return err(404, "not_found", str(e))
 
 
 @app.exception_handler(market.ListingError)
@@ -127,6 +135,33 @@ def recover_interrupted_jobs() -> list[str]:
     return resume
 
 
+MAX_VIDEO_BYTES = 1024 * 1024 * 1024     # 1 GiB
+MAX_AUDIO_BYTES = 25 * 1024 * 1024
+
+
+async def save_upload(f, dst: Path, limit: int) -> Path:
+    """Copy an upload to disk in 1 MiB chunks; refuse it (413) past `limit` bytes."""
+    size = 0
+    part = dst.with_name(dst.name + ".part")
+    with part.open("wb") as out:
+        while chunk := await f.read(1 << 20):
+            size += len(chunk)
+            if size > limit:
+                out.close()
+                part.unlink(missing_ok=True)
+                raise HTTPException(413, f"upload is larger than {limit // (1024 * 1024)} MiB")
+            out.write(chunk)
+    part.replace(dst)
+    return dst
+
+
+async def read_upload(f, limit: int) -> bytes:
+    data = await f.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(413, f"upload is larger than {limit // (1024 * 1024)} MiB")
+    return data
+
+
 def user_id(x_tacit_user: str | None) -> str:
     return x_tacit_user or "u_maria"
 
@@ -176,7 +211,10 @@ async def sample_verify(sample_id: str, refresh: bool = False):
         return err(404, "not_found", f"no sample {sample_id}")
     cache = SAMPLES / f"{sample_id}.verify.json"
     if cache.exists() and not refresh:
-        return json.loads(cache.read_text())
+        try:
+            return json.loads(cache.read_text())
+        except json.JSONDecodeError:
+            pass  # a half-written cache: compute it again
     video = MEDIA / "samples" / os.path.basename(sample["video"])
     dur = probe(video)["duration"]
     times = geometry.pick_times(dur, 4)
@@ -187,7 +225,9 @@ async def sample_verify(sample_id: str, refresh: bool = False):
     out = {"sample_id": sample_id, "kind": sample.get("kind"), "status": geometry.verdict(metrics["score"]), "score": metrics["score"],
            "method": "VGGT multi-view consistency", "details": metrics, "times": times,
            "pointcloud": f"/media/samples/{sample_id}.pointcloud.bin", "points": len(cloud) // 24, "served_by": [sb]}
-    cache.write_text(json.dumps(out))
+    tmp = cache.with_suffix(".part")
+    tmp.write_text(json.dumps(out))
+    tmp.replace(cache)
     return out
 
 
@@ -224,8 +264,9 @@ async def skills_create(request: Request, x_tacit_user: str | None = Header(defa
             raise HTTPException(400, "file is required")
         sid = new_id("sk")
         ext = Path(getattr(f, "filename", "") or "upload.mp4").suffix or ".mp4"
-        raw = skill_dir(sid) / f"upload{ext}"
-        raw.write_bytes(await f.read())
+        if ext.lower() not in (".mp4", ".mov", ".webm", ".mkv", ".avi", ".m4v"):
+            raise HTTPException(400, "upload a video file (mp4, mov, webm, mkv, avi)")
+        raw = await save_upload(f, skill_dir(sid) / f"upload{ext}", MAX_VIDEO_BYTES)
         skill = _new_skill(sid, expert, {"kind": "upload", "raw_path": str(raw)}, form.get("title"))
         return {"skill_id": sid, "status": skill["status"]}
     body = await request.json()
@@ -248,7 +289,7 @@ def _new_skill(sid: str, expert: dict, source: dict, title: str | None) -> dict:
              "test": bool(title and title.startswith("QA ")),
              "expert": expert, "source": source, "steps": [], "qa": [], "verification": {"status": "pending"}, "robot": {},
              "consent": {"motion": True, "gaze": True, "voice_text": True, "raw_video": False, "signed_by": expert["id"], "signed_at": now()}}
-    return save_skill(skill)
+    return save_skill(skill, create=True)
 
 
 @app.get("/api/skills/{skill_id}")
@@ -302,6 +343,8 @@ async def skills_patch(skill_id: str, body: dict):
 
 @app.delete("/api/skills/{skill_id}")
 async def skills_delete(skill_id: str):
+    if any(jobs.active_for(skill_id, k) for k in ("process", "verify", "train", "evaluate", "audit")):
+        return err(409, "busy", "a job is running on this skill; delete it when the job ends")
     removed = market.delete_listings_of(skill_id)
     delete_skill(skill_id)
     return {"ok": True, "listings_removed": removed}
@@ -378,8 +421,10 @@ async def skills_audit(skill_id: str, file: UploadFile = File(...), worker: str 
     if not sk or sk.get("status") != "ready":
         return err(400, "bad_request", "audits need a ready skill")
     aid = audit.new_audit_id()
-    raw = audit.audits_dir(skill_id) / f"{aid}{Path(file.filename or 'run.mp4').suffix or '.mp4'}"
-    raw.write_bytes(await file.read())
+    ext = Path(file.filename or "run.mp4").suffix.lower() or ".mp4"
+    if ext not in (".mp4", ".mov", ".webm", ".mkv", ".avi", ".m4v"):
+        raise HTTPException(400, "upload a video file (mp4, mov, webm, mkv, avi)")
+    raw = await save_upload(file, audit.audits_dir(skill_id) / f"{aid}{ext}", MAX_VIDEO_BYTES)
     job = jobs.run(jobs.create("audit", skill_id, audit.STAGES), lambda j: audit.run_audit(j, skill_id, raw, aid, worker))
     return {"job_id": job.id, "audit_id": aid}
 
@@ -404,7 +449,7 @@ async def skills_answer(skill_id: str, file: UploadFile | None = File(default=No
         return err(404, "not_found", f"no skill {skill_id}")
     served_by = []
     if file is not None:
-        text, sb = await speech.stt(await file.read(), file.filename or "answer.wav")
+        text, sb = await speech.stt(await read_upload(file, MAX_AUDIO_BYTES), file.filename or "answer.wav")
         served_by.append(sb)
     if not text:
         raise HTTPException(400, "no answer")
@@ -479,7 +524,7 @@ async def tts_stream_(text: str):
 
 @app.post("/api/speech/stt")
 async def stt_(file: UploadFile = File(...)):
-    text, sb = await speech.stt(await file.read(), file.filename or "speech.wav")
+    text, sb = await speech.stt(await read_upload(file, MAX_AUDIO_BYTES), file.filename or "speech.wav")
     return {"text": text, "served_by": [sb]}
 
 
@@ -506,6 +551,8 @@ async def lesson(skill_id: str, lang: str = "en"):
         return err(404, "not_found", f"no skill {skill_id}")
     nar = sk.get("narration") or {}
     if lang != "en":
+        if lang not in writer.LANGS:
+            return err(400, "bad_request", f"unsupported language {lang}; use one of {', '.join(writer.LANGS)}")
         tr = await i18n.translate(skill_id, lang)
         by_i = {s["index"]: s for s in tr.get("steps", [])}
         sk = {**sk, "title": tr.get("title") or sk.get("title"), "summary": tr.get("summary") or sk.get("summary"),
@@ -614,7 +661,7 @@ async def tutor_ask(skill_id: str, request: Request):
         question = form.get("question") or ""
         history = json.loads(form.get("history") or "[]")
         if f is not None:
-            transcript, _ = await speech.stt(await f.read(), getattr(f, "filename", None) or "question.wav")
+            transcript, _ = await speech.stt(await read_upload(f, MAX_AUDIO_BYTES), getattr(f, "filename", None) or "question.wav")
             question = transcript
     else:
         body = await request.json()
@@ -865,8 +912,9 @@ if (WEB_DIST / "assets").exists():
 async def spa(path: str):
     if path.startswith(("api/", "ws/", "media/")):
         return err(404, "not_found", f"/{path}")
-    f = WEB_DIST / path
-    if path and f.is_file():
+    root = WEB_DIST.resolve()
+    f = (WEB_DIST / path).resolve()
+    if path and f.is_relative_to(root) and f.is_file():
         return FileResponse(f)
     index = WEB_DIST / "index.html"
     if index.exists():
