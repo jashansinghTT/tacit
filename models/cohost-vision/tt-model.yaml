@@ -103,8 +103,10 @@ runtime:
     p150: [hamer, gaze, rfdetr, vggt]
   # The one mesh every member shares. Standalone each opened its own chip with worker dispatch
   # (11x10 grid), as the co-host host does. trace_region_size is the sum of the members' own
-  # regions (HaMeR 200 MiB, Gaze-LLE 64 MiB, RF-DETR 90 MB, VGGT 1536 MiB); l1_small_size holds
-  # the conv2d configs of RF-DETR (32 KiB standalone) and VGGT (64 KiB standalone).
+  # regions (HaMeR 200 MiB, Gaze-LLE 64 MiB, RF-DETR 90 MB, VGGT 1536 MiB). l1_small_size holds
+  # the conv2d configs of RF-DETR and VGGT (15.1 KiB/core together); it is VGGT's own 64 KiB
+  # because VGGT's conv2d configs depend on it: at 96 KiB its dense outputs moved by a few fp16
+  # ulps, at 64 KiB they are bit-identical to standalone (RF-DETR's are at 32, 64 and 96 KiB).
   tt_config:
     l1_small_size: 65536
     trace_region_size: 1979711488
