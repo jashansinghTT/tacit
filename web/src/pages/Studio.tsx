@@ -63,6 +63,7 @@ export default function StudioPage() {
   const samples = useSamples()
   const [source, setSource] = useState<Source>((params.get('source') as Source) || 'webcam')
   const [sampleId, setSampleId] = useState<string | null>(null)
+  const [title, setTitle] = useState(params.get('title') ?? '')
   const [layers, setLayers] = useState<OverlayLayers>(ALL_LAYERS)
   const [handsFree, setHandsFree] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -154,7 +155,7 @@ export default function StudioPage() {
         v.currentTime = 0
         await v.play().catch(() => undefined)
       }
-      const r = await api.createSkill({ source: 'live' })
+      const r = await api.createSkill({ source: 'live', ...(title.trim() ? { title: title.trim() } : {}) })
       cap.start(r.skill_id, v)
     } catch (e) {
       toast.error('Could not start the capture', (e as Error).message)
@@ -172,7 +173,8 @@ export default function StudioPage() {
   const processOffline = async (kind: 'sample' | 'upload', file?: File) => {
     setBusy(true)
     try {
-      const r = kind === 'sample' && sampleId ? await api.createSkill({ source: 'sample', sample_id: sampleId }) : file ? await api.uploadSkill(file, file.name.replace(/\.[^.]+$/, '')) : null
+      const name = title.trim() || undefined
+      const r = kind === 'sample' && sampleId ? await api.createSkill({ source: 'sample', sample_id: sampleId, ...(name ? { title: name } : {}) }) : file ? await api.uploadSkill(file, name ?? file.name.replace(/\.[^.]+$/, '')) : null
       if (!r) return
       const p = await api.process(r.skill_id)
       setOfflineJob({ skillId: r.skill_id, jobId: p.job_id })
@@ -314,6 +316,16 @@ export default function StudioPage() {
         <div className="min-w-0 space-y-4">
           {cap.phase === 'idle' && (
             <Panel data-tour="studio-source" title="Source" actions={<Segmented<Source> label="Capture source" value={source} onChange={setSource} items={[{ key: 'webcam', label: 'Webcam', icon: <Camera className="size-3.5" /> }, { key: 'sample', label: 'Sample', icon: <Film className="size-3.5" /> }, { key: 'upload', label: 'Upload', icon: <Upload className="size-3.5" /> }]} />}>
+              <label className="mb-4 flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-fg-muted">Name this skill (optional)</span>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="The model names it from what it sees if you leave this empty"
+                  data-testid="skill-title"
+                  className="h-9 rounded-md bg-ink-900 px-3 text-[13px] text-fg shadow-[inset_0_0_0_1px_var(--color-line-strong)] outline-none placeholder:text-fg-faint focus:shadow-[inset_0_0_0_1px_var(--color-ion)]"
+                />
+              </label>
               {source === 'webcam' && (
                 <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-[13px] text-fg-muted">

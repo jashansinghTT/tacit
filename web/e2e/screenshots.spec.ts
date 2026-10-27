@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { test, expect, REAL, openReadySkill } from './fixtures'
+import { test, expect, REAL, openReadySkill, studioUrl } from './fixtures'
 
 // Full-page screenshots of every page this card owns, into .orchestration/evidence/web/<mode>/.
 const out = fileURLToPath(new URL(`../../.orchestration/evidence/web/${REAL ? 'real' : 'mock'}/`, import.meta.url))
@@ -57,7 +57,7 @@ test('screenshot the tour and a hero detail', async ({ page }) => {
 
 test('screenshot a live capture', async ({ page }) => {
   test.setTimeout(REAL ? 180_000 : 60_000)
-  await page.goto('/studio')
+  await page.goto(studioUrl('screenshot capture'))
   await page.getByTestId('capture-start').click()
   await expect(page.getByTestId('coach-question').first()).toBeVisible({ timeout: REAL ? 120_000 : 30_000 })
   await page.waitForTimeout(2000)

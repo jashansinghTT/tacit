@@ -208,3 +208,14 @@ def test_audit_and_translated_lesson(api):
     assert api.get(f"/api/skills/{sid}/audits").json()[0]["id"] == r["audit_id"]
     les = api.get(f"/api/learn/lessons/{sid}?lang=es").json()
     assert les["lang"] == "es" and les["steps"] and any(l["code"] == "es" for l in les["languages"])
+
+
+def test_rename_during_processing_survives(api):
+    from tacit.storage import load_skill, save_skill
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    stale = load_skill(sid)                       # a job's copy, loaded before the rename
+    api.patch(f"/api/skills/{sid}", json={"title": "QA renamed mid-run"})
+    stale["title"] = "Writer's title"
+    save_skill(stale)                             # the job saves its stale copy
+    sk = load_skill(sid)
+    assert sk["title"] == "QA renamed mid-run" and sk["test"] is True

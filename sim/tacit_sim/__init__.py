@@ -10,6 +10,10 @@ Public API (the backend codes against this; keep it stable):
         .frames(realtime=True)  -> iterator of WS /ws/robot messages
         .run_episode()          -> {success, steps, reason}
     retarget_wrist_path(points_xyz, times) -> workspace path (Runner's human_path)
+    policy_info(policy_path) -> {program, trained_on, loss_curve, val_loss}
+
+A policy only runs on the program it was trained on: evaluate_policy and Runner(mode="policy")
+raise ProgramMismatch (a ValueError) otherwise.
 """
 
 import os
@@ -18,7 +22,7 @@ os.environ.setdefault("MUJOCO_GL", "egl")
 
 from .demos import DemoSet, generate_demos, instruction  # noqa: E402
 from .describe import scene_description  # noqa: E402
-from .policy import train_policy  # noqa: E402
+from .policy import ProgramMismatch, policy_info, train_policy  # noqa: E402
 from .program import parse_program  # noqa: E402
 from .retarget import retarget_wrist_path  # noqa: E402
 from .runner import MODES, Runner, evaluate_policy, run_episode  # noqa: E402
@@ -28,4 +32,5 @@ __version__ = "0.1.0"
 __all__ = [
     "scene_description", "generate_demos", "train_policy", "evaluate_policy", "Runner",
     "run_episode", "retarget_wrist_path", "DemoSet", "parse_program", "instruction", "MODES",
+    "policy_info", "ProgramMismatch",
 ]

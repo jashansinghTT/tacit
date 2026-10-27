@@ -30,14 +30,42 @@ def sim():
         raise SimUnavailable("The robot simulator (tacit_sim) is not installed yet.") from e
 
 
+def normalize_program(prog: list[dict], default_target: str = "tray", max_pairs: int = 4) -> list[dict]:
+    """Pick-and-place pairs only: a pick without a place goes to the last target used (or the tray);
+    a place without a pick is dropped."""
+    out, held, last_target = [], None, default_target
+    for op in prog or []:
+        if op.get("op") == "pick" and op.get("object"):
+            if held:
+                out += [{"op": "pick", "object": held}, {"op": "place", "target": last_target}]
+            held = op["object"]
+        elif op.get("op") == "place" and op.get("target") and held:
+            last_target = op["target"]
+            out += [{"op": "pick", "object": held}, {"op": "place", "target": last_target}]
+            held = None
+    if held:
+        out += [{"op": "pick", "object": held}, {"op": "place", "target": last_target}]
+    return out[: 2 * max_pairs]
+
+
 def program_for(skill: dict) -> list[dict]:
-    prog = (skill.get("robot") or {}).get("program") or []
+    """The skill's current robot program, normalised to pick-and-place pairs."""
+    prog = normalize_program((skill.get("robot") or {}).get("program") or [])
     if not prog:
         objs = [o for st in skill.get("steps", []) for o in st.get("objects", [])][:2] or ["part"]
-        prog = []
-        for o in objs:
-            prog += [{"op": "pick", "object": o}, {"op": "place", "target": "tray"}]
+        prog = normalize_program([{"op": "pick", "object": o} for o in objs])
     return prog
+
+
+def policy_program(skill: dict) -> list[dict]:
+    """The program the trained policy learned (evaluate and run it on exactly that)."""
+    pol = (skill.get("robot") or {}).get("policy") or {}
+    if pol.get("program"):
+        return pol["program"]
+    try:
+        return sim().policy_info(pol["policy_path"]).get("program") or program_for(skill)
+    except Exception:  # noqa: BLE001 - an old policy file without metadata
+        return program_for(skill)
 
 
 def robot_dir(skill_id: str):
@@ -110,7 +138,7 @@ async def train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
     job.finish_stage("train", detail=f"final loss {curve[-1][1] if curve else 'n/a'}")
     skill = load_skill(skill_id)
     skill["robot"]["policy"] = {"status": "trained", "trained_at": now(), "policy_path": res.get("policy_path", str(rd / "policy.pt")),
-                                "demos": ds.get("n", demos), "loss_curve": curve}
+                                "demos": ds.get("n", demos), "loss_curve": curve, "program": prog}
     save_skill(skill)
     _ = cb
     return {"loss_curve": curve, "policy_path": res.get("policy_path")}
@@ -131,7 +159,7 @@ async def evaluate(job: jobs.Job, skill_id: str, trials: int, seed: int) -> dict
         job.result = {"trials": list(done)}
         loop.call_soon_threadsafe(job.stage_progress, (i + 1) / trials, f"{sum(1 for x in done if x.get('success'))}/{len(done)} succeeded")
 
-    res = await asyncio.to_thread(ts.evaluate_policy, program_for(skill), pol["policy_path"], trials, seed, on_trial)
+    res = await asyncio.to_thread(ts.evaluate_policy, policy_program(skill), pol["policy_path"], trials, seed, on_trial)
     skill = load_skill(skill_id)
     skill["robot"]["policy"].update({"success_rate": res["success_rate"], "trials": trials, "evaluated_at": now(),
                                      "last_eval": res.get("trials", [])})
@@ -171,7 +199,8 @@ async def stream(ws: WebSocket, run_id: str) -> None:
         kwargs["human_path"] = ts.retarget_wrist_path(wp[0], wp[1], wp[2])
     if meta["mode"] == "gr00t":
         kwargs["gr00t_url"] = endpoints()["gr00t"].url
-    runner = ts.Runner(program_for(skill), meta["mode"], **kwargs)
+    prog = policy_program(skill) if meta["mode"] == "policy" else program_for(skill)
+    runner = ts.Runner(prog, meta["mode"], **kwargs)
     q: asyncio.Queue = asyncio.Queue(maxsize=240)
     loop = asyncio.get_running_loop()
     stop = threading.Event()

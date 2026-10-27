@@ -197,7 +197,7 @@ matching HTTP status. `model_unavailable` (503) names the model and chip.
 ### Quality and safety audit (use case 5)
 - `POST /api/skills/{id}/audit` multipart `file` (a worker's recorded run), `worker` (name) → `{job_id, audit_id}`; the job's stages are `decode, perceive, align, report`.
 - `GET /api/skills/{id}/audits` → `[{id, worker, created_at, summary, narrative, video}]`.
-- `GET /api/skills/{id}/audits/{audit_id}` → `{id, skill_id, worker, video, created_at, narrative, summary {steps_total, done, out_of_order, missing, gaze_checks_ok, score}, steps: [{index, title, status: "done"|"missing"|"out_of_order", score, expert_seconds, run_t, run_seconds, gaze_check {expert_looked_at, worker_looked_at, ok}}]}`.
+- `GET /api/skills/{id}/audits/{audit_id}` → `{id, skill_id, worker, video, created_at, narrative, summary {steps_total, done, out_of_order, missing, gaze_checks_ok, score}, steps: [{index, title, status: "done"|"missing"|"out_of_order", score, expert_seconds, run_t: [start, end], run_seconds, gaze_check {expert_looked_at: [..], worker_looked_at: [..], ok}}]}`; a missing step has no run_t, run_seconds or gaze_check.
 
 ### Multilingual lessons (use case 6)
 - `GET /api/learn/lessons/{skill_id}?lang=es|fr|de|zh|ja|ko|pt|hi` → the same lesson with translated title, summary, steps, quiz and safety (gpt-oss-20b, cached). Narration in that language is spoken in the background: `narration_audio` is null until it is ready (poll, or play `POST /api/speech/tts` meanwhile). The response lists `languages`.

@@ -372,3 +372,14 @@ def test_writer_gets_the_action_target_and_repeat():
     tl = _timeline_summary({"source": {"duration": 16.0}, "qa": [], "title_hint": "Stems in a vase"}, steps, ["vase"])
     s = tl["steps"][1]
     assert s["action"] == "insert" and s["target"] == "vase" and s["repeat"] == "2 of 3" and s["hand"] == "right"
+
+
+def test_normalize_program_pairs_picks_with_places():
+    from tacit.robot.lab import normalize_program
+    assert normalize_program([{"op": "pick", "object": "knife"}, {"op": "pick", "object": "cup"}]) == [
+        {"op": "pick", "object": "knife"}, {"op": "place", "target": "tray"},
+        {"op": "pick", "object": "cup"}, {"op": "place", "target": "tray"}]
+    assert normalize_program([{"op": "place", "target": "bin"}, {"op": "pick", "object": "cup"},
+                              {"op": "place", "target": "bowl"}, {"op": "pick", "object": "fork"}]) == [
+        {"op": "pick", "object": "cup"}, {"op": "place", "target": "bowl"},
+        {"op": "pick", "object": "fork"}, {"op": "place", "target": "bowl"}]

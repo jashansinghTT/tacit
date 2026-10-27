@@ -38,8 +38,7 @@ class Action:
 
 def grasp_height(env: SimEnv, name: str) -> float:
     """TCP height for a grasp: about 2 cm below the object's top, fingertips clear of the table."""
-    o = env.spec(name)
-    top = env.object_state(name).pos[2] + o.half_height
+    top = env.object_state(name).pos[2] + env.grasp_info(name).half_z
     return max(0.018, top - 0.022)
 
 
@@ -89,7 +88,7 @@ class ScriptedExpert:
             yaw_err = wrap_period(yaw_goal - yaw, np.pi)
             xy_err = np.linalg.norm(g[:2] - tcp[:2])
             z_err = tcp[2] - g[2]
-            obj_w = 2 * spec.grasp_half_width
+            obj_w = 2 * env.grasp_info(name).half_width
             between = xy_err < 0.018 and abs(z_err) < 0.02
             if between and width < obj_w + 0.005 and env.grip_cmd > 0.5:
                 # Closed on the object: lift straight up.
@@ -109,18 +108,37 @@ class ScriptedExpert:
         goal_c = env.target_point(task)                 # object centre at release
         offset = tcp - obj.pos                          # held object relative to the TCP
         g = goal_c + offset                             # TCP at release
-        bottom = obj.pos[2] - spec.half_height
-        carry = max(0.0, CARRY_CLEARANCE - (goal_c[2] - spec.half_height))
+        half_z = env.grasp_info(name).half_z
+        bottom = obj.pos[2] - half_z
+        carry = max(0.0, CARRY_CLEARANCE - (goal_c[2] - half_z))
         xy_err = np.linalg.norm(goal_c[:2] - obj.pos[:2])
-        z_err = bottom - (goal_c[2] - spec.half_height)
-        if env.grip_cmd < 0.5 or (xy_err < 0.012 and z_err < 0.008):
-            # Release (and keep it released while the fingers open).
+        z_err = bottom - (goal_c[2] - half_z)
+        if env.grip_cmd < 0.5:
+            # Released: back off upward while the fingers open (a bin wall or a neighbouring
+            # part can stop them opening fully in place).
+            return Action(tcp + np.array([0.0, 0.0, V_FINE * DT * 0.5]), yaw, 0.0)
+        resting = env.in_target(task) and abs(env.object_velocity(name)[2]) < 0.02 and z_err < 0.04
+        if xy_err < 0.012 and (z_err < 0.008 or resting):
+            # At the release height, or set down on something inside the bin: let go.
             return Action(tcp.copy(), yaw, 0.0)
         sub = _funnel(tcp - offset, goal_c, carry, 0.01, 0.0) + offset
         near = xy_err < 0.03
         nxt = _step_toward(tcp, sub, V_FINE * 1.5 if near else V_MAX)
-        # The part's yaw does not matter in a bin: turn the hand toward a relaxed wrist instead.
-        return Action(nxt, natural_yaw(tcp), 1.0)
+        return Action(nxt, place_yaw(env, name, tcp), 1.0)
+
+
+def place_yaw(env: SimEnv, name: str, tcp: np.ndarray) -> float:
+    """Gripper yaw while carrying: a long part (or a lying cylinder) goes in lengthwise along x,
+    so parts sharing a bin, which are spread along y, do not land on each other. Anything else
+    is free, so relax the wrist. The hand only turns once the part is lifted clear."""
+    g = env.grasp_info(name)
+    if env.object_state(name).pos[2] - g.half_z < 0.06:
+        # Too low to turn a long part without sweeping its neighbours: hold the yaw.
+        return env.gripper_yaw()
+    if g.period == np.pi:
+        # The fingers close across the short side: closing along y puts the long side along x.
+        return np.pi / 2
+    return natural_yaw(tcp)
 
 
 def natural_yaw(p: np.ndarray) -> float:

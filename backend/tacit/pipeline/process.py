@@ -19,6 +19,7 @@ from ..perception.timeline import IGNORE, segment_steps
 from ..storage import (load_skill, media_dir, media_url, pointcloud_path, read_json, save_skill, skill_dir,
                        tracks_path, twin_path, write_json)
 from . import geometry, preview, writer
+from ..robot import lab as robot_lab
 from .video import frame_at, frames as video_frames, probe, save_jpeg, transcode
 
 log = logging.getLogger("tacit.process")
@@ -168,12 +169,16 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
         if st["why_source"] != "expert" and st["index"] in pending and not any(q.get("step_index") == st["index"] for q in skill.get("qa", [])):
             skill.setdefault("qa", []).append({"step_index": st["index"], "step_id": st["id"], "t": st["t_end"],
                                                "question": pending[st["index"]], "answer": None, "pending": True})
-    title = struct.get("title") or skill.get("title")
+    title = skill["title"] if (load_skill(skill_id) or {}).get("title_locked") else (struct.get("title") or skill.get("title"))
     if skill.get("test") and not title.startswith("QA "):
         title = "QA " + title
     skill.update({"title": title, "summary": struct.get("summary", ""), "steps": out_steps,
                   "sop_markdown": docs.get("sop_markdown", ""), "quiz": docs.get("quiz", [])[:5], "safety": docs.get("safety", [])[:4]})
-    skill.setdefault("robot", {})["program"] = struct.get("robot_program") or []
+    robot = skill.setdefault("robot", {})
+    robot["program"] = struct.get("robot_program") or []
+    pol = robot.get("policy") or {}
+    if pol.get("status") == "trained" and pol.get("program") and pol["program"] != robot_lab.normalize_program(robot["program"]):
+        pol["status"] = "stale"  # the skill changed; the policy learned the old program
     save_skill(skill)
     job.finish_stage("write", detail=f"\"{skill['title']}\"")
 

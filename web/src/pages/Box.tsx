@@ -109,7 +109,7 @@ function ChipMap({ box, selected, onSelect }: { box: BoxStatus; selected: number
   )
 }
 
-function ChipPanel({ c, hist, highlight }: { c: BoxChip; hist: Map<string, number[]>; highlight: boolean }) {
+function ChipPanel({ c, hist, highlight, queue }: { c: BoxChip; hist: Map<string, number[]>; highlight: boolean; queue?: BoxStatus['speech_queue'] }) {
   const tone = chipTone(c)
   return (
     <Panel
@@ -155,6 +155,19 @@ function ChipPanel({ c, hist, highlight }: { c: BoxChip; hist: Map<string, numbe
           )
         })}
       </div>
+      {queue && c.group.includes('speech') && (
+        <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-xs" data-testid="speech-queue">
+          <span className="flex items-center gap-2 text-fg-muted">
+            <StatusDot tone={queue.busy ? 'ion' : 'ok'} pulse={queue.busy} />
+            Voice gate {queue.busy ? 'busy' : 'idle'}
+          </span>
+          <span className="telemetry flex gap-3 text-fg-subtle">
+            <span title="live answers waiting for Whisper">listen {queue.listen}</span>
+            <span title="coach and tutor speech waiting">interactive {queue.interactive}</span>
+            <span title="narration and background work">batch {queue.batch}</span>
+          </span>
+        </div>
+      )}
       {c.memory && (
         <div className="space-y-2.5 border-t border-line px-4 py-3">
           <div>
@@ -235,7 +248,7 @@ export default function BoxPage() {
           <ChipMap box={data} selected={selected} onSelect={(id) => setSelected((s) => (s === id ? null : id))} />
           <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
             {data.chips.map((c) => (
-              <ChipPanel key={c.id} c={c} hist={hist} highlight={selected === c.id} />
+              <ChipPanel key={c.id} c={c} hist={hist} highlight={selected === c.id} queue={data.speech_queue} />
             ))}
           </div>
         </>

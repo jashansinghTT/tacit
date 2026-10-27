@@ -106,5 +106,6 @@ export const STAGE_LABEL: Record<string, string> = {
   train: 'Train',
   save: 'Save',
   trials: 'Trials',
+  align: 'Align with the expert',
   report: 'Report',
 }

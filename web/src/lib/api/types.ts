@@ -62,6 +62,8 @@ export interface BoxChip {
 }
 
 export interface BoxStatus {
+  /** The chip-1 voice gate: queued listen / interactive / batch requests. */
+  speech_queue?: { listen: number; interactive: number; batch: number; busy: boolean }
   host: string
   updated_at: string
   chips: BoxChip[]
@@ -633,4 +635,45 @@ export interface Earnings {
   currency: string
   by_month: [string, number][]
   entries: EarningsEntry[]
+}
+
+// Quality and safety audit (use case 5)
+
+export type AuditStepStatus = 'done' | 'missing' | 'out_of_order'
+
+export interface AuditStep {
+  index: number
+  title: string
+  status: AuditStepStatus
+  score: number | null
+  expert_seconds: number | null
+  /** Where the step starts in the worker's run (the backend may send [start, end]). */
+  run_t: number | null
+  run_t_end?: number | null
+  run_seconds: number | null
+  /** Targets as lists after normalisation (the backend may send a string or a list). */
+  gaze_check: { expert_looked_at: string[]; worker_looked_at: string[]; ok: boolean | null } | null
+}
+
+export interface AuditSummary {
+  steps_total: number
+  done: number
+  out_of_order: number
+  missing: number
+  gaze_checks_ok: number
+  score: number | null
+}
+
+export interface AuditListItem {
+  id: string
+  worker: string
+  created_at: string
+  summary: AuditSummary | null
+  narrative: string | null
+  video: string | null
+}
+
+export interface Audit extends AuditListItem {
+  skill_id: string
+  steps: AuditStep[]
 }

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Box, Eye, GraduationCap, Bot, ShieldCheck, Coins, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useApp, type PersonaId } from '@/lib/store'
+import { useFeatured } from '@/lib/featured'
 import { Button, Kbd } from '@/components/ui'
 
 interface TourStep {
@@ -27,25 +28,25 @@ export const TOUR: TourStep[] = [
     models: 'MediaPipe · HaMeR, Gaze-LLE, RF-DETR on chip 0 · gpt-oss-20b on chip 2 · S2 Pro, Whisper on chip 1',
   },
   {
-    key: 'check', label: 'Check', icon: ShieldCheck, route: '/skills/sk_sort?tab=verify', persona: 'u_maria', target: '[data-tour="verify-panel"]',
+    key: 'check', label: 'Check', icon: ShieldCheck, route: 'verify', persona: 'u_maria', target: '[data-tour="verify-panel"]',
     title: 'Check it is real',
     body: 'VGGT rebuilds the scene from four views of the clip. A real camera gives one rigid scene; an AI-made video drifts. This capture scores high and carries a verification certificate.',
     models: 'VGGT-1B on chip 0',
   },
   {
-    key: 'teach', label: 'Teach', icon: GraduationCap, route: '/learn/sk_sort', persona: 'u_sam', target: '[data-tour="lesson-player"]',
+    key: 'teach', label: 'Teach', icon: GraduationCap, route: 'learn', persona: 'u_sam', target: '[data-tour="lesson-player"]',
     title: 'Teach the next person',
     body: 'Sam, a new hire, learns the skill: each step with Maria\'s own "why", the 3D twin doing it, narration in the trainee\'s language, and live practice on camera with a match score.',
     models: 'S2 Pro, Whisper on chip 1 · gpt-oss-20b on chip 2 · HaMeR on chip 0',
   },
   {
-    key: 'do', label: 'Do', icon: Bot, route: '/robot/sk_sort', persona: 'u_priya', target: '[data-tour="robot-modes"]',
+    key: 'do', label: 'Do', icon: Bot, route: 'robot', persona: 'u_priya', target: '[data-tour="robot-modes"]',
     title: 'Let a robot do it',
     body: 'The same capture becomes a robot program. Train a policy in simulation, evaluate it over 20 randomised trials, and compare with GR00T running on the box.',
     models: 'MuJoCo + PyTorch on CPU · GR00T N1.7 on chip 3',
   },
   {
-    key: 'earn', label: 'Earn', icon: Coins, route: '/exchange/lst_sort', persona: 'u_atlas', target: '[data-tour="license-panel"]',
+    key: 'earn', label: 'Earn', icon: Coins, route: 'listing', persona: 'u_atlas', target: '[data-tour="license-panel"]',
     title: 'Earn from what you know',
     body: 'Verified, consented skills are listed on the Skill Exchange. A robot maker licenses the pack (motion, gaze, text, never video) and Maria earns 70% of every licence.',
     models: 'Consent record + VGGT certificate',
@@ -101,13 +102,15 @@ export function Tour() {
   const navigate = useNavigate()
   const location = useLocation()
   const step = TOUR[tourStep]
+  const featured = useFeatured()
+  const routeOf = (r: string) => (r.startsWith('/') ? r : featured.links[r as keyof typeof featured.links] ?? '/')
 
   useEffect(() => {
-    if (!tourOpen || !step) return
+    if (!tourOpen || !step || featured.loading) return
     setPersona(step.persona)
-    navigate(step.route)
+    navigate(routeOf(step.route))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tourOpen, tourStep])
+  }, [tourOpen, tourStep, featured.loading])
 
   useEffect(() => {
     if (!tourOpen) return

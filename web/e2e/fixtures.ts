@@ -38,3 +38,19 @@ export async function openReadySkill(page: Page): Promise<string> {
   await expect(page.getByTestId('page-skill')).toBeVisible()
   return id
 }
+
+/**
+ * A skill a test may write to: on the mock any ready skill; on the real stack only a test ("QA ")
+ * skill, so demo data is never touched. Returns null if there is none.
+ */
+export async function writableSkillId(page: Page): Promise<string | null> {
+  if (!REAL) return null
+  const res = await page.request.get('/api/skills?include_test=1&status=ready')
+  const rows = (await res.json()) as { id: string; title: string; steps_count: number }[]
+  return rows.find((r) => r.title.startsWith('QA ') && r.steps_count > 0)?.id ?? null
+}
+
+/** The Studio URL for a capture; on the real stack the skill is named "QA ..." from the start. */
+export function studioUrl(what: string) {
+  return REAL ? `/studio?title=${encodeURIComponent(`QA e2e ${what}`)}` : '/studio'
+}

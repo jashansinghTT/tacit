@@ -58,6 +58,10 @@ export const useTracks = (id: string | undefined, enabled = true) =>
   useQuery({ queryKey: qk.tracks(id ?? ''), queryFn: () => api.tracks(id!), enabled: Boolean(id) && enabled, staleTime: Infinity })
 export const useTwin = (id: string | undefined, enabled = true) =>
   useQuery({ queryKey: qk.twin(id ?? ''), queryFn: () => api.twin(id!), enabled: Boolean(id) && enabled, staleTime: Infinity })
+export const useAudits = (skillId: string | undefined) =>
+  useQuery({ queryKey: ['audits', skillId], queryFn: () => api.audits(skillId!), enabled: Boolean(skillId) })
+export const useAudit = (skillId: string | undefined, auditId: string | null) =>
+  useQuery({ queryKey: ['audit', skillId, auditId], queryFn: () => api.audit(skillId!, auditId!), enabled: Boolean(skillId && auditId), staleTime: Infinity })
 export const usePointcloud = (url: string | null | undefined) =>
   useQuery({ queryKey: qk.pointcloud(url ?? ''), queryFn: () => api.pointcloud(url!), enabled: Boolean(url), staleTime: Infinity })
 
