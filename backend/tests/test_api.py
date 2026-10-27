@@ -72,8 +72,10 @@ def _llm(request: httpx.Request) -> httpx.Response:
         content = "You did the first step well. Do not skip setting the cup in the bowl."
     elif "pending_questions" in prompt:
         content = json.dumps(STRUCTURE)
-    elif "sop_markdown" in prompt:
-        content = "```json\n" + json.dumps(DOCS) + "\n```"
+    elif "standard work instruction in Markdown" in prompt:
+        content = DOCS["sop_markdown"]
+    elif '"quiz"' in prompt:
+        content = "```json\n" + json.dumps({"quiz": DOCS["quiz"], "safety": DOCS["safety"]}) + "\n```"
     else:
         content = "Why did you pick the cup first?"
     return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})

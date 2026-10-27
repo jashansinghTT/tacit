@@ -67,6 +67,25 @@ def backend_settled() -> bool:
         return True
 
 
+CPU_SHARES = {"speech": 8192, "vision": 4096, "gpt-oss": 4096, "gr00t": 2048}
+
+
+def ensure_cpu_priority() -> list[str]:
+    """Model containers outrank everything else on the CPU under load: S2 Pro's host loop is CPU-bound
+    and slows 3-4x when the box is busy (QA-7). Containers lose this on restart, so reapply it."""
+    out = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True).stdout.split()
+    changed = []
+    for name in out:
+        if not name.startswith("tt-model-"):
+            continue
+        want = next((v for k, v in CPU_SHARES.items() if k in name), 1024)
+        cur = subprocess.run(["docker", "inspect", "-f", "{{.HostConfig.CpuShares}}", name], capture_output=True, text=True).stdout.strip()
+        if cur != str(want):
+            subprocess.run(["docker", "update", "--cpu-shares", str(want), name], capture_output=True)
+            changed.append(f"{name}={want}")
+    return changed
+
+
 def allowed(state: dict, name: str) -> bool:
     hist = [t for t in state.get(name, []) if time.time() - t < 3600]
     state[name] = hist
@@ -88,6 +107,9 @@ def main() -> None:
         out = subprocess.run([str(ROOT / "deploy" / "stack.sh"), "up-models"], capture_output=True, text=True, timeout=600)
         state["models"].append(time.time())
         actions.append("stack up-models: " + " | ".join(l.strip() for l in out.stdout.splitlines() if "start" in l or "FAILED" in l))
+    shares = ensure_cpu_priority()
+    if shares:
+        actions.append("cpu priority: " + ", ".join(shares))
     STATE.write_text(json.dumps(state))
     if actions:
         log("; ".join(actions))

@@ -118,6 +118,21 @@ def wrist_path(skill_id: str) -> tuple[list[list[float]], list[float], list[floa
     return (pts, ts, grip) if len(pts) >= 5 else None
 
 
+def _niced(fn, *args):
+    """Run sim work at low CPU priority (nice 10 for this worker thread and the processes it starts),
+    so a training never slows the live models or the coach's voice."""
+    import os
+    import threading
+
+    def go():
+        try:
+            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 10)
+        except OSError:
+            pass
+        return fn(*args)
+    return asyncio.to_thread(go)
+
+
 def _bridge(job: jobs.Job, loop: asyncio.AbstractEventLoop):
     def cb(frac: float, detail: str) -> None:
         loop.call_soon_threadsafe(job.stage_progress, frac, detail)
@@ -137,7 +152,7 @@ async def train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
     def on_episode(i: int, n: int, ok: bool) -> None:
         loop.call_soon_threadsafe(job.stage_progress, (i + 1) / max(1, n), f"{i + 1}/{n} demonstrations")
 
-    ds = await asyncio.to_thread(ts.generate_demos, prog, demos, 0, str(rd / "demos"), True, None, on_episode)
+    ds = await _niced(ts.generate_demos, prog, demos, 0, str(rd / "demos"), True, None, on_episode)
     ds = ds.to_dict() if hasattr(ds, "to_dict") else dict(ds)
     job.finish_stage("demos", detail=f"{ds.get('n', demos)} demos, scripted success {ds.get('success_rate', 0):.0%}")
     job.start_stage("train", models=["PyTorch@cpu"])
@@ -148,7 +163,7 @@ async def train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
         loop.call_soon_threadsafe(job.stage_progress, epoch / max(1, epochs), f"epoch {epoch}/{epochs} loss {loss:.4f}")
         job.result = {"loss_curve": curve}
 
-    res = await asyncio.to_thread(ts.train_policy, ds.get("path", str(rd / "demos")), str(rd / "policy.pt"), epochs, on_epoch)
+    res = await _niced(ts.train_policy, ds.get("path", str(rd / "demos")), str(rd / "policy.pt"), epochs, on_epoch)
     job.finish_stage("train", detail=f"final loss {curve[-1][1] if curve else 'n/a'}")
     skill = load_skill(skill_id)
     skill["robot"]["policy"] = {"status": "trained", "trained_at": now(), "policy_path": res.get("policy_path", str(rd / "policy.pt")),
@@ -173,7 +188,7 @@ async def evaluate(job: jobs.Job, skill_id: str, trials: int, seed: int) -> dict
         job.result = {"trials": list(done)}
         loop.call_soon_threadsafe(job.stage_progress, (i + 1) / trials, f"{sum(1 for x in done if x.get('success'))}/{len(done)} succeeded")
 
-    res = await asyncio.to_thread(ts.evaluate_policy, policy_program(skill), pol["policy_path"], trials, seed, on_trial)
+    res = await _niced(ts.evaluate_policy, policy_program(skill), pol["policy_path"], trials, seed, on_trial)
     skill = load_skill(skill_id)
     skill["robot"]["policy"].update({"success_rate": res["success_rate"], "trials": trials, "evaluated_at": now(),
                                      "last_eval": res.get("trials", [])})

@@ -1,6 +1,7 @@
 """gpt-oss-20b turns an observed timeline into a lesson: steps, the why, an SOP, a quiz and a robot program."""
 from __future__ import annotations
 
+import asyncio
 import json
 
 from ..models import llm
@@ -68,17 +69,36 @@ place into the container). Ask pending questions only for steps whose why is inf
 
 
 async def write_documents(structure: dict) -> tuple[dict, dict]:
-    user = f"""Skill (JSON):
-{json.dumps({k: structure.get(k) for k in ("title", "summary", "steps")}, ensure_ascii=False)}
+    """The SOP (plain Markdown) and the quiz with safety notes (small JSON), written in parallel.
+
+    Markdown inside a JSON string is long and easy to break, so the two are separate calls."""
+    skill = json.dumps({k: structure.get(k) for k in ("title", "summary", "steps")}, ensure_ascii=False)
+    sop_user = f"""Skill (JSON):
+{skill}
+
+Write a standard work instruction in Markdown: '# <title>', a one-line purpose, a 'Before you start' list, numbered
+steps (bold title, then the instruction, then a 'Why:' line), and a short 'Check your work' list. Reply with the
+Markdown only."""
+    quiz_user = f"""Skill (JSON):
+{skill}
 
 Return JSON with exactly these keys:
-{{"sop_markdown": "a standard work instruction in Markdown: '# <title>', a one-line purpose, a 'Before you start' list, \
-numbered steps (bold title, then the instruction, then 'Why:' line), and a short 'Check your work' list",
-  "quiz": [{{"q": "...", "choices": ["...", "...", "..."], "answer": <index of the right choice>, "explain": "one sentence"}}],
+{{"quiz": [{{"q": "...", "choices": ["...", "...", "..."], "answer": <index of the right choice>, "explain": "one sentence"}}],
   "safety": ["at most 3 short safety or quality notes that follow from the steps"]}}
 Write exactly 3 quiz questions that test the why, not trivia."""
-    return await llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": user}],
-                               max_tokens=1600)
+    sop_sys = WRITER_SYSTEM.replace("Reply with JSON only, no prose before or after.", "Reply with Markdown only.")
+    (sop, sb1), (qz, sb2) = await asyncio.gather(
+        llm.chat([{"role": "system", "content": sop_sys}, {"role": "user", "content": sop_user}], max_tokens=1600),
+        llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": quiz_user}], max_tokens=1000))
+    if not qz.get("quiz"):  # one retry: a lesson without a quiz cannot be completed
+        qz2, _ = await llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": quiz_user}],
+                                     max_tokens=1000)
+        qz["quiz"] = qz2.get("quiz") or []
+        qz.setdefault("safety", qz2.get("safety", []))
+    sop = sop.strip()
+    if sop.startswith("```"):
+        sop = sop.strip("`").split("\n", 1)[-1]
+    return {"sop_markdown": sop, "quiz": qz.get("quiz", []), "safety": qz.get("safety", [])}, sb1
 
 
 COACH_SYSTEM = """You are the coach inside Tacit. An expert is recording a hands-on task so new hires and robots can learn it. \
