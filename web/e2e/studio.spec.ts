@@ -46,3 +46,18 @@ test('the source picker offers webcam, sample and upload', async ({ page }) => {
   await page.getByTestId('camera-preview').click()
   await expect(page.getByTestId('live-stage')).toBeVisible()
 })
+
+// QA-8: a backend restart fails the running job and re-runs it under a new id. The Studio must
+// follow the re-run instead of showing "Failed" forever. Mock only (it simulates the restart).
+test('processing follows a job the box re-ran after a restart', async ({ page }) => {
+  test.skip(REAL, 'simulated restart exists only in the mock backend')
+  await page.goto(`/studio?title=${encodeURIComponent('Restart drill [restart]')}`)
+  await page.getByTestId('capture-start').click()
+  await expect(page.getByTestId('capture-stop')).toBeVisible()
+  await page.waitForTimeout(1500)
+  await page.getByTestId('capture-stop').click()
+  await expect(page.getByTestId('processing-panel')).toBeVisible()
+  await expect(page.getByTestId('processing-panel')).toContainText('Restarted, continuing', { timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: 'Your skill is ready' })).toBeVisible({ timeout: 40_000 })
+  await expect(page.getByTestId('processing-panel')).not.toContainText('Failed')
+})

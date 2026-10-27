@@ -124,14 +124,28 @@ function captureSocket(skillId: string) {
     } else if (msg.type === 'stop') {
       const sk = db.skills.get(skillId)
       if (sk) sk.status = 'processing'
-      const job_id = startJob('process', skillId, () => {
+      const finish = () => {
         const k = db.skills.get(skillId)
         if (k) {
           k.status = 'ready'
-          k.title = 'Kit an M6 bracket set (live)'
+          if (!k.title.includes('[restart]')) k.title = 'Kit an M6 bracket set (live)'
           k.verification = { ...k.verification, status: 'verified', score: 0.93, checked_at: new Date().toISOString() }
+          k.job_id = null
         }
-      })
+      }
+      // A title with "[restart]" simulates the backend restarting mid-job and re-running it.
+      const restart = sk?.title.includes('[restart]')
+        ? {
+            failAt: 'write',
+            onFail: () => {
+              setTimeout(() => {
+                const k = db.skills.get(skillId)
+                if (k) k.job_id = startJob('process', skillId, finish)
+              }, 2500)
+            },
+          }
+        : undefined
+      const job_id = startJob('process', skillId, finish, restart)
       if (sk) sk.job_id = job_id
       s.later(300, () => {
         s.push({ type: 'saved', skill_id: skillId, job_id })
