@@ -122,3 +122,33 @@ def test_consistency_separates_rigid_from_drifting_scenes():
     assert real["score"] > 0.9 and geometry.verdict(real["score"]) == "verified"
     assert fake["score"] < real["score"] and geometry.verdict(fake["score"]) == "suspect"
     json.dumps(real)
+
+
+def test_reflex_curls_open_vs_fist_and_movement_file():
+    from tacit import reflex
+    # A straight hand: every finger's points on a line from the wrist.
+    straight = [[0.0, 0.0, 0.0]]
+    for k in range(5):
+        d = np.array([0.3 * (k - 2), 1.0, 0.0]) / np.linalg.norm([0.3 * (k - 2), 1.0, 0.0])
+        for j in range(1, 5):
+            straight.append((0.03 * j * d).tolist())
+    c_open = reflex.curls(straight)
+    assert max(c_open) == 0.0
+    # Curl every finger: each bone turns 75 degrees from the last one.
+    bent = [[0.0, 0.0, 0.0]]
+    for k in range(5):
+        p, ang = np.zeros(3), 0.0
+        for j in range(1, 5):
+            p = p + 0.03 * np.array([0.0, np.cos(ang), -np.sin(ang)])
+            bent.append((p + [0.02 * (k - 2), 0, 0]).tolist())
+            ang += np.deg2rad(75)
+    c_fist = reflex.curls(bent)
+    assert all(v > 0.5 for v in c_fist[1:])
+    track = {"frames": [[0.0, *c_open], [0.5, *c_fist], [1.0, *c_fist], [1.5, *c_open]], "hand": "right"}
+    steps = reflex.movement_steps(track)
+    assert steps[-1]["pose"] == [0.15] * 5 and all(max(s["pose"]) <= reflex.GUIDE_MAX for s in steps)
+    src = reflex.movement_file("Sort the cup", "test", steps)
+    ns: dict = {}
+    exec(compile(src, "movement.py", "exec"), ns)  # the generated module must be valid Reflex input
+    assert ns["TITLE"] == "Sort the cup" and len(ns["steps"]()) == len(steps)
+    assert reflex.movement_name("sk_ab12cd", 2) == "tacit_sk_ab12cd_step2"

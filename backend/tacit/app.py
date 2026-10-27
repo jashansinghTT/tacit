@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadF
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import jobs, seed
+from . import jobs, reflex, seed
 from .box import box_status
 from .config import MEDIA, SAMPLES, VERSION, WEB_DIST, WEB_PUBLIC
 from .db import LessonProgress, SkillRow, User, init_db, select, session
@@ -641,6 +641,63 @@ async def ex_pack(license_id: str):
 @app.get("/api/earnings")
 async def earnings_(x_tacit_user: str | None = Header(default=None)):
     return market.earnings(user_id(x_tacit_user))
+
+
+# ------------------------------------------------------------------------------------ reflex glove
+@app.get("/api/reflex/status")
+async def reflex_status():
+    return await reflex.Client().status()
+
+
+@app.get("/api/skills/{skill_id}/fingers")
+async def skill_fingers(skill_id: str, step: int | None = None, hand: str | None = None):
+    if not load_skill(skill_id):
+        return err(404, "not_found", f"no skill {skill_id}")
+    return reflex.finger_track(skill_id, step, hand)
+
+
+@app.get("/api/skills/{skill_id}/reflex.py")
+async def skill_reflex_file(skill_id: str, step: int | None = None, speed: float = 1.0):
+    sk = load_skill(skill_id)
+    if not sk:
+        return err(404, "not_found", f"no skill {skill_id}")
+    track = reflex.finger_track(skill_id, step)
+    steps = reflex.movement_steps(track, speed=speed)
+    title = sk.get("title", "Tacit skill") + (f", step {step}" if step else "")
+    name = reflex.movement_name(skill_id, step)
+    src = reflex.movement_file(title, f"{len(steps)} poses from {(sk.get('expert') or {}).get('name', 'an expert')}'s {track['hand']} hand", steps)
+    return Response(content=src, media_type="text/x-python", headers={"Content-Disposition": f'attachment; filename="{name}.py"'})
+
+
+@app.post("/api/reflex/guide")
+async def reflex_guide(body: dict):
+    """Teach the expert's finger motion (whole skill or one step) to a Reflex glove and play it."""
+    skill_id, step = body["skill_id"], body.get("step_index")
+    sk = load_skill(skill_id)
+    if not sk:
+        return err(404, "not_found", f"no skill {skill_id}")
+    track = reflex.finger_track(skill_id, step)
+    steps = reflex.movement_steps(track, speed=float(body.get("speed", 1.0)))
+    if not steps:
+        raise HTTPException(400, "no hand motion recorded for that part of the skill")
+    client = reflex.Client(body.get("url"))
+    st = await client.status()
+    name = reflex.movement_name(skill_id, step)
+    if not st["connected"]:
+        return {"connected": False, "name": name, "steps": steps, "seconds": round(sum(s["seconds"] for s in steps), 2),
+                "message": f"No Reflex backend at {client.url}; the virtual glove plays the same steps."}
+    title = sk.get("title", "Tacit skill") + (f", step {step}" if step else "")
+    await client.teach(name, title, "taught by Tacit", steps)
+    await client.play(name)
+    return {"connected": True, "name": name, "steps": steps, "seconds": round(sum(s["seconds"] for s in steps), 2)}
+
+
+@app.post("/api/reflex/stop")
+async def reflex_stop():
+    client = reflex.Client()
+    if (await client.status())["connected"]:
+        await client.stop()
+    return {"ok": True}
 
 
 # ------------------------------------------------------------------------------------ static
