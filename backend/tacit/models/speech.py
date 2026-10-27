@@ -28,6 +28,7 @@ class _Gate:
     """
 
     LISTEN, INTERACTIVE, BATCH = -1, 0, 1   # transcription first: a person is waiting on it
+    HOLD_S = 20.0    # after someone talks to Tacit, narration waits this long so the voice is free for the reply
 
     def __init__(self):
         self._busy = False
@@ -36,6 +37,11 @@ class _Gate:
         self.live_sessions = 0           # open live captures: narration waits until they end
         self._quiet = asyncio.Event()
         self._quiet.set()
+        self._person_at = -1e9
+
+    def person_active(self) -> None:
+        """Someone asked or answered: hold narration so it does not take the voice right before the reply."""
+        self._person_at = time.monotonic()
 
     def session_opened(self) -> None:
         self.live_sessions += 1
@@ -47,13 +53,23 @@ class _Gate:
             self._quiet.set()
 
     async def wait_quiet(self, max_wait: float = 900.0) -> None:
-        """Batch narration holds off while someone is recording with the coach (at most 15 min)."""
-        try:
-            await asyncio.wait_for(self._quiet.wait(), timeout=max_wait)
-        except TimeoutError:
-            pass
+        """Batch narration holds off while someone records with the coach or talks to the tutor (at most 15 min)."""
+        deadline = time.monotonic() + max_wait
+        while (left := deadline - time.monotonic()) > 0:
+            if not self._quiet.is_set():
+                try:
+                    await asyncio.wait_for(self._quiet.wait(), timeout=left)
+                except TimeoutError:
+                    return
+                continue
+            hold = self._person_at + self.HOLD_S - time.monotonic()
+            if hold <= 0:
+                return
+            await asyncio.sleep(min(hold, left))
 
     async def acquire(self, priority: int) -> None:
+        if priority < self.BATCH:
+            self.person_active()
         if not self._busy and not self._waiting:
             self._busy = True
             return

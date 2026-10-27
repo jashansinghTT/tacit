@@ -428,6 +428,27 @@ async def test_narration_waits_while_a_capture_is_open():
     await asyncio.wait_for(waiter, 1)
 
 
+async def test_narration_holds_off_while_someone_talks_to_the_tutor():
+    import asyncio
+    import time
+    from tacit.models.speech import _Gate
+    gate = _Gate()
+    gate.HOLD_S = 0.3
+    await gate.wait_quiet(max_wait=5)            # nobody has talked yet: no wait
+    await gate.acquire(gate.INTERACTIVE)        # the tutor speaks
+    gate.release()
+    t0 = time.monotonic()
+    await gate.wait_quiet(max_wait=5)
+    assert time.monotonic() - t0 >= 0.25        # narration waited for a follow-up question
+    t0 = time.monotonic()
+    await gate.acquire(gate.BATCH)              # narration itself does not extend the hold
+    gate.release()
+    await gate.wait_quiet(max_wait=5)
+    assert time.monotonic() - t0 < 0.1
+    gate.person_active()
+    await asyncio.wait_for(gate.wait_quiet(max_wait=0.1), 1)   # never past max_wait
+
+
 def test_episode_count_reads_both_meta_formats(tmp_path):
     import json
     from tacit.exchange.market import _count_episodes

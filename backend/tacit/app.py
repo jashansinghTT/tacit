@@ -660,6 +660,7 @@ async def tutor_ask(skill_id: str, request: Request):
     sk = load_skill(skill_id)
     if not sk:
         return err(404, "not_found", f"no skill {skill_id}")
+    speech.GATE.person_active()   # keep the voice free while the answer is written
     ctype = request.headers.get("content-type", "")
     transcript = None
     if ctype.startswith("multipart/"):
