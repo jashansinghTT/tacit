@@ -36,19 +36,25 @@ its bars; times below are in the first cut.
 |---|---|---|---|---|---|
 | 1 | Cold open | 0.0–8.0 (0–3) | **Experts retire.** | Masked word rise; "retire." comes apart letter by letter, defocusing | Her real hands at the bench, slowing into a freeze, graded low |
 | 2 | Hands | 8.0–22.4 (3–9) | **Their hands *know* things.** | Light draw-on of the tracked skeletons on the frozen frame; lift into 3D and orbit; dissolve to the index finger, which becomes the mark in the silence | The skill's own tracks; the 3D hand is her left hand's world landmarks |
-| 3 | Title | 22.4–24.8 (9–10) | **tacit** | On the drop: spring settle, fingertip shockwave, wordmark wipe, specular sweep; push-out into the cut | The app's mark |
+| 3 | Title | 22.4–24.8 (9–10) | **tacit** | On the drop: camera kick, spring settle, fingertip shockwave, wordmark wipe, specular sweep; push-out into the cut | The app's mark, large |
 | 4 | Watch | 24.8–32.1 (10–13) | **Watch.** · `HaMeR 16 ms` `Gaze-LLE 10 ms` `RF-DETR 12 ms` | Scan beam reveal, slow push-in, chips on the beats with their subjects flaring | Original footage: she sets a stem in the vase, eyes on it; skeletons, gaze ray, vase boxes from the tracks |
 | 5 | Check | 32.1–39.3 (13–16) | **Check.** · `VERIFIED 0.90` / `SUSPECT 0.24` | Particle dissolve into VGGT's rebuild, orbit; split screen, stamp slams, RGB-split glitch on the fake | VGGT clouds of the real and the AI-made clip |
-| 6 | Teach | 39.3–44.1 (16–18) | **Teach.** *in nine languages.* | Z-space panes with parallax and depth fade; zoom-through into the twin's hand | Lesson page in English and Spanish, and its 3D twin |
-| 7 | Do | 44.1–51.3 (18–21) | **Do.** · **20/20** `scenes it never saw` · `GR00T N1.7 chip 3 baseline` | Zoom-out match cut, mosaic of trial tiles flipping on the beat, hard cut to GR00T's camera | Robot Lab replay of her wrist path; the 20 evaluated trials; GR00T's exterior camera |
-| 8 | Earn | 51.3–56.1 (21–23) | **Earn.** **70%** *to the expert.* | Whip pan with motion blur, counter roll | Skill Exchange and Earnings pages |
+| 6 | Teach | 39.3–44.1 (16–18) | **Teach.** · the nine language names, one per half-beat · *in nine languages.* | Beat-cut word flash over a slow push; zoom-through into the twin's hand | The lesson's 3D twin, cropped to the scene |
+| 7 | Do | 44.1–51.3 (18–21) | **Do.** · **20/20** `unseen scenes · simulation` | Zoom-out match cut, hard cut on the beat to the policy run, mosaic of trial tiles flipping on the beat | Robot Lab: her ghost hands on the replay, then the trained policy picking and placing the stem; the 20 evaluated trials |
+| 8 | Earn | 51.3–56.1 (21–23) | **Earn.** **70%** *to the expert.* · `expert 70` `plant 30` | Whip pan with motion blur, counter roll, a bar splitting on the beat | The Skill Exchange, blurred to texture |
 | 9 | Box | 56.1–60.9 (23–25) | **9** models · **4** Tenstorrent chips · **1** box | One chip per beat with its models, counters stepping; one outline closes around all four on the breakdown | Drawn from `/api/box` |
-| 10 | Tagline | 60.9–68.1 (25–28) | **Teach a robot by *showing* it.** | Words on the beats, rack focus to the scene, slow push | The landing page's 3D hero |
-| 11 | End card | 68.1–74.3 (28–end) | tacit · Nine models · four Tenstorrent chips · one box | Lockup, tracking-in line, glint on the last hit, credits, fade | Credits incl. MiniMax-Music3, machine-generated |
+| 10 | Tagline | 60.9–68.1 (25–28) | **Teach a robot by *showing* it.**, then a recap | Words on the beats, rack focus to the scene, slow push; on bar 27 eight flash-cuts of earlier sections on the half-beat | The landing page's 3D hero; frames of sections 2 to 9 |
+| 11 | End card | 68.1–74.3 (28–end) | tacit · Nine models · four Tenstorrent chips · one box | Stacked lockup built on the downbeat (the chain draws on joint by joint), tracking-in line, a sweep on the last hit, credits, fade with the tail | Credits incl. MiniMax-Music3, machine-generated |
 
 Changed from the plan: Teach no longer says "In her own words": both showcase skills' "why" notes are
-still inferred from the video, not answered by the expert, so the line would not be true. GR00T is
-named as the baseline (it does not finish the task in this sim; the skill-trained policy does).
+still inferred from the video, not answered by the expert, so the line would not be true. GR00T is not
+shown driving the robot (it is the baseline and does not finish this task in the sim; the trained
+policy does); it appears as chip 3's model in section 9.
+
+Changed after the first review (an independent pass over the first cut, 2026-10-27): no app pane may
+show the demo persona or demo-license dollar amounts (they would put a fake name and payout on a real,
+unnamed Pexels model), and readable UI is never the main picture. Teach and Earn were redesigned
+around that; Do now shows the task actually done; the end card got its own composition.
 
 ## Transitions (as built)
 

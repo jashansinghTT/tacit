@@ -1,7 +1,7 @@
 # Status: showreel
 
 State: running
-Updated: 2026-10-27T22:01:40+00:00
+Updated: 2026-10-27T22:47:26+00:00
 
 ## Works
 - Soundtrack: MiniMax Music 3 on chip 1, two takes in the lead's window (seed 11: 74 s, 433 s of chip
@@ -15,11 +15,10 @@ Updated: 2026-10-27T22:01:40+00:00
   lab panels as stills; robot replay run (1x, SwiftShader is too slow at 2x) and the landing hero (2x).
 
 ## Next
-- Four previews rendered and reviewed once (title, Watch→Check, Teach→Do, outro); fixes made from them:
-  the riser now builds, the dissolve follows the beam, the zoom-through lands on the hand, the outro got
-  a recap sizzle on the final lift, and the royalty counter can no longer show 71%.
-- Rendering the full first cut now; then previews re-encoded from its frames, an independent review
-  pass, fixes, and the handoff.
+- First cut rendered (22:13Z) and reviewed by an independent agent. Its findings acted on: no demo
+  persona or demo payouts on screen (they put a fake name and earnings on a real Pexels model), Teach and
+  Earn redesigned, Do shows the trained policy picking and placing, plus title, end card, Watch, Check and
+  Box fixes. Rendering the revised cut and previews now; then a re-check and the handoff.
 
 ## Notes for others
 - Listing detail API 500 (market._count_episodes got a list): reported, fixed by the lead at 21:31Z. The

@@ -34,6 +34,16 @@ See `showreel/README.md`. In short: `cd showreel && uv sync && ./make.sh cut && 
   does, 20/20). Latencies are the co-hosted p50s (16/10/12 ms), not the standalone 15/10/13.
 - App pages were captured from QA's merged build (:5790) because Learn, Robot Lab and Exchange were not
   in main yet. Recapture from main after the merge if the pages change.
+- After the first render, an independent review (a fresh agent with only the film, the user's
+  preferences and the plan) found that two panes put the app's demo persona ("Maria Chen, senior
+  assembler, 22 years") and demo-license payouts over the real, unnamed Pexels model. That would be
+  a fake identity and fake earnings on a real person, so both were removed. The same pass drove
+  several redesigns: Teach (the nine languages the lesson offers, over its twin), Earn (a 70/30 split
+  on the beat), Do (the trained policy actually picking and placing, labelled simulation), the mark
+  snapping on the riser's peak, a bigger title, and a stacked end card. The cut in this folder is the
+  revised one.
+- Teach shows the nine offered languages, not nine translations: requesting the eight missing ones
+  would queue their narration on chip 1, which the lead keeps free for people.
 
 ## For the user's review (choices I left open)
 
@@ -46,3 +56,4 @@ See `showreel/README.md`. In short: `cd showreel && uv sync && ./make.sh cut && 
 
 - Software-rendered 3D (robot, hero) is softer than the 2D material.
 - The listing page is not used (its API was returning 500 during capture; fixed since).
+- The tagline's hero arm is the landing page's stylized Franka; the Robot Lab's is the detailed model.
