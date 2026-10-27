@@ -136,7 +136,7 @@ function ChipPanel({ c, hist, highlight, queue }: { c: BoxChip; hist: Map<string
                 <div className="flex items-center gap-2">
                   <StatusDot tone={m.healthy ? 'ok' : 'fault'} />
                   <span className="truncate text-[13px] font-medium text-fg">{m.name}</span>
-                  <BackendBadge backend={m.backend} model={m.name} />
+                  <BackendBadge backend={m.backend} model={m.name} chip={m.backend === 'cpu' ? null : c.id} />
                 </div>
                 <div className="telemetry mt-0.5 pl-4 text-[11px] text-fg-subtle">
                   {m.role} · :{m.port} · {fmtInt(m.calls)} calls{m.dram_gib != null && ` · ${m.dram_gib.toFixed(2)} GiB`}

@@ -98,12 +98,20 @@ export function ChipTag({ chip, className }: { chip: number | null | undefined; 
 
 const BACKEND_LABEL: Record<Backend, string> = { tt: 'Tenstorrent', cpu: 'CPU fallback', cache: 'cached', mock: 'mock' }
 
+/** Models that run on the CPU by design (no chip), as opposed to a TT model falling back. */
+const CPU_NATIVE = /mediapipe|mujoco|pytorch|\bsim\b|behaviou?r cloning|bc policy/i
+
+export function isCpuNative(model: string | undefined, chip?: number | null) {
+  return Boolean(model && CPU_NATIVE.test(model) && (chip === null || chip === undefined))
+}
+
 /**
  * Says which path served a result. The spec asks for a visible badge whenever a result did not
  * come from a Tenstorrent chip; TT results get a quiet chip tag instead.
  */
-export function BackendBadge({ backend, model }: { backend: Backend; model?: string }) {
+export function BackendBadge({ backend, model, chip }: { backend: Backend; model?: string; chip?: number | null }) {
   if (backend === 'tt') return null
+  if (backend === 'cpu' && isCpuNative(model, chip)) return <ChipTag chip={null} />
   const Icon = backend === 'cache' ? Database : backend === 'mock' ? FlaskConical : Cpu
   return (
     <Badge tone={backend === 'mock' ? 'violet' : 'warn'} title={model ? `${model}: ${BACKEND_LABEL[backend]}` : BACKEND_LABEL[backend]} icon={<Icon className="size-3" aria-hidden />}>
@@ -119,7 +127,7 @@ export function ServedByList({ served, className }: { served: ServedBy[] | undef
       {served.map((s, i) => (
         <span key={`${s.model}-${i}`} className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-1.5 py-0.5 text-[11px] text-fg-subtle shadow-[inset_0_0_0_1px_var(--color-line)]">
           <span className="text-fg-muted">{s.model}</span>
-          {s.backend === 'tt' ? <ChipTag chip={s.chip} /> : <BackendBadge backend={s.backend} model={s.model} />}
+          {s.backend === 'tt' ? <ChipTag chip={s.chip} /> : <BackendBadge backend={s.backend} model={s.model} chip={s.chip} />}
           <span className="telemetry">{s.ms < 100 ? s.ms.toFixed(1) : Math.round(s.ms)} ms</span>
         </span>
       ))}
