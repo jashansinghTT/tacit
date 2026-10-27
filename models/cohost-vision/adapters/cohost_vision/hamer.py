@@ -10,11 +10,30 @@ CPU reference, so a device path broken by sharing the chip fails the boot instea
 from __future__ import annotations
 
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List
 
+from pydantic import BaseModel, Field
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, is_l1, l1_copy, log, note, programs, unpin_l1, without_lifespan
+from .common import (Rounds, StepModel, is_l1, l1_copy, log, note, programs, share_decodes, unpin_l1,
+                     without_lifespan)
+
+
+class Hand(BaseModel):
+    """One hand box of a POST /predict_hands request (as /predict takes it)."""
+
+    bbox: List[float] = Field(..., min_length=4, max_length=4)
+    is_right: bool = True
+
+
+class HandsRequest(BaseModel):
+    """POST /predict_hands: one frame and its hands; the other fields apply to every hand, as in /predict."""
+
+    image: str
+    hands: List[Hand] = Field(..., min_length=1, max_length=4)
+    rescale_factor: float = Field(2.0, gt=0.5, le=5.0)
+    return_vertices: bool = True
+    return_faces: bool = False
 
 
 class HamerMember(AppMember):
@@ -71,6 +90,7 @@ class HamerMember(AppMember):
             mod._ones = lambda fz, residual: l1_copy(fz["ones"]) if is_l1(residual) else fz["ones"]
         log.info("cohost-vision: hamer: %d resident L1 constant(s) freed; copied into L1 per use", freed)
         self.ref, self.cfg, self.srv = ref, cfg, srv
+        share_decodes(srv)
         self.x_a, self.x_b = sample_input(batch=1, seed=0), sample_input(batch=1, seed=1)
         srv.STATE.update(mano=mano, mano_path=str(mano_path) if mano_path else None, cfg=cfg,
                          weights={**winfo, "ckpt": str(ck), "mean_params": str(mean), "report": report})
@@ -118,7 +138,31 @@ class HamerMember(AppMember):
     def asgi_app(self):
         self.srv.STATE.update(model=StepModel(self.host, self.member.name, self.model),
                               boot_seconds=round(time.perf_counter() - self.t_start, 1), ready=True)
+        _add_predict_hands(self.srv)
         return without_lifespan(self.srv.app)
+
+
+def _add_predict_hands(srv) -> None:
+    """POST /predict_hands: the hands of one frame in one request (the backend sends both hands of a live frame).
+
+    Each answer is exactly what POST /predict returns for that hand (it is that function); a hand whose box is
+    rejected carries its error instead of failing the others. The frame is decoded once (share_decodes), and one
+    request replaces one per hand."""
+    from fastapi import HTTPException
+
+    @srv.app.post("/predict_hands")
+    def predict_hands(req: HandsRequest) -> dict:
+        t0 = time.perf_counter()
+        out = []
+        for hand in req.hands:
+            one = srv.PredictRequest(image=req.image, bbox=hand.bbox, is_right=hand.is_right,
+                                     rescale_factor=req.rescale_factor, return_vertices=req.return_vertices,
+                                     return_faces=req.return_faces)
+            try:
+                out.append(srv.predict(one))
+            except HTTPException as e:
+                out.append({"error": {"status": e.status_code, "detail": e.detail}})
+        return {"hands": out, "timing_ms": {"total": round((time.perf_counter() - t0) * 1000.0, 2)}}
 
 
 def member(host, member):

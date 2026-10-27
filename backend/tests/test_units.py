@@ -483,3 +483,210 @@ def test_quiz_choices_are_shuffled_with_the_answer():
     assert all(q["choices"][q["answer"]] == "right" for q in qs)
     assert any(q["answer"] != 0 for q in qs)
     assert valid_quiz([{"q": "Why 1?", "choices": ["right", "wrong a", "wrong b"], "answer": 0}])[0] == qs[1]   # stable
+
+
+# --------------------------------------------------------------------------------------------------------
+# Live speed: the chip gate, and steps at low and uneven frame rates
+# --------------------------------------------------------------------------------------------------------
+async def test_chip_gate_puts_live_first_and_caps_offline_while_live():
+    import asyncio
+    from tacit.models.vision import BATCH, LIVE, ChipGate
+    gate, order = ChipGate(batch=2, live=4, batch_live=1, live_window=1.0), []
+
+    async def use(name, prio, hold=0.05):
+        async with gate.slot(prio):
+            order.append(name)
+            await asyncio.sleep(hold)
+
+    # offline work alone may hold two slots
+    batch = [asyncio.create_task(use(f"b{k}", BATCH)) for k in range(4)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["batch_inflight"] == 2 and gate.snapshot()["waiting"] == 2
+    # a live frame's four calls go at once, past the waiting offline work
+    live = [asyncio.create_task(use(f"l{k}", LIVE)) for k in range(4)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["live_inflight"] == 4 and order[2:6] == ["l0", "l1", "l2", "l3"]
+    await asyncio.gather(*batch, *live)
+    # while live is flowing, offline work gets one slot
+    batch = [asyncio.create_task(use(f"c{k}", BATCH)) for k in range(3)]
+    await asyncio.sleep(0.01)
+    assert gate.snapshot()["batch_inflight"] == 1 and gate.snapshot()["batch_cap"] == 1
+    await asyncio.gather(*batch)
+
+
+def test_live_steps_survive_low_fps_and_stalls():
+    """3 fps, and no frame at all for 1.5 s while the hand travels to the vase: each insertion still closes."""
+    frames = [f for f in _frames_insert_three_times()[::3]
+              if not any(start - 1.6 <= f["t"] < start - 0.1 for start in (1.0, 6.0, 11.0))]
+    seg = LiveSegmenter()
+    steps = [e["step"] for f in frames for e in seg.update(f) if e["type"] == "step"]
+    last = seg.finish(frames[-1]["t"])
+    steps += [last] if last else []
+    assert len(steps) == 3 and all(s["action"] == "insert" and s["hand"] == "right" for s in steps)
+    assert len(segment_steps(frames)) == 3       # the offline segmentation of the same frames agrees
+
+
+def test_a_hand_not_seen_does_not_let_go_but_a_hand_seen_elsewhere_does():
+    from tacit.perception.timeline import _runs
+    times = [i / 10 for i in range(60)]
+    contact = [("vase", False, False) if t < 2.0 or t >= 3.5 else None for t in times]
+    hidden = [not (2.0 <= t < 3.5) for t in times]             # the hand is not detected in the gap
+    assert len(_runs(contact, times, hidden)) == 1
+    elsewhere = [True] * len(times)                            # seen all along, away from the vase in the gap
+    assert len(_runs(contact, times, elsewhere)) == 2
+
+
+def _fake_frame(t: float) -> dict:
+    return {"t": round(t, 3), "hands": [], "pose": None, "head": None, "gaze": None, "objects": [], "size": [640, 360],
+            "timing_ms": {}, "served_by": [], "unavailable": []}
+
+
+def _fake_analysis(monkeypatch, fail_begin=(), fail_finish=()):
+    """frame.begin / frame.finish stand-ins: random chip delays, so later frames could finish first."""
+    import asyncio
+    import random
+    from tacit.perception import frame
+    rng, began = random.Random(7), []
+
+    async def begin(rgb, t, runner, kinds=frame.KINDS, priority=0):
+        await asyncio.sleep(0.001)
+        if round(t, 3) in fail_begin:
+            raise RuntimeError(f"MediaPipe failed on {t}")
+        began.append(round(t, 3))
+        return {"t": t}
+
+    async def finish(started):
+        await asyncio.sleep(rng.uniform(0.0, 0.02))
+        if round(started["t"], 3) in fail_finish:
+            raise RuntimeError(f"chip call failed on {started['t']}")
+        return _fake_frame(started["t"])
+    monkeypatch.setattr(frame, "begin", begin)
+    monkeypatch.setattr(frame, "finish", finish)
+    return began
+
+
+async def test_live_analyzer_keeps_order_and_flushes_the_last_frame(monkeypatch):
+    from tacit.perception.frame import LiveAnalyzer
+    _fake_analysis(monkeypatch, fail_begin={0.5}, fail_finish={0.8})
+    la, out, errors = LiveAnalyzer(mp_runner=None), [], []
+    for k in range(10):
+        try:
+            f = await la.push(None, k / 10)
+        except RuntimeError as e:
+            errors.append(str(e))
+            continue
+        if f is not None:
+            out.append(f["t"])
+    last = await la.flush()
+    out.append(last["t"])
+    # every frame but the two that failed, in order, the last one only from the flush
+    assert out == [0.0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.9]
+    assert len(errors) == 2 and await la.flush() is None
+
+
+async def test_capture_drains_the_frame_in_flight_before_saving(monkeypatch):
+    import asyncio
+    from tacit.live import capture
+
+    class Runner:
+        def __init__(self, video=True):
+            pass
+
+        def close(self):
+            pass
+
+    class Ws:
+        def __init__(self):
+            self.sent = []
+
+        async def send_json(self, msg):
+            self.sent.append(msg)
+    monkeypatch.setattr(capture, "MediaPipeRunner", Runner)
+    monkeypatch.setattr(capture, "decode_jpeg", lambda data: (_ for _ in ()).throw(ValueError("corrupt"))
+                        if data == b"bad" else np.zeros((360, 640, 3), np.uint8))
+    _fake_analysis(monkeypatch)
+    ws = Ws()
+    s = capture.CaptureSession(ws, "sk_test")
+    s.loop_task = asyncio.create_task(s.analysis_loop())
+    for k in range(12):
+        s.latest = (k / 10, b"bad" if k == 4 else b"jpeg")
+        s.new_frame.set()
+        await asyncio.sleep(0.03)
+    await s.drain()
+    ts = [f["t"] for f in s.frames]
+    assert ts == sorted(ts) and ts[-1] == 1.1          # in order, and the frame in flight at stop made it
+    assert 0.4 not in ts and len(ts) >= 8               # the corrupt frame was skipped, the rest went on
+    assert any(m["type"] == "error" and "corrupt" in m["message"] for m in ws.sent)
+    assert s.loop_task.done()
+
+
+def test_cohost_members_share_one_decode_per_frame():
+    """models/cohost-vision: the decode cache returns PIL's own pixels, decodes a frame once however many
+    members (and threads) ask, and fails on bad bytes exactly as PIL does."""
+    import importlib.util
+    import io
+    import threading
+
+    from PIL import Image, UnidentifiedImageError
+    path = Path(__file__).resolve().parents[2] / "models" / "cohost-vision" / "adapters" / "cohost_vision" / "common.py"
+    spec = importlib.util.spec_from_file_location("cohost_common", path)
+    common = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(common)
+    buf = io.BytesIO()
+    Image.fromarray((np.arange(240 * 320 * 3) % 251).astype(np.uint8).reshape(240, 320, 3)).save(buf, "JPEG", quality=88)
+    data = buf.getvalue()
+    want = np.asarray(Image.open(io.BytesIO(data)).convert("RGB"))
+
+    # three members' server modules, each after ``from PIL import Image``
+    members = [type(f"Member{k}", (), {"Image": Image}) for k in range(3)]
+    Member = members[0]
+    for m in members:
+        common.share_decodes(m)
+    got = []
+
+    def decode(m):
+        im = m.Image.open(io.BytesIO(data))
+        im.load()
+        got.append(np.asarray(im.convert("RGB")))
+    threads = [threading.Thread(target=decode, args=(m,)) for m in members * 2]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(got) == 6 and all(np.array_equal(g, want) for g in got)
+    assert common.DECODES.misses == 1 and common.DECODES.hits == 5
+    with pytest.raises(UnidentifiedImageError):
+        Member.Image.open(io.BytesIO(b"not an image"))
+    assert Member.Image.BILINEAR == Image.BILINEAR          # everything else is PIL's own
+
+
+async def test_both_hands_of_a_frame_go_in_one_request_when_hamer_serves_it(monkeypatch):
+    """vision.hamer_hands: one /predict_hands call for two hands when the HaMeR image serves it (a rejected box is
+    that hand's error only), else one /predict per hand; the same answer per hand either way."""
+    import respx
+
+    from tacit.models import vision
+    from tacit.models.base import ModelUnavailable
+    fx = json.loads((Path(__file__).parent / "fixtures" / "hamer" / "response.json").read_text())
+    url = vision.endpoints()["hamer"].url
+    hands = [([10.0, 20.0, 110.0, 120.0], True), ([300.0, 20.0, 400.0, 120.0], False)]
+    for route in (False, True):
+        monkeypatch.setattr(vision, "_HANDS_ROUTE", {"ok": False, "checked": -1e9})
+        paths = {"/predict": {}, **({"/predict_hands": {}} if route else {})}
+        with respx.mock(assert_all_called=False) as mock:
+            mock.get(f"{url}/openapi.json").respond(json={"paths": paths})
+            one = mock.post(f"{url}/predict").respond(json=fx)
+            both = mock.post(f"{url}/predict_hands").respond(
+                json={"hands": [fx, {"error": {"status": 400, "detail": "bbox lies entirely outside"}}]})
+            out = await vision.hamer_hands("AAAA", 0.5, hands, priority=vision.LIVE)
+            single = await vision.hamer_hands("AAAA", 0.5, hands[:1], priority=vision.LIVE)
+        assert out[0][0] == vision._hand(fx, 0.5) and single[0][0] == vision._hand(fx, 0.5)
+        if route:
+            assert both.call_count == 1 and one.call_count == 1          # the single hand still uses /predict
+            sent = json.loads(both.calls[0].request.content)
+            assert [h["bbox"] for h in sent["hands"]] == [[5.0, 10.0, 55.0, 60.0], [150.0, 10.0, 200.0, 60.0]]
+            assert [h["is_right"] for h in sent["hands"]] == [True, False] and sent["return_vertices"] is False
+            assert isinstance(out[1], ModelUnavailable) and "HTTP 400" in str(out[1])
+        else:
+            assert both.call_count == 0 and one.call_count == 3
+            assert out[1][0] == vision._hand(fx, 0.5)

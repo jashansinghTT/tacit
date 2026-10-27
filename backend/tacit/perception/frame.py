@@ -40,22 +40,44 @@ def label_point(x: float, y: float, objects: list[dict], hands: list[dict]) -> s
 async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS,
                   priority: int = vision.BATCH) -> dict:
     """Analyse one RGB frame at time `t` (seconds). Shapes match API.md's Tracks frame plus timing and served_by."""
-    t0 = time.perf_counter()
-    det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
-    t_mp = (time.perf_counter() - t0) * 1000
-    b64, scale = encode_jpeg(rgb)
+    return await finish(await begin(rgb, t, mp_runner, kinds, priority))
 
+
+async def begin(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS,
+                priority: int = vision.BATCH) -> dict:
+    """The CPU half of ``analyze``: encode, MediaPipe, and every chip call started (RF-DETR before MediaPipe:
+    it needs no hand or head box). ``finish`` waits for the calls. Frames must begin in time order (MediaPipe
+    tracks across them)."""
+    t0 = time.perf_counter()
+    b64, scale = encode_jpeg(rgb)
+    t_enc = (time.perf_counter() - t0) * 1000
     jobs: dict[str, asyncio.Future] = {}
+    # RF-DETR needs no hand or head box: it runs on the chip while MediaPipe runs on the CPU
     if "rfdetr" in kinds:
         jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale, priority=priority))
+    t1 = time.perf_counter()
+    try:
+        det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
+    except BaseException:
+        for j in jobs.values():
+            j.cancel()
+        raise
+    t_mp = (time.perf_counter() - t1) * 1000
+
     if "gaze" in kinds and det["head"]:
         jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]], priority=priority))
-    if "hamer" in kinds:
-        for hd in det["hands"]:
-            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right", priority=priority))
+    if "hamer" in kinds and det["hands"]:
+        jobs["hamer"] = asyncio.ensure_future(vision.hamer_hands(
+            b64, scale, [(hd["bbox"], hd["side"] == "right") for hd in det["hands"]], priority=priority))
+    return {"t": t, "t0": t0, "det": det, "jobs": jobs, "t_mp": t_mp, "t_enc": t_enc}
+
+
+async def finish(started: dict) -> dict:
+    """The chip half of ``analyze``: wait for the calls ``begin`` started and put the frame together."""
+    t, t0, det, jobs, t_mp, t_enc = (started[k] for k in ("t", "t0", "det", "jobs", "t_mp", "t_enc"))
     results = dict(zip(jobs, await asyncio.gather(*jobs.values(), return_exceptions=True)))
 
-    served, timing, errors = [], {"mediapipe": round(t_mp, 1)}, []
+    served, timing, errors = [], {"mediapipe": round(t_mp, 1), "encode": round(t_enc, 1)}, []
     objects: list[dict] = []
     if "rfdetr" in results:
         r = results["rfdetr"]
@@ -66,12 +88,15 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
             served.append(sb)
             timing["rfdetr"] = sb["ms"]
     hands = det["hands"]
-    for hd in hands:
-        r = results.get(f"hamer:{hd['side']}")
+    per_hand = results.get("hamer")
+    if isinstance(per_hand, BaseException):
+        per_hand = [per_hand] * len(hands)
+    for k, hd in enumerate(hands):
+        r = per_hand[k] if per_hand is not None and k < len(per_hand) else None
         if r is None:
             hd["source"] = "mediapipe"
             continue
-        if isinstance(r, Exception):
+        if isinstance(r, BaseException):
             errors.append(str(r))
             hd["source"] = "mediapipe"
             continue
@@ -104,6 +129,31 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
             "unavailable": unavailable}
 
 
+class LiveAnalyzer:
+    """Analysis of a live stream, one frame deep: a frame's MediaPipe runs on the CPU while the previous frame's
+    calls are on the chip, so a frame costs the slower of the two instead of their sum. ``push`` returns the
+    previous frame's analysis (None for the first), in order; ``flush`` returns the last one."""
+
+    def __init__(self, mp_runner: MediaPipeRunner, kinds: tuple[str, ...] = KINDS, priority: int = vision.LIVE):
+        self.runner, self.kinds, self.priority = mp_runner, kinds, priority
+        self._pending: asyncio.Task | None = None
+
+    async def push(self, rgb: np.ndarray, t: float) -> dict | None:
+        started = await begin(rgb, t, self.runner, self.kinds, self.priority)
+        prev, self._pending = self._pending, asyncio.ensure_future(finish(started))
+        return await prev if prev is not None else None
+
+    async def flush(self) -> dict | None:
+        prev, self._pending = self._pending, None
+        return await prev if prev is not None else None
+
+    def cancel(self) -> None:
+        """Drop the frame in flight (the stream ended without a stop)."""
+        if self._pending is not None:
+            self._pending.cancel()
+            self._pending = None
+
+
 async def vision_health() -> dict[str, bool]:
     from ..models.base import health
     keys = ("hamer", "gaze", "rfdetr", "vggt")
@@ -111,4 +161,4 @@ async def vision_health() -> dict[str, bool]:
     return dict(zip(keys, oks))
 
 
-__all__ = ["analyze", "label_point", "vision_health", "ModelUnavailable", "endpoints"]
+__all__ = ["analyze", "begin", "finish", "LiveAnalyzer", "label_point", "vision_health", "ModelUnavailable", "endpoints"]

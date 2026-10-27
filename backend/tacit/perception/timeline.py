@@ -268,6 +268,8 @@ def legacy_steps(frames: list[dict], max_steps: int = 8) -> list[dict]:
 # Steps as hand-object interactions
 # --------------------------------------------------------------------------------------------------------
 GAP = 0.8            # seconds a hand may leave an object and still be in the same interaction
+LOST = 2.0           # seconds a hand may go undetected while it works with an object
+SEEN_BEFORE = 5.0    # where a hand was last seen, up to this many seconds before a contact, says if it reached for it
 MIN_EPISODE = 0.6    # shortest contact that counts as an interaction
 FLICKER = 0.4        # a contact this short with another object, inside an interaction, is noise
 REST = 0.25          # a hand that stays within this many shoulder widths and never approached is resting
@@ -297,15 +299,27 @@ class Episode:
     held: list = field(default_factory=list)   # frames where the object was off its resting place
 
 
-def _runs(seq: list, times: list[float]) -> list[list]:
-    """[id, i_first, i_last, n, n_mouth, n_engaged] runs of equal ids in ``seq`` of (id, mouth, engaged) | None,
-    bridging gaps of up to GAP seconds."""
+def frame_gaps(times) -> tuple[float, float]:
+    """(release gap, lost-hand gap) in seconds for frames this far apart: GAP and LOST at 10 fps and up,
+    longer when frames come slower or unevenly (live capture runs at whatever rate the chip allows)."""
+    dt = float(np.median(np.diff(times))) if len(times) > 1 else 0.1
+    return max(GAP, 2.5 * dt), max(LOST, 4.0 * dt)
+
+
+def _runs(seq: list, times: list[float], seen: list[bool] | None = None) -> list[list]:
+    """[id, i_first, i_last, n, n_mouth, n_engaged] runs of equal ids in ``seq`` of (id, mouth, engaged) | None.
+
+    Two contacts on the same object are one run when they are at most the release gap apart, or when the hand
+    was not seen at all in between (a detection dropout while it works is not letting go) for up to the
+    lost-hand gap. ``seen``: per frame, was this hand detected."""
+    gap, lost = frame_gaps(times)
     runs: list[list] = []
     for i, c in enumerate(seq):
         if c is None:
             continue
         cid, mouth, eng = c
-        if runs and runs[-1][0] == cid and times[i] - times[runs[-1][2]] <= GAP:
+        if runs and runs[-1][0] == cid and (times[i] - times[runs[-1][2]] <= gap or (
+                seen is not None and times[i] - times[runs[-1][2]] <= lost and not any(seen[runs[-1][2] + 1:i]))):
             r = runs[-1]
             r[2], r[3], r[4], r[5] = i, r[3] + 1, r[4] + int(mouth), r[5] + int(eng)
         else:
@@ -316,7 +330,7 @@ def _runs(seq: list, times: list[float]) -> list[list]:
         changed = False
         for k in range(1, len(runs) - 1):
             a, b, c = runs[k - 1], runs[k], runs[k + 1]
-            if (a[0] == c[0] != b[0] and times[b[2]] - times[b[1]] < FLICKER and times[c[1]] - times[a[2]] <= 2 * GAP):
+            if (a[0] == c[0] != b[0] and times[b[2]] - times[b[1]] < FLICKER and times[c[1]] - times[a[2]] <= 2 * gap):
                 runs[k - 1:k + 2] = [[a[0], a[1], c[2], a[3] + c[3], a[4] + c[4], a[5] + c[5]]]
                 changed = True
                 break
@@ -384,7 +398,8 @@ def contact_episodes(frames: list[dict], scale: float | None = None) -> tuple[li
     by_id = {tr.id: tr for tr in tracker.tracks}
     episodes = []
     for side in ("left", "right"):
-        for cid, i0, i1, cnt, mouth, eng in _runs(contacts[side], times):
+        seen = [not np.isnan(points[side][i][0]) for i in range(n)]
+        for cid, i0, i1, cnt, mouth, eng in _runs(contacts[side], times, seen):
             if times[i1] - times[i0] < MIN_EPISODE:
                 continue
             ep = Episode(side, by_id[cid], i0, i1, times[i0], times[i1], cnt, mouth, eng)
@@ -396,6 +411,16 @@ def contact_episodes(frames: list[dict], scale: float | None = None) -> tuple[li
                                                    "times": times, "walking": walk, "support": support}
 
 
+def approached(before: list[tuple[float, np.ndarray]], t: float, p, scale: float) -> bool:
+    """Did the hand come to ``p`` (at time ``t``) from elsewhere? Yes when it was more than REST away within the
+    last 1.5 s, or the last time it was seen at all (frames can stall for seconds on a busy chip)."""
+    if not before:
+        return False
+    far = [float(np.linalg.norm(q - p)) / scale > REST for tt, q in before if t - tt <= 1.5]
+    last = max(before, key=lambda x: x[0])
+    return any(far) or float(np.linalg.norm(last[1] - p)) / scale > REST
+
+
 def _resting(ep: Episode, pts: np.ndarray, times: list[float], scale: float) -> bool:
     """A hand that sat on the object without moving and without having reached for it (leaning, holding still)."""
     seg = pts[ep.i0:ep.i1 + 1]
@@ -403,9 +428,9 @@ def _resting(ep: Episode, pts: np.ndarray, times: list[float], scale: float) -> 
     if len(seg) < 2:
         return True
     spread = float(np.max(np.linalg.norm(seg - np.median(seg, axis=0), axis=1))) / scale
-    before = [i for i in range(ep.i0 - 1, -1, -1) if times[ep.i0] - times[i] <= 1.5 and not np.isnan(pts[i, 0])]
-    approached = any(float(np.linalg.norm(pts[i] - pts[ep.i0])) / scale > REST for i in before)
-    return spread < REST and not approached
+    before = [(times[i], pts[i]) for i in range(ep.i0 - 1, -1, -1)
+              if times[ep.i0] - times[i] <= SEEN_BEFORE and not np.isnan(pts[i, 0])]
+    return spread < REST and not approached(before, times[ep.i0], pts[ep.i0], scale)
 
 
 def _object_motion(track, i0: int, i1: int, scale: float) -> dict:
@@ -722,8 +747,10 @@ class LiveSegmenter:
         self.widths: deque = deque(maxlen=300)        # shoulder widths seen (or hand box widths, scaled)
         self.tracker: ObjectTracker | None = None
         self.seen: deque = deque(maxlen=300)          # recent frames, sides fixed: names, walking, facing
-        self.hist = {"left": deque(maxlen=40), "right": deque(maxlen=40)}   # (t, hand point)
+        self.hist = {"left": deque(maxlen=60), "right": deque(maxlen=60)}   # (t, hand point)
         self.hand: dict[str, dict] = {}               # side -> the contact it is in
+        self.released: dict[str, tuple[int, float]] = {}   # side -> (object, time) of its last released contact
+        self.times: deque = deque(maxlen=30)          # recent frame times: the release gaps follow the frame rate
         self.step: dict | None = None                 # the interaction under way
         self.steps_closed = 0
         self.interactions = 0
@@ -767,7 +794,7 @@ class LiveSegmenter:
         return float(np.linalg.norm(pts[-1][1] - pts[0][1])) / self.scale / (pts[-1][0] - pts[0][0]) > WALK
 
     def _approached(self, side: str, t: float, p) -> bool:
-        return any(t - tt <= 1.5 and float(np.linalg.norm(q - p)) / self.scale > REST for tt, q in self.hist[side])
+        return approached([(tt, q) for tt, q in self.hist[side] if t - tt <= SEEN_BEFORE], t, p, self.scale)
 
     def _names(self) -> dict[int, str]:
         frames = list(self.seen)
@@ -777,6 +804,8 @@ class LiveSegmenter:
     def update(self, f: dict) -> list[dict]:
         self.i += 1
         t = f["t"]
+        self.times.append(t)
+        gap, lost = frame_gaps(list(self.times))
         f = fix_sides(f)
         self._observe_scale(f)
         if self.tracker is None:
@@ -793,8 +822,10 @@ class LiveSegmenter:
                 tr, mouth, eng = c
                 st = self.hand.get(side)
                 if st is None:
+                    back = self.released.get(side)
+                    resumed = back is not None and back[0] == tr.id and t - back[1] <= lost
                     st = self.hand[side] = {"obj": tr.id, "since": t, "i0": self.i, "last": t, "n": 0, "open": False,
-                                            "resting": not self._approached(side, t, p)}
+                                            "resting": not (resumed or self._approached(side, t, p))}
                 st["obj"], st["last"], st["n"] = tr.id, t, st["n"] + 1   # an open contact may move to a neighbour
                 if eng:
                     st["resting"] = False
@@ -808,11 +839,13 @@ class LiveSegmenter:
                     s = self.step
                     s["t1"], s["i1"], s["n"], s["mouth"] = t, self.i, s["n"] + 1, s["mouth"] + int(mouth)
                     s["per_obj"][tr.id] += 1 + 4 * int(eng)
-                    s["per_side"][side] += 1
+                    s["per_side"][(side, tr.id)] += 1
                     s["handled"] = s["handled"] or eng
             self.hist[side].append((t, p))
         for side, st in list(self.hand.items()):
-            if t - st["last"] > GAP:
+            # a hand seen away from the object let go; one not seen at all may be hidden while it works
+            if t - st["last"] > (gap if side in pts else lost):
+                self.released[side] = (st["obj"], st["last"])
                 if st["open"]:
                     events.append({"type": "event", "t": t, "kind": "release", "hand": side,
                                    "object": self._names().get(st["obj"]), "target": None})
@@ -836,9 +869,11 @@ class LiveSegmenter:
         tracks = {tr.id: tr for tr in self.tracker.tracks}
         names = self._names()
         main = tracks[s["per_obj"].most_common(1)[0][0]]
-        (first, n_first), *rest = s["per_side"].most_common()
+        # the hand is the one that worked with that object; both only when they shared it about equally
+        on_main = Counter({side: n for (side, tid), n in s["per_side"].items() if tid == main.id})
+        (first, n_first), *rest = on_main.most_common() or [("right", 0)]
         n_second = rest[0][1] if rest else 0
-        hand = "both" if n_second >= 0.7 * n_first else first
+        hand = "both" if n_first and n_second >= 0.7 * n_first else first
         mv = _object_motion(main, s["i0"], s["i1"], self.scale)
         if main.label in CONTAINERS and s["mouth"] >= 0.5 * s["n"] and mv["max"] < MOVED:
             kind = "insert"

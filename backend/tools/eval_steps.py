@@ -23,6 +23,8 @@ import os
 import sys
 from pathlib import Path
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tacit.perception.timeline import LiveSegmenter, segment_steps  # noqa: E402
@@ -104,6 +106,26 @@ def subsample(frames: list[dict], fps: float | None) -> list[dict]:
     return out
 
 
+def drop_frames(frames: list[dict], p: float, seed: int = 0) -> list[dict]:
+    """Uneven arrival, as on a busy chip: each frame lost with probability ``p``, and stalls of 1 to 2 s with no
+    frame at all, ``p / 3`` of them per second (one every 10 s at p = 0.3)."""
+    if not p:
+        return frames
+    rng = np.random.default_rng(seed)
+    out, stall_until, prev_t = [], -1.0, None
+    for f in frames:
+        dt = f["t"] - prev_t if prev_t is not None else 0.0
+        prev_t = f["t"]
+        if f["t"] < stall_until:
+            continue
+        if rng.random() < p / 3 * dt:
+            stall_until = f["t"] + rng.uniform(1.0, 2.0)
+            continue
+        if rng.random() >= p:
+            out.append(f)
+    return out
+
+
 def live_steps(frames: list[dict]) -> list[dict]:
     """What the live segmenter emits when the frames arrive one by one (the steps the coach asks about)."""
     seg, out = LiveSegmenter(), []
@@ -113,13 +135,38 @@ def live_steps(frames: list[dict]) -> list[dict]:
     return out + ([last] if last else [])
 
 
-def detected_steps(skill_dir: Path, stored: bool, live: bool = False, fps: float | None = None) -> list[dict]:
+def detected_steps(skill_dir: Path, stored: bool, live: bool = False, fps: float | None = None,
+                   drop: float = 0.0, seed: int = 0) -> list[dict]:
     if stored:
         sk = json.loads((skill_dir / "skill.json").read_text())
         return [{"t_start": s["t_start"], "t_end": s["t_end"], "hand": s.get("hand"), "objects": s.get("objects", []),
                  "draft": f"{s.get('title', '')}. {s.get('instruction', '')}"} for s in sk.get("steps", [])]
-    frames = subsample(json.loads((skill_dir / "tracks.json").read_text())["frames"], fps)
+    frames = drop_frames(subsample(json.loads((skill_dir / "tracks.json").read_text())["frames"], fps), drop, seed)
     return live_steps(frames) if live else segment_steps(frames)
+
+
+def sweep(gt_all: dict, chosen: dict, seeds: int = 6) -> None:
+    """Robustness: offline and live at 10, 5 and 3 fps, steady and with uneven arrival (30% lost, stalls)."""
+    tracks = {}
+    for clip in gt_all:
+        sdir = DATA / "skills" / chosen[clip] if clip in chosen else (skills_for(clip) or [None])[0]
+        if sdir is not None:
+            tracks[clip] = json.loads((sdir / "tracks.json").read_text())["frames"]
+    print(f"{'scenario':26s} " + " ".join(f"{c + ' P':>12s} {c + ' R':>12s}" for c in tracks) + "   (mean, min over seeds)")
+    for live in (False, True):
+        for fps in (10.0, 5.0, 3.0):
+            for drop in (0.0, 0.3):
+                cells = []
+                for clip, frames in tracks.items():
+                    ps, rs = [], []
+                    for seed in range(seeds if drop else 1):
+                        fr = drop_frames(subsample(frames, fps), drop, seed)
+                        r = score(live_steps(fr) if live else segment_steps(fr), gt_all[clip]["steps"])
+                        ps.append(r["precision"])
+                        rs.append(r["recall"])
+                    cells += [f"{np.mean(ps):.2f} ({min(ps):.2f})", f"{np.mean(rs):.2f} ({min(rs):.2f})"]
+                name = f"{'live' if live else 'offline'} {fps:g} fps" + (f", drop {drop}" if drop else "")
+                print(f"{name:26s} " + " ".join(f"{c:>12s}" for c in cells))
 
 
 def main() -> None:
@@ -129,12 +176,18 @@ def main() -> None:
     ap.add_argument("--stored", action="store_true", help="score the steps stored in skill.json instead of re-segmenting")
     ap.add_argument("--live", action="store_true", help="score the live segmenter (frames fed one by one)")
     ap.add_argument("--fps", type=float, help="subsample the tracks to this frame rate first (live capture runs slower)")
+    ap.add_argument("--drop", type=float, default=0.0, help="lose frames at random with this probability (and stall now and then)")
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--sweep", action="store_true", help="robustness table: offline and live, 10/5/3 fps, steady and uneven")
     ap.add_argument("--json", help="write the full results here")
     ap.add_argument("-v", "--verbose", action="store_true", help="list every detected and ground-truth step")
     a = ap.parse_args()
 
     gt_all = {k: v for k, v in json.loads(Path(a.gt).read_text()).items() if isinstance(v, dict) and "steps" in v}
     chosen = dict(s.split("=", 1) for s in a.skill)
+    if a.sweep:
+        sweep(gt_all, chosen)
+        return
     results = {}
     for clip, gt in gt_all.items():
         if clip in chosen:
@@ -145,7 +198,7 @@ def main() -> None:
                 print(f"{clip}: no processed skill with tracks.json; skipped")
                 continue
             sdir = found[0]
-        det = detected_steps(sdir, a.stored, a.live, a.fps)
+        det = detected_steps(sdir, a.stored, a.live, a.fps, a.drop, a.seed)
         res = score(det, gt["steps"])
         res["skill"] = sdir.name
         res["steps"] = [{k: s.get(k) for k in ("t_start", "t_end", "hand", "objects", "draft")} for s in det]

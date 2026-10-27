@@ -1,0 +1,51 @@
+{
+ "clip": "vase.mp4",
+ "camera_fps": 10.0,
+ "seconds": 70.0,
+ "load": true,
+ "pipeline": true,
+ "background_frames_per_s": 6.2,
+ "unavailable": [],
+ "frames": 600,
+ "fps": 10.03,
+ "stages": {
+  "encode": {
+   "p50": 1.7,
+   "p90": 2.2
+  },
+  "gaze": {
+   "p50": 42.3,
+   "p90": 56.7
+  },
+  "hamer_left": {
+   "p50": 76.5,
+   "p90": 93.5
+  },
+  "hamer_right": {
+   "p50": 53.8,
+   "p90": 87.2
+  },
+  "mediapipe": {
+   "p50": 24.9,
+   "p90": 35.4
+  },
+  "rfdetr": {
+   "p50": 36.8,
+   "p90": 49.9
+  },
+  "total": {
+   "p50": 95.0,
+   "p90": 135.0
+  }
+ },
+ "latency_ms": {
+  "p50": 128.4,
+  "p90": 144.3
+ },
+ "two_hands": {
+  "frames": 255,
+  "total_p50": 116.1,
+  "total_p90": 144.8,
+  "fps_if_all_two_hands": 8.34
+ }
+}

@@ -12,7 +12,8 @@ import time
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, is_l1, l1_copy, log, note, programs, unpin_l1, without_lifespan
+from .common import (Rounds, StepModel, is_l1, l1_copy, log, note, programs, share_decodes, unpin_l1,
+                     without_lifespan)
 
 
 class RfDetrMember(AppMember):
@@ -45,6 +46,7 @@ class RfDetrMember(AppMember):
         TtDinoBackbone._ls = staticmethod(lambda p, key, residual: l1_copy(p[key]) if is_l1(residual) else p[key])
         log.info("cohost-vision: rfdetr: %d resident L1 layer-scale row(s) freed; copied into L1 per use", freed)
         self.model, self.pre, self.srv = model, pre, srv
+        share_decodes(srv)   # the same frame is decoded once for every member
         srv.STATE.update(
             device=mesh, pre=pre, config=cfg,
             id2label={int(k): str(v) for k, v in (model_cfg.id2label or {}).items()},
