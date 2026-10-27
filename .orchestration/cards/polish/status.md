@@ -1,7 +1,7 @@
 # Status: polish
 
 State: review
-Updated: 2026-10-27T22:33:00+00:00
+Updated: 2026-10-27T22:58:00+00:00
 
 ## Done (work/polish; details in handoff.md)
 - QA-9, QA-10 fixed (regression test for QA-9); plain-language error states (QA-12 mitigation).
@@ -23,6 +23,13 @@ Updated: 2026-10-27T22:33:00+00:00
   touches demo-visible progress (idempotent for the certificate).
 
 - Real-stack Learn suite 9/9 (22:30Z window). Merge gate met; handoff.md written.
+
+- Stock footage credits and fictional personas (lead's follow-up): "Video: <name> · <license>"
+  under each Studio sample (name links to the clip, license to its terms, new tab, keyboard
+  reachable); "Sample footage: <name> on Pexels" wherever a sample-based skill's video plays
+  (Studio sample stream, Skill player, Audit expert video, Lesson); landing footer note "Demo
+  personas are fictional. …". Mock samples carry credits (honestly labelled mock renders); two
+  mock specs. Typecheck, lint, mock smoke 25/25.
 
 ## Next
 Lead merges work/polish, rebuilds web/dist and deploys; QA runs the final round on that build.

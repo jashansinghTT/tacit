@@ -25,8 +25,15 @@ export const users: User[] = [
 ]
 
 export const samples: Sample[] = [
-  { id: 'smp_sort', title: 'Kitting an M6 bracket set', video: `${M}/samples/sort.mp4`, thumb: `${M}/samples/sort.jpg`, duration: SCENE_DURATION, kind: 'real' },
-  { id: 'smp_fake', title: 'The same task, AI-generated', video: `${M}/samples/fake.mp4`, thumb: `${M}/samples/fake.jpg`, duration: 12.0, kind: 'ai-generated' },
+  // The mock clips are Tacit's own procedural render, credited in the same shape as /api/samples.
+  {
+    id: 'smp_sort', title: 'Kitting an M6 bracket set', video: `${M}/samples/sort.mp4`, thumb: `${M}/samples/sort.jpg`, duration: SCENE_DURATION, kind: 'real',
+    author: 'Tacit mock renderer (https://example.com/tacit/renderer)', license: 'Mock data, not stock footage (https://example.com/tacit/license)', source_url: 'https://example.com/tacit/samples/sort',
+  },
+  {
+    id: 'smp_fake', title: 'The same task, AI-generated', video: `${M}/samples/fake.mp4`, thumb: `${M}/samples/fake.jpg`, duration: 12.0, kind: 'ai-generated',
+    author: 'Tacit mock renderer (https://example.com/tacit/renderer)', license: 'Mock data, not stock footage (https://example.com/tacit/license); drifts like an AI-made clip', source_url: 'https://example.com/tacit/samples/fake',
+  },
 ]
 
 const maria = { id: 'u_maria', name: 'Maria Chen', title: 'Senior assembler' }
@@ -141,7 +148,7 @@ function sortSkill(): Skill {
     status: 'ready',
     created_at: iso(9, 14),
     expert: maria,
-    source: { kind: 'sample', video: `${M}/samples/sort.mp4`, fps: 30, duration: SCENE_DURATION, width: 1280, height: 720 },
+    source: { kind: 'sample', sample_id: 'smp_sort', video: `${M}/samples/sort.mp4`, fps: 30, duration: SCENE_DURATION, width: 1280, height: 720 },
     consent: { motion: true, gaze: true, voice_text: true, raw_video: false, signed_by: 'u_maria', signed_at: iso(9, 15) },
     steps: sortSteps,
     qa: sortQa,
@@ -204,7 +211,7 @@ function briefSkill(b: Brief): Skill {
   return {
     id: b.id, title: b.title, summary: b.summary, status: b.status ?? 'ready', created_at: iso(b.daysAgo),
     expert: b.expert ?? maria,
-    source: { kind: 'sample', video: `${M}/samples/sort.mp4`, fps: 30, duration: dur, width: 1280, height: 720 },
+    source: { kind: 'sample', sample_id: 'smp_sort', video: `${M}/samples/sort.mp4`, fps: 30, duration: dur, width: 1280, height: 720 },
     consent: { motion: true, gaze: true, voice_text: true, raw_video: false, signed_by: b.expert?.id ?? 'u_maria', signed_at: iso(b.daysAgo) },
     steps, qa: steps.slice(0, 2).map((s, i) => ({ id: `q${i + 1}`, step_id: s.id, t: s.t_end - 1, question: `Why ${s.title.toLowerCase()} that way?`, question_audio: null, answer: i === 0 ? s.why : null, answer_audio: null })),
     sop_markdown: `# ${b.title}\n\n${b.summary}\n\n## Steps\n${steps.map((s) => `${s.index}. **${s.title}.** ${s.instruction}`).join('\n')}\n\n## Safety\n${(b.safety ?? ['Wear safety glasses.']).map((s) => `- ${s}`).join('\n')}\n`,

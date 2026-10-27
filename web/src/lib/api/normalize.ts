@@ -17,6 +17,7 @@ export function normalizeSkill(raw: Partial<Skill> & { id: string }): Skill {
     expert: raw.expert ?? { id: 'unknown', name: 'Unknown expert' },
     source: {
       kind: src.kind ?? 'upload',
+      sample_id: src.sample_id ?? null,
       video: src.video ?? null,
       fps: src.fps ?? 30,
       duration,

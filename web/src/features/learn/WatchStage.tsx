@@ -13,6 +13,7 @@ import { Captions, MusicCredit } from './Captions'
 import { useLessonCtx } from './context'
 import { useNarration, type NarrationLine } from './narration'
 import { StepVideo } from './StepVideo'
+import { FootageCredit } from '@/components/media/Credit'
 import { useLesson } from './store'
 
 const ADVANCE_SECONDS = 4
@@ -213,6 +214,7 @@ export function WatchStage() {
           )}
         </AnimatePresence>
       </div>
+      {view === 'video' && <FootageCredit skill={skill} className="-mt-1" />}
 
       <div className="flex flex-wrap items-center gap-2" data-testid="transport">
         <IconButton label={pb.playing ? 'Pause' : 'Play'} onClick={pb.toggle} variant="secondary" size="sm" data-testid="play-toggle">

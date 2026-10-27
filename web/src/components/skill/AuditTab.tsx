@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowLeftRight, Check, ClipboardCheck, Eye, EyeOff, FileVideo, Play, Upload, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -7,6 +7,7 @@ import { useAudit, useAudits, useJob } from '@/lib/api/queries'
 import { fmtAgo, fmtClock, fmtDate } from '@/lib/format'
 import { Badge, Button, EmptyState, Meter, Panel, ScoreRing, Skeleton, TextInput, toast, type Tone } from '@/components/ui'
 import { ProcessingPanel } from './ProcessingPanel'
+import { FootageCredit } from '@/components/media/Credit'
 
 const STATUS: Record<AuditStep['status'], { label: string; tone: Tone; bar: string; icon: typeof Check }> = {
   done: { label: 'Done', tone: 'ok', bar: 'shadow-[inset_3px_0_0_var(--color-ok)]', icon: Check },
@@ -76,7 +77,7 @@ function NewAudit({ skill, onStarted }: { skill: Skill; onStarted: (jobId: strin
   )
 }
 
-function SideVideo({ label, src, seekTo, seekKey, testId }: { label: string; src: string | null | undefined; seekTo: number | null; seekKey: number; testId: string }) {
+function SideVideo({ label, src, seekTo, seekKey, testId, footer }: { label: string; src: string | null | undefined; seekTo: number | null; seekKey: number; testId: string; footer?: ReactNode }) {
   const ref = useRef<HTMLVideoElement>(null)
   useEffect(() => {
     const v = ref.current
@@ -90,6 +91,7 @@ function SideVideo({ label, src, seekTo, seekKey, testId }: { label: string; src
       <div className="relative aspect-video overflow-hidden rounded-lg bg-ink-950 shadow-[inset_0_0_0_1px_var(--color-line)]">
         {src ? <video ref={ref} src={src} className="size-full object-contain" controls muted playsInline preload="metadata" data-testid={testId} /> : <div className="grid size-full place-items-center text-xs text-fg-subtle">No video</div>}
       </div>
+      {footer}
     </figure>
   )
 }
@@ -172,7 +174,7 @@ function AuditReport({ skill, audit }: { skill: Skill; audit: Audit }) {
       <Panel title="Worker and expert, side by side" eyebrow="pick a step to jump both videos to it">
         <div className="grid gap-4 md:grid-cols-2">
           <SideVideo label={`${audit.worker}'s run`} src={audit.video} seekTo={seek.worker} seekKey={seek.key} testId="audit-video-worker" />
-          <SideVideo label={`${skill.expert.name}, the expert`} src={skill.source.video} seekTo={seek.expert} seekKey={seek.key} testId="audit-video-expert" />
+          <SideVideo label={`${skill.expert.name}, the expert`} src={skill.source.video} seekTo={seek.expert} seekKey={seek.key} testId="audit-video-expert" footer={<FootageCredit skill={skill} className="mt-2" />} />
         </div>
       </Panel>
 
