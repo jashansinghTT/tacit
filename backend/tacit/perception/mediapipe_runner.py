@@ -11,6 +11,7 @@ import numpy as np
 from mediapipe.tasks.python import BaseOptions, vision
 
 from ..config import MODELS_DIR
+from .interactions import fix_sides
 
 HAND_MODEL = MODELS_DIR / "hand_landmarker.task"
 POSE_MODEL = MODELS_DIR / "pose_landmarker_full.task"
@@ -65,17 +66,11 @@ class MediaPipeRunner:
             pts = np.array([[p.x * w, p.y * h] for p in lms], dtype=np.float32)
             world = [[round(p.x, 4), round(p.y, 4), round(p.z, 4)] for p in hr.hand_world_landmarks[i]]
             cat = hr.handedness[i][0]
-            # MediaPipe labels handedness as if the image were mirrored; camera frames are not.
-            side = "right" if cat.category_name == "Left" else "left"
+            # A first guess only: the pose below says which arm each hand is on (see fix_sides).
+            side = "left" if cat.category_name == "Left" else "right"
             hands.append({"side": side, "score": round(float(cat.score), 3),
                           "bbox": _box(pts, w, h, margin=0.6, square=True),
                           "lm2d": [[round(float(x), 1), round(float(y), 1)] for x, y in pts], "world": world})
-        # One hand of each side at most (keep the more confident).
-        best: dict[str, dict] = {}
-        for hd in hands:
-            if hd["side"] not in best or hd["score"] > best[hd["side"]]["score"]:
-                best[hd["side"]] = hd
-        hands = list(best.values())
 
         pose = head = None
         if pr.pose_landmarks:
@@ -86,4 +81,10 @@ class MediaPipeRunner:
             face = np.array([[lm2d[i][0], lm2d[i][1]] for i in range(11) if lm2d[i][2] > 0.3], dtype=np.float32)
             if len(face) >= 3:
                 head = {"bbox": _box(face, w, h, margin=1.4, square=True)}
-        return {"hands": hands, "pose": pose, "head": head, "size": [w, h]}
+        hands = fix_sides({"hands": hands, "pose": pose})["hands"]
+        # One hand of each side at most (keep the more confident).
+        best: dict[str, dict] = {}
+        for hd in hands:
+            if hd["side"] not in best or hd["score"] > best[hd["side"]]["score"]:
+                best[hd["side"]] = hd
+        return {"hands": list(best.values()), "pose": pose, "head": head, "size": [w, h]}
