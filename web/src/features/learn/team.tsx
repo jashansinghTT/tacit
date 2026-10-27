@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn'
 import type { SkillSummary, User } from '@/lib/api'
 import type { ProgressEntry, RobotReadiness } from '@/lib/api/learn'
 import { fmtAgo, fmtDuration } from '@/lib/format'
-import { Avatar, Badge, ButtonLink, Meter, Skeleton, VerifiedBadge } from '@/components/ui'
+import { Avatar, Badge, ButtonLink, Meter, SkillStatusBadge, Skeleton, VerifiedBadge } from '@/components/ui'
 import { StepSegments } from './LessonCard'
 
 export interface Trainee {
@@ -179,7 +179,6 @@ function RobotCell({ data, loading }: { data: RobotReadiness | undefined; loadin
   )
 }
 
-const STATUS_TONE = { ready: 'ok', processing: 'ion', draft: 'neutral', failed: 'fault' } as const
 
 /** Every captured skill with its verification, who has learned it, and whether a robot can do it. */
 export function SkillsTable({
@@ -229,9 +228,7 @@ export function SkillsTable({
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge tone={STATUS_TONE[s.status] ?? 'neutral'} dot={s.status === 'processing'} pulse={s.status === 'processing'}>
-                    {s.status}
-                  </Badge>
+                  <SkillStatusBadge status={s.status} />
                 </td>
                 <td className="px-4 py-3">
                   <VerifiedBadge status={s.verification_status} />

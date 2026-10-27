@@ -6,7 +6,7 @@ import { useSkill, useSkillJob, useTracks, useTwin, qk } from '@/lib/api/queries
 import { fmtDate } from '@/lib/format'
 import { usePlayback } from '@/lib/playback'
 import { Page, PageHeader } from '@/components/layout/Page'
-import { Avatar, Badge, ButtonLink, EmptyState, ErrorState, Panel, Skeleton, Tabs, VerifiedBadge } from '@/components/ui'
+import { Avatar, Badge, SkillStatusBadge, ButtonLink, EmptyState, ErrorState, Panel, Skeleton, Tabs, VerifiedBadge } from '@/components/ui'
 import { OverviewTab } from '@/components/skill/OverviewTab'
 import { TwinTab } from '@/components/skill/TwinTab'
 import { SopTab } from '@/components/skill/SopTab'
@@ -83,11 +83,7 @@ export default function SkillDetailPage() {
             ) : (
               <Badge tone="warn">No consent yet</Badge>
             )}
-            {s.status !== 'ready' && (
-              <Badge tone={s.status === 'failed' ? 'fault' : 'ion'} dot pulse={s.status === 'processing'}>
-                {s.status}
-              </Badge>
-            )}
+            {s.status !== 'ready' && <SkillStatusBadge status={s.status} />}
           </>
         }
         actions={
