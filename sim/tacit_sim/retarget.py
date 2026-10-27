@@ -102,6 +102,7 @@ class PathFollower:
         self.g = None if g is None else np.asarray(g, dtype=float)
         self.duration = float(self.t[-1])
         self.errors: list[float] = []
+        self.t0: float | None = None       # sim time the playback started (after the approach)
 
     def target(self, t: float) -> tuple[np.ndarray, float]:
         t = min(max(t, 0.0), self.duration)

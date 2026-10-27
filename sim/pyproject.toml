@@ -14,8 +14,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Only for exporting web assets (GLB) and writing evidence videos.
+# Only for exporting the web assets (GLB).
 export = ["trimesh>=4.4"]
+
+[dependency-groups]
 dev = ["pytest>=8", "trimesh>=4.4"]
 
 [build-system]
