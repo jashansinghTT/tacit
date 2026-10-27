@@ -56,8 +56,8 @@ function MonthChart({ data }: { data: ExEarnings }) {
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} stroke="rgb(255 255 255 / 0.06)" />
-          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#6e7580', fontSize: 11 }} />
-          <YAxis tickLine={false} axisLine={false} width={56} tick={{ fill: '#6e7580', fontSize: 11, fontFamily: 'Geist Mono Variable, monospace' }} tickFormatter={(v: number) => fmtMoney(v)} />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#868d97', fontSize: 11 }} />
+          <YAxis tickLine={false} axisLine={false} width={56} tick={{ fill: '#868d97', fontSize: 11, fontFamily: 'Geist Mono Variable, monospace' }} tickFormatter={(v: number) => fmtMoney(v)} />
           <Tooltip content={<ChartTip />} cursor={{ fill: 'rgb(255 255 255 / 0.04)' }} />
           <Bar dataKey="amount" fill="url(#earn-bar)" radius={[4, 4, 0, 0]} maxBarSize={48} isAnimationActive={!reduce} animationDuration={700} />
         </BarChart>
