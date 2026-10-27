@@ -170,7 +170,21 @@ function ModeBar({ expert }: { expert: string }) {
   )
 }
 
-function LessonPlayer({ lesson, skill, tracks, passed, translating }: { lesson: LessonDetail; skill: Skill | undefined; tracks: Tracks | undefined; passed: boolean; translating: boolean }) {
+function LessonPlayer({
+  lesson,
+  skill,
+  tracks,
+  passed,
+  savedDone,
+  translating,
+}: {
+  lesson: LessonDetail
+  skill: Skill | undefined
+  tracks: Tracks | undefined
+  passed: boolean
+  savedDone: number
+  translating: boolean
+}) {
   const reset = useLesson((s) => s.reset)
   const stepIndex = useLesson((s) => s.step)
   const view = useLesson((s) => s.view)
@@ -200,7 +214,7 @@ function LessonPlayer({ lesson, skill, tracks, passed, translating }: { lesson: 
       <LessonHeader lesson={lesson} skill={skill} passed={passed} translating={translating} />
       <div className="grid items-start gap-4 lg:grid-cols-[232px_minmax(0,1fr)] xl:grid-cols-[248px_minmax(0,1fr)_368px]">
         <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-[calc(var(--header-h)+16px)]">
-          <StepRail lesson={lesson} quizPassed={passed} />
+          <StepRail lesson={lesson} quizPassed={passed} savedDone={savedDone} />
           <div className="hidden lg:block">
             <SafetyCard items={lesson.safety} />
           </div>
@@ -249,7 +263,8 @@ export default function LessonPage() {
   const skill = useSkill(skillId)
   const tracks = useTracks(skillId)
   const lessons = useLessonList()
-  const passed = Boolean(lessons.data?.find((l) => l.skill_id === skillId)?.progress?.passed)
+  const saved = lessons.data?.find((l) => l.skill_id === skillId)?.progress
+  const passed = Boolean(saved?.passed)
   const notFound = lesson.error instanceof ApiError && lesson.error.status === 404
 
   return (
@@ -275,7 +290,7 @@ export default function LessonPage() {
           The skill is still being processed. Its lesson appears when the steps are written.
         </EmptyState>
       ) : lesson.data ? (
-        <LessonPlayer lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} translating={translating} />
+        <LessonPlayer lesson={lesson.data} skill={skill.data} tracks={tracks.data} passed={passed} savedDone={saved?.steps_done ?? 0} translating={translating} />
       ) : null}
     </Page>
   )

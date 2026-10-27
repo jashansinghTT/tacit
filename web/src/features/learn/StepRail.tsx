@@ -9,13 +9,14 @@ function scoreTone(v: number) {
 }
 
 /** The lesson's steps, top to bottom, then the quiz. Shows practice results per step. */
-export function StepRail({ lesson, quizPassed }: { lesson: LessonDetail; quizPassed: boolean }) {
+/** `savedDone`: steps practised in earlier sessions, from the trainee's saved progress. */
+export function StepRail({ lesson, quizPassed, savedDone = 0 }: { lesson: LessonDetail; quizPassed: boolean; savedDone?: number }) {
   const step = useLesson((s) => s.step)
   const view = useLesson((s) => s.view)
   const practice = useLesson((s) => s.practice)
   const goStep = useLesson((s) => s.goStep)
   const openQuiz = useLesson((s) => s.openQuiz)
-  const doneCount = lesson.steps.filter((s) => practice[s.index]?.done != null).length
+  const doneCount = Math.max(savedDone, lesson.steps.filter((s) => practice[s.index]?.done != null).length)
 
   return (
     <nav aria-label="Lesson steps" className="panel flex flex-col overflow-hidden" data-testid="step-rail">
