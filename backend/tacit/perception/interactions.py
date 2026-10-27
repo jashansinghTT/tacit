@@ -214,16 +214,6 @@ def contact_distance(p, box, label: str, scale: float) -> tuple[float, bool]:
     return d, False
 
 
-def best_contact(p, present: list[tuple[ObjectTrack, list]], scale: float):
-    """The object a hand at ``p`` works with: (track, distance, via_opening), or None."""
-    best = None
-    for tr, box in present:
-        d, mouth = contact_distance(p, box, tr.label, scale)
-        if d <= CONTACT and (best is None or d < best[1]):
-            best = (tr, d, mouth)
-    return best
-
-
 def pick_contact(p, present: list[tuple[ObjectTrack, list]], scale: float, engaged) -> tuple | None:
     """The object a hand at ``p`` works with, as (track, via_opening, engaged), or None.
 

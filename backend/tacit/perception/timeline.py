@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .interactions import (CONTACT, CONTAINERS, HAND_TO_SCALE, IGNORE, ObjectTracker, body_center, body_scale, box_dist,
+from .interactions import (CONTAINERS, HAND_TO_SCALE, IGNORE, ObjectTracker, body_center, body_scale, box_dist,
                            center, faces_camera, fix_sides, hand_point, pick_contact)
 TIPS = (8, 12, 16, 20)
 
