@@ -56,10 +56,10 @@ def ui_run(d: Path) -> dict | None:
     if not p.exists():
         return None
     data = json.loads(p.read_text())
-    flows = {}
+    flows, extras = {}, {}
     for suite in data.get("suites", []):
         for spec in _specs(suite):
-            m = re.search(r"\bF(\d)\b", spec.get("title", ""))
+            m = re.search(r"\b([FX])(\d)\b", spec.get("title", ""))
             if not m:
                 continue
             results = [r for t in spec.get("tests", []) for r in t.get("results", [])]
@@ -76,12 +76,13 @@ def ui_run(d: Path) -> dict | None:
                         timings = json.loads(_body(a))
                     except ValueError:
                         timings = []
-            flows[int(m.group(1))] = {"outcome": outcome, "seconds": round(last.get("duration", 0) / 1000, 1),
+            target = flows if m.group(1) == "F" else extras
+            target[int(m.group(2))] = {"outcome": outcome, "seconds": round(last.get("duration", 0) / 1000, 1),
                                       "flags": [t_["step"] + " slow" for t_ in timings if t_.get("slow")], "timings": timings,
                                       "error": re.sub(r"\x1b\[[0-9;]*m", "", err)[:400] if err else None,
                                       "evidence": str(d.relative_to(REPO)), "attachments": atts, "notes": notes}
     stats = data.get("stats", {})
-    return {"id": d.name, "kind": "ui", "finished": stats.get("startTime"), "flows": flows}
+    return {"id": d.name, "kind": "ui", "finished": stats.get("startTime"), "flows": flows, "extras": extras}
 
 
 def runs() -> list[dict]:
@@ -158,6 +159,11 @@ def main() -> int:
         notes = [f"- F{n}: {x}" for n, f in sorted((r or {"flows": {}})["flows"].items()) for x in f.get("notes", [])]
         if notes:
             lines += ["", f"## Notes from the last {label} run", ""] + notes
+    if lu and lu.get("extras"):
+        lines += ["", "## Extra checks (not SPEC 9 flows; reported, not gating)", "", "| Check | UI | Note |", "|---|---|---|"]
+        names = {1: "Guided tour (SPEC 8 demo mode)"}
+        for n, f in sorted(lu["extras"].items()):
+            lines.append(f"| X{n} {names.get(n, '')} | {cell(f)} | {(f.get('error') or '').splitlines()[0][:160] if f.get('error') else ''} |")
     lines += ["", "## History", "", "| Run | Kind | Passed | Failed |", "|---|---|---|---|"]
     for r in reversed(rs[-20:]):
         p = sum(1 for f in r["flows"].values() if f["outcome"] == "passed")

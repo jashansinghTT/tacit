@@ -186,21 +186,6 @@ test.describe('with the capture camera', () => {
     await page.goto('/')
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(wide, `landing scrolls horizontally at 1280 px by ${wide}px`).toBeLessThanOrEqual(1)
-    // The guided demo ("Show me", SPEC 8): Watch, Check, Teach, Do, Earn, Box, each on its own page and target.
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.getByTestId('tour-start').first().click()
-    await expect(page.getByTestId('tour')).toBeVisible()
-    const targets = ['studio-source', 'verify-panel', 'lesson-player', 'robot-modes', 'license-panel', 'chip-map']
-    for (const [i, t] of targets.entries()) {
-      await run.time(`tour stop ${i + 1}: ${t}`, 5, async () => {
-        await expect(page.locator(`[data-tour="${t}"]`).first(), `tour stop ${i + 1} has no ${t} on ${page.url()}`).toBeVisible({ timeout: 20_000 })
-      })
-      await page.waitForTimeout(600)
-      await run.shot(`tour-${i + 1}-${t}`)
-      if (i < targets.length - 1) await page.getByTestId('tour-next').click()
-    }
-    await page.getByTestId('tour-close').click()
-    await expect(page.getByTestId('tour')).toBeHidden()
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
   })
@@ -277,6 +262,23 @@ test.describe('with the capture camera', () => {
     await expect(page.getByTestId('latency-hud')).toBeVisible()
     await page.waitForTimeout(3000)
     await run.shot('live-analysis')
+    // Timeline for the record: questions, voices still coming, answers, and whether the mic is recording.
+    const timeline: string[] = []
+    const t0 = Date.now()
+    const probe = setInterval(() => {
+      void page
+        .evaluate(() => ({
+          q: document.querySelectorAll('[data-testid="coach-question"]').length,
+          coming: [...document.querySelectorAll('[data-testid="coach-question"]')].filter((e) => /voice coming/.test(e.textContent ?? '')).length,
+          a: document.querySelectorAll('[data-testid="expert-answer"]').length,
+          rec: document.querySelector('[data-testid="talk-button"]')?.getAttribute('aria-pressed') === 'true',
+        }))
+        .then((x) => {
+          const line = `q=${x.q} voice_coming=${x.coming} answers=${x.a} mic=${x.rec ? 'REC' : '-'}`
+          if (timeline.at(-1)?.split(' ').slice(1).join(' ') !== line) timeline.push(`${((Date.now() - t0) / 1000).toFixed(1)}s ${line}`)
+        })
+        .catch(() => {})
+    }, 500)
     const question = page.getByTestId('coach-question').first()
     await run.time('first coach question (from start)', 60, async () => {
       await expect(question).toBeVisible({ timeout: 120_000 })
@@ -284,9 +286,17 @@ test.describe('with the capture camera', () => {
     run.note(`coach asked: ${await question.innerText()}`)
     await run.shot('coach-question')
     const answer = page.getByTestId('expert-answer').first()
-    await run.time('spoken answer transcribed (from question)', 30, async () => {
-      await expect(answer).toBeVisible({ timeout: 90_000 })
-    })
+    try {
+      await run.time('mic picks up the spoken answer (from question)', 30, async () => {
+        await expect(answer).toBeVisible({ timeout: 90_000 })
+      })
+      await run.time('answer transcribed (from end of speech)', 5, async () => {
+        await expect(answer).not.toContainText(/Transcribing/i, { timeout: 90_000 })
+      })
+    } finally {
+      clearInterval(probe)
+      run.note(`capture timeline:\n${timeline.join('\n')}`)
+    }
     const heard = await answer.innerText()
     run.note(`transcript: ${heard}`)
     expect(overlap(heard, answerText), `transcript "${heard}" vs "${answerText}"`).toBeGreaterThanOrEqual(0.5)
@@ -547,6 +557,31 @@ test.describe('the rest', () => {
     expect(unhealthy, 'unhealthy models').toEqual([])
     await page.waitForTimeout(2500)
     await run.shot('box')
+    await run.finish()
+    expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
+  })
+})
+
+// ------------------------------------------------------------------------------------ extra checks (not SPEC 9 flows)
+test.describe('extra', () => {
+  test('X1 guided tour: every stop lands on its page and highlights its target (SPEC 8)', async ({ page }, info) => {
+    const run = new Run(page, info)
+    await persona(page, 'u_maria')
+    await page.goto('/')
+    await expect(page.getByTestId('landing-hero')).toBeVisible()
+    await page.getByTestId('tour-start').first().click()
+    await expect(page.getByTestId('tour')).toBeVisible()
+    const targets = ['studio-source', 'verify-panel', 'lesson-player', 'robot-modes', 'license-panel', 'chip-map']
+    for (const [i, t] of targets.entries()) {
+      await run.time(`tour stop ${i + 1}: ${t}`, 5, async () => {
+        await expect(page.locator(`[data-tour="${t}"]`).first(), `tour stop ${i + 1} has no ${t} on ${page.url()}`).toBeVisible({ timeout: 20_000 })
+      })
+      await page.waitForTimeout(600)
+      await run.shot(`tour-${i + 1}-${t}`)
+      if (i < targets.length - 1) await page.getByTestId('tour-next').click()
+    }
+    await page.getByTestId('tour-close').click()
+    await expect(page.getByTestId('tour')).toBeHidden()
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
   })
