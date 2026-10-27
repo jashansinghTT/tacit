@@ -1,7 +1,21 @@
 # Handoff: web-learn
 
-Branch `work/web-learn` (worktree `~/tacit-wt/web-learn`). Merges `work/web` (TwinViewer, overlay,
-media hooks) and `main` up to the card's start. No new npm dependencies. No shared files edited.
+Branch `work/web-learn` (worktree `~/tacit-wt/web-learn`). Includes `main` and `work/web` as of
+the 20:2x UTC merges (TwinViewer, overlay, media hooks). No new npm dependencies. No shared files
+edited.
+
+## Merge gate
+
+- Three pages end to end on the real backend: yes (seeded skill `sk_c28f1461`, after the lead's
+  reprocess with the new perception).
+- Practice with a webcam (Chromium fake camera fed the expert's own step 1): live score (best 93),
+  one hint, step history, progress saved.
+- Tutor with audio: typed question answered and spoken; spoken question transcribed by Whisper
+  and answered.
+- Virtual glove plays a step in sync with the video; the connected-glove path is tested with the
+  Reflex endpoints stubbed in the browser (no glove hardware on the box).
+- typecheck, lint, build pass; `npx playwright test -c e2e/learn.config.ts`: 9/9 passed.
+- Screenshots in `.orchestration/evidence/web-learn/`.
 
 ## What it delivers (SPEC F4, the training use case)
 
@@ -28,12 +42,15 @@ Lesson player:
 - **Ask the expert**: typed or push-to-talk (16 kHz WAV, voice-activity cut-off) to
   `POST /api/tutor/{id}/ask`; streamed text, sentence audio played back to back with the spoken
   sentence highlighted, the spoken question's transcript, sources link to steps, replay,
-  starter questions; "waiting for the voice chip" from `/api/box` `speech_queue`.
+  starter questions in the lesson language, Try again on a failed answer; "waiting for the voice
+  chip" from `/api/box` `speech_queue`. While the trainee asks or the answer is spoken, the
+  lesson's narration pauses and auto-advance waits.
 - **Languages**: one picker (header and tutor) for nine languages drives the lesson text
   (`?lang=`), narration and the tutor. Lines not voiced yet are spoken on demand through
   `POST /api/speech/tts` while the lesson polls for its own narration.
 - **Guide my hand (Reflex)**: `/api/reflex/status`; connected: `POST /api/reflex/guide` / `stop`;
-  otherwise the 3D virtual glove (five fingers x three capsule segments, curl 0..1) plays
+  otherwise the 3D virtual glove (five fingers x three capsule segments with exoskeleton rails and
+  lit actuator rings, contact shadow, camera that eases in and frames the grip, curl 0..1) plays
   `/api/skills/{id}/fingers?step=N` in sync with the step video, with live curl bars, the step's
   curl chart and a grip summary. "Download for Reflex" (`reflex.py?step=N`) always.
 - **Quiz** -> `POST /api/learn/sessions/{id}/complete` (new session on a 404) -> certificate SVG,
@@ -71,5 +88,7 @@ lesson-tutor, lesson-tutor-voice, lesson-guide, lesson-quiz, lesson-certificate,
 - Shared `TwinViewer` keys objects by label, so two parts with the same label log React
   duplicate-key errors; `learn.spec.ts` ignores exactly that warning until the web card fixes it.
 - Speech shares chip 1 with narration and music; while it is busy, tutor speech and
-  transcription queue (the UI says so). The voice e2e test allows 150 s for the transcript.
+  transcription queue (the UI says so). The voice e2e test allows 150 s for the transcript, and
+  the tutor tests press Try again once on a transient model error.
+- The dev server must be restarted after `npm ci` (a stale Vite dependency cache blanks the app).
 - App chrome stays English in translated lessons; only lesson content and the tutor switch.
