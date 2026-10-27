@@ -120,3 +120,23 @@ it is fixed.
   (`GET /api/skills/{id}` returns `job_id` of the re-run) and keeps showing progress; or at least it says
   "restarted, continuing" and switches to "Open the skill" when the skill is ready.
 - Repro: start processing in the Studio, restart the backend mid-job (`deploy/stack.sh restart-backend`), wait.
+
+## QA-9 web (Studio): hands-free answering never opens while the coach's voice is slow
+
+- Owner: web (tacit-web). State: open, sent to web-e2 (cc lead) 2026-10-27 21:16Z.
+- Seen (browser F3, fake camera and microphone): with S2 Pro at RTF ~8 (21:00Z), coach questions arrived at
+  18.5 s, 27.7 s, 51.2 s, ... and each new one was "voice coming" before the previous one's listening window
+  opened; the mic never armed in 90 s, so the expert could not answer (`findings/QA-9-handsfree-never-armed.png`).
+  `awaiting` requires the newest chat line to be a coach line with its voice ready and nothing playing.
+  With quick TTS it works: 21:10Z run, question at 9.1 s, mic recording at 15.6 s, transcript at 21.1 s.
+- Expected: the expert can answer whenever a question is open.
+- Suggestion: open the listening window when the question text arrives, keep it open while the voice plays (or
+  duck the playback when the expert speaks), and answer with that question's id even if a newer one arrived.
+- Related (QA-3 follow-up, backend): STT still waits for the S2 Pro request in flight: transcripts took 7.6 s
+  (API F3, 20:58Z) and 13.1 s (browser F3, 21:10Z, "Whisper 13147 ms") for a 5 s answer.
+
+## Watch item: a live capture closed no step in 2 minutes
+
+- 21:08Z browser F3 (fake camera, vase clip looping): "0 closed" after 2:04 with hands, gaze and parts tracked,
+  while the API run processed a sample in parallel (live analysis 2.5 fps, round trip 405 ms). Runs before and
+  after (21:00Z, 21:04Z, 21:10Z) got their first question at about 9 s. Not filed; QA watches the release runs.
