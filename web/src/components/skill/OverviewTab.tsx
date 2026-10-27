@@ -23,6 +23,16 @@ export function OverviewTab({ skill, tracks, pb }: { skill: Skill; tracks: Track
                 key={s.id}
                 className={cn('panel grid cursor-pointer gap-4 p-3 transition-shadow md:grid-cols-[220px_minmax(0,1fr)]', on && 'shadow-[0_0_0_1px_rgb(60_215_255/0.5),0_0_30px_-10px_rgb(60_215_255/0.5)]')}
                 onClick={() => pb.seek(s.t_start + 0.01)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    pb.seek(s.t_start + 0.01)
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Play step ${s.index}: ${s.title}`}
+                aria-current={on ? 'step' : undefined}
                 data-testid={`step-${s.index}`}
               >
                 <div className="relative aspect-video overflow-hidden rounded-md bg-ink-950">

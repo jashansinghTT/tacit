@@ -23,7 +23,7 @@ export function ListingCard({ l: listing, className }: { l: Listing | ExListing;
   const from = Math.min(...Object.values(l.price ?? { training: 0 }))
   return (
     <Spotlight
-      className={cn('panel group overflow-hidden rounded-xl', className)}
+      className={cn('panel group overflow-hidden rounded-xl has-[:focus-visible]:shadow-[0_0_0_2px_var(--color-ion),0_0_28px_-6px_rgb(60_215_255/0.7)]', className)}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
       onFocus={() => setHover(true)}

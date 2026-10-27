@@ -10,7 +10,7 @@ import { Badge, ButtonLink, EmptyState, ErrorState, Panel, Segmented, SkillStatu
 
 export function SkillCard({ s }: { s: SkillSummary }) {
   return (
-    <Spotlight className="panel group overflow-hidden rounded-xl">
+    <Spotlight className="panel group overflow-hidden rounded-xl has-[:focus-visible]:shadow-[0_0_0_2px_var(--color-ion),0_0_28px_-6px_rgb(60_215_255/0.7)]">
       <Link to={`/skills/${s.id}`} className="flex h-full flex-col outline-none" data-testid={`skill-card-${s.id}`}>
         <div className="relative aspect-video overflow-hidden bg-ink-950">
           {s.thumb ? <img src={s.thumb} alt="" loading="lazy" className="size-full object-cover opacity-85 transition-transform duration-500 group-hover:scale-[1.03]" /> : <div className="size-full grid-bg" />}

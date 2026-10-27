@@ -1,5 +1,5 @@
 // Process primitives: Stepper (pipeline stages) and Timeline (steps over a clip).
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Circle, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -131,6 +131,33 @@ export function Timeline({
           const r = e.currentTarget.getBoundingClientRect()
           onSeek(((e.clientX - r.left) / r.width) * duration)
         }}
+        {...(onSeek
+          ? {
+              // keyboard: arrows step a second (shift: five), Home and End jump, PageUp/Down move a step
+              role: 'slider',
+              tabIndex: 0,
+              'aria-label': 'Seek through the steps',
+              'aria-valuemin': 0,
+              'aria-valuemax': Math.round(duration * 10) / 10,
+              'aria-valuenow': Math.round((time ?? 0) * 10) / 10,
+              'aria-valuetext': `${Math.round(time ?? 0)} seconds${activeId ? `, ${segments.find((x) => x.id === activeId)?.label ?? ''}` : ''}`,
+              onKeyDown: (e: KeyboardEvent) => {
+                const t = time ?? 0
+                const step = e.shiftKey ? 5 : 1
+                const starts = segments.map((x) => x.t0)
+                let next: number | null = null
+                if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = t + step
+                else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = t - step
+                else if (e.key === 'Home') next = 0
+                else if (e.key === 'End') next = duration
+                else if (e.key === 'PageDown') next = starts.find((x) => x > t + 0.05) ?? duration
+                else if (e.key === 'PageUp') next = [...starts].reverse().find((x) => x < t - 0.5) ?? 0
+                if (next === null) return
+                e.preventDefault()
+                onSeek(Math.max(0, Math.min(duration, next)))
+              },
+            }
+          : {})}
       >
         {segments.map((s, i) => {
           const active = s.id === activeId

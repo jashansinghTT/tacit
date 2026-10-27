@@ -8,7 +8,7 @@ import { useFeatured } from '@/lib/featured'
 
 function Tile({ className, eyebrow, title, body, to, children }: { className?: string; eyebrow: string; title: string; body: string; to: string; children: ReactNode }) {
   return (
-    <Spotlight className={cn('panel group overflow-hidden rounded-2xl', className)}>
+    <Spotlight className={cn('panel group overflow-hidden rounded-2xl has-[:focus-visible]:shadow-[0_0_0_2px_var(--color-ion),0_0_28px_-6px_rgb(60_215_255/0.7)]', className)}>
       <Link to={to} className="flex h-full flex-col p-6 outline-none">
         <div className="flex items-start justify-between gap-4">
           <div>
