@@ -61,3 +61,16 @@ test('processing follows a job the box re-ran after a restart', async ({ page })
   await expect(page.getByRole('heading', { name: 'Your skill is ready' })).toBeVisible({ timeout: 40_000 })
   await expect(page.getByTestId('processing-panel')).not.toContainText('Failed')
 })
+
+// QA-9: when the coach's voice lags (S2 Pro busy), hands-free must still listen as soon as the
+// question text arrives, and the answer goes to that question. Mock only (it simulates slow TTS).
+test('hands-free answers a question before its voice arrives', async ({ page }) => {
+  test.skip(REAL, 'slow speech is simulated by the mock backend')
+  await page.goto(`/studio?title=${encodeURIComponent('Slow voice drill [slowtts]')}`)
+  await page.getByTestId('capture-start').click()
+  await expect(page.getByTestId('coach-question').first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('coach-question').first()).toContainText('voice coming')
+  // the fake microphone plays a tone: hands-free picks it up and sends it as the answer
+  await expect(page.getByTestId('expert-answer').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByTestId('coach-question').first()).toContainText('voice coming')
+})

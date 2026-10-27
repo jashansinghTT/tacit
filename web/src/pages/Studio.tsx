@@ -103,19 +103,33 @@ export default function StudioPage() {
   }
 
   const lastQuestion = useMemo(() => [...cap.chat].reverse().find((l) => l.who === 'coach')?.questionId ?? null, [cap.chat])
-  // Hands-free only listens while a question is open: asked, voiced, and not answered yet.
-  const awaiting = useMemo(() => {
-    const last = cap.chat.at(-1)
-    return Boolean(last && last.who === 'coach' && !last.pendingAudio)
+  // Questions asked and not answered yet. Hands-free listens as soon as the text of one arrives,
+  // without waiting for its voice (S2 Pro can lag several questions behind when the chip is busy).
+  const openQuestions = useMemo(() => {
+    const answered = new Set(cap.chat.filter((l) => l.who === 'expert').map((l) => l.questionId))
+    return cap.chat.filter((l) => l.who === 'coach' && !answered.has(l.questionId))
   }, [cap.chat])
+  const newestOpen = openQuestions.at(-1)?.questionId ?? null
+  // The question an utterance answers is the one open when the expert started speaking, even if a
+  // newer one arrives while they talk.
+  const answeringFor = useRef<string | null>(null)
   const mic = useMicrophone({
-    autoStart: handsFree && live && awaiting && !speaker.playing,
+    autoStart: handsFree && live && openQuestions.length > 0,
     silenceMs: 1000,
-    onUtterance: (wav) => {
-      if (speaking.current) return
-      void cap.answer(wav, lastQuestion)
-    },
+    // While the coach's voice plays, only clearly louder speech opens an answer (echo guard).
+    threshold: speaker.playing ? 0.06 : 0.02,
+    onUtterance: (wav) => void cap.answer(wav, answeringFor.current ?? newestOpen ?? lastQuestion),
   })
+  useEffect(() => {
+    if (mic.state === 'recording') {
+      answeringFor.current = newestOpen ?? lastQuestion
+      speaker.duck(true)
+    } else {
+      speaker.duck(false)
+    }
+    // pin the question when recording starts only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mic.state])
   useEffect(() => {
     if (live) void mic.start()
     else mic.stop()
@@ -445,7 +459,7 @@ export default function StudioPage() {
             mic={{ state: mic.state, level: mic.level, begin: () => void mic.begin(), end: mic.end }}
             handsFree={handsFree}
             onHandsFree={setHandsFree}
-            onSay={(t) => cap.say(t, lastQuestion)}
+            onSay={(t) => cap.say(t, newestOpen ?? lastQuestion)}
             onReplay={(l) => void playLine(l, l.audio ?? null)}
             expertName="Maria"
           />

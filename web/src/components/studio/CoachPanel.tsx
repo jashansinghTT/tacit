@@ -19,6 +19,15 @@ interface CoachPanelProps {
   expertName: string
 }
 
+function Elapsed({ since }: { since: number }) {
+  const [, tick] = useState(0)
+  useEffect(() => {
+    const iv = setInterval(() => tick((x) => x + 1), 1000)
+    return () => clearInterval(iv)
+  }, [])
+  return <span className="telemetry text-fg-faint">{Math.floor((performance.now() - since) / 1000)} s</span>
+}
+
 /** The coach's spoken "why" questions with captions, and the expert's transcribed answers. */
 export function CoachPanel({ chat, live, speaking, mic, handsFree, onHandsFree, onSay, onReplay, expertName }: CoachPanelProps) {
   const [text, setText] = useState('')
@@ -65,7 +74,8 @@ export function CoachPanel({ chat, live, speaking, mic, handsFree, onHandsFree, 
               <div className={cn('max-w-[85%] rounded-lg px-3 py-2 text-[13px]', l.who === 'coach' ? 'rounded-tl-sm bg-ion/[0.07] text-fg shadow-[inset_0_0_0_1px_rgb(60_215_255/0.2)]' : 'rounded-tr-sm bg-white/[0.05] text-fg')}>
                 {l.text || (
                   <span className="flex items-center gap-1.5 text-fg-subtle">
-                    <Loader2 className="size-3 animate-spin" /> Transcribing…
+                    <Loader2 className="size-3 animate-spin" /> Transcribing with Whisper…
+                    {l.sentAt !== undefined && <Elapsed since={l.sentAt} />}
                   </span>
                 )}
                 <div className="mt-1 flex items-center gap-2 text-[10px] text-fg-subtle">

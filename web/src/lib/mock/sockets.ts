@@ -112,7 +112,9 @@ function captureSocket(skillId: string) {
           const id = `q${++qn}`
           lastQuestion = id
           s.later(1400, () => s.push({ type: 'coach', id, t: msg.t + 1.4, text: q, audio: null, pending_audio: true }))
-          s.later(3600, () => s.push({ type: 'coach_audio', id, audio: silentWav(q.length / 15), duration: q.length / 15 }))
+          // "[slowtts]" in the title simulates S2 Pro lagging far behind (QA-9)
+          const slow = db.skills.get(skillId)?.title.includes('[slowtts]')
+          s.later(slow ? 60000 : 3600, () => s.push({ type: 'coach_audio', id, audio: silentWav(q.length / 15), duration: q.length / 15 }))
         }
         lastStep = idx
       }

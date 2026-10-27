@@ -125,6 +125,8 @@ export interface SkillSummary {
   steps_count: number
   verification_status: VerificationStatus
   listed: boolean
+  /** live, upload or sample (the seeded demo skills come from samples). */
+  source_kind?: string
 }
 
 export interface Consent {

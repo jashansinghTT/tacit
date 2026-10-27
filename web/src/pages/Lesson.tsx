@@ -224,7 +224,7 @@ function LessonPlayer({
             <SafetyCard items={lesson.safety} />
           </div>
         </div>
-        <div className="flex min-w-0 flex-col gap-4" data-testid="lesson-main" data-mode={mode} data-view={view} data-step={step.index}>
+        <div className="flex min-w-0 flex-col gap-4" data-testid="lesson-main" data-tour="lesson-player" data-mode={mode} data-view={view} data-step={step.index}>
           {view === 'quiz' ? (
             <QuizPanel />
           ) : (
