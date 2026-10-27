@@ -438,13 +438,16 @@ test.describe('the rest', () => {
     await expect(page.getByTestId('sell-steps')).toBeVisible({ timeout: 20_000 })
     await run.shot('sell-check')
     // Walk the wizard: check, consent (the expert confirms), prices, split, market, review.
-    for (let i = 0; i < 8 && !(await page.getByTestId('sell-publish').isVisible().catch(() => false)); i++) {
-      if (await page.getByTestId('sell-step-consent').isVisible().catch(() => false)) {
+    for (const step of ['check', 'consent', 'prices', 'split', 'market']) {
+      await expect(page.getByTestId(`sell-step-${step}`)).toBeVisible({ timeout: 15_000 })
+      if (step === 'consent') {
         await page.getByTestId('consent-confirm').click()
         await run.shot('sell-consent')
       }
+      await expect(page.getByTestId('sell-next')).toBeEnabled({ timeout: 15_000 })
       await page.getByTestId('sell-next').click()
     }
+    await expect(page.getByTestId('sell-step-review')).toBeVisible({ timeout: 15_000 })
     await run.shot('sell-review')
     await run.time('publish the listing', 3, async () => {
       await page.getByTestId('sell-publish').click()
@@ -487,6 +490,7 @@ test.describe('the rest', () => {
     expect(after.total - before.total).toBeCloseTo(349.3, 1)
     await expect(page.getByTestId('earnings-total')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('earnings-ledger')).toContainText('349.3')
+    await page.waitForTimeout(2500) // the chart animates in
     await run.shot('earnings')
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
