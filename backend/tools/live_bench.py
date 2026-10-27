@@ -82,11 +82,14 @@ async def live(frames: list[np.ndarray], fps: float, seconds: float, priority: i
 
     async def camera():
         k = 0
-        while time.perf_counter() < stop:
-            latest["frame"] = (k / fps, frames[k % len(frames)], time.perf_counter())
-            new.set()
-            k += 1
-            await asyncio.sleep(max(0.0, (k / fps) - (time.perf_counter() - (stop - seconds))))
+        try:
+            while time.perf_counter() < stop:
+                latest["frame"] = (k / fps, frames[k % len(frames)], time.perf_counter())
+                new.set()
+                k += 1
+                await asyncio.sleep(max(0.0, (k / fps) - (time.perf_counter() - (stop - seconds))))
+        finally:
+            new.set()   # an analyser that caught up with the camera is waiting: the run is over
 
     cam = asyncio.create_task(camera())
     runner = MediaPipeRunner(video=True)
@@ -101,6 +104,8 @@ async def live(frames: list[np.ndarray], fps: float, seconds: float, priority: i
         while time.perf_counter() < stop:
             await new.wait()
             new.clear()
+            if time.perf_counter() >= stop:
+                break
             t, rgb, offered = latest["frame"]
             offered_at[round(t, 3)] = offered
             f = await (analyzer.push(rgb, t) if analyzer else analyze(rgb, t, runner, priority=priority))
