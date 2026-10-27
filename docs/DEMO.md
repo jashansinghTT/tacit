@@ -48,7 +48,10 @@ chip 0, about 1 to 3 s).
 - **Practise**: Sam's camera, live match score and one hint at a time ("Move your hand to your
   right, toward the vase").
 - **Ask the expert** by voice: the tutor answers from Maria's own explanations, spoken sentence by
-  sentence.
+  sentence. Ask "Why does the first step matter?" or "What should I check before I start?": their
+  answers on the vase lesson are already voiced, so the reply plays in about a second. A new question
+  shows its text in about a second, and the voice follows 8 to 18 s later. S2 Pro speaks at 2 to 4×
+  real time, depending on how busy the box is.
 - Language picker → **Español**: the lesson is translated (about 5 s) and re-narrated.
 - **Reflex glove** (the Hack the North 2026 project): "feel the expert's grip". With a glove connected
   the expert's finger motion plays on Sam's hand; without one the virtual glove shows it, and the skill
