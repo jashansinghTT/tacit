@@ -69,7 +69,7 @@
       "id": "qa",
       "title": "E2E suite on the real stack (SPEC section 9) and fix loop",
       "owner": "tacit-qa",
-      "state": "paused for the liveperf deploy; release runs restart after it",
+      "state": "running: final release runs on the 21:49:50Z deploy (freeze to 23:20Z)",
       "branch": "work/qa",
       "worktree": "~/tacit-wt/qa",
       "acceptance": [
@@ -135,7 +135,7 @@
       "id": "liveperf",
       "title": "Live analysis at 8+ fps on a busy box",
       "owner": "tacit-vision",
-      "state": "chip-0 image swap (go 21:36Z); lead merges after handover",
+      "state": "merged (27010cd; chip-0 image 188bf1934c60; deployed 21:49:50Z)",
       "branch": "work/liveperf",
       "worktree": "~/tacit-wt/vision",
       "acceptance": [
@@ -149,7 +149,7 @@
       "id": "polish",
       "title": "The whole app as one product",
       "owner": "tacit-web",
-      "state": "running",
+      "state": "running (QA-9/QA-10 fix cherry-picked to main as bffcf3b; rest after QA's runs)",
       "branch": "work/polish",
       "worktree": "~/tacit-wt/web",
       "acceptance": [
@@ -174,5 +174,5 @@
       "handoff": ".orchestration/cards/showreel/handoff.md"
     }
   ],
-  "updated": "2026-10-27T21:46Z"
+  "updated": "2026-10-27T21:55Z"
 }

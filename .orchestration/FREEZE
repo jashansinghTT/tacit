@@ -1,1 +1,1 @@
-HOLD for the liveperf deploy (chip-0 image swap by vision from 21:40Z, then backend restart by the lead about 22:10Z). QA paused; no other backend, model or web/dist changes until the lead writes the next FREEZE.
+FREEZE until 2026-10-27T23:20:00+00:00 (QA release runs on the 21:49:50Z deploy, main 27010cd): no backend restarts, no web/dist rebuilds, no model restarts
