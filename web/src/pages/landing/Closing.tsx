@@ -98,6 +98,9 @@ export function Footer() {
         <span>© 2026 Tacit. A demo on Tenstorrent Blackhole.</span>
         <span>No payments are taken anywhere in this demo.</span>
       </div>
+      <p className="mx-auto mt-3 max-w-[1680px] text-xs text-fg-faint" data-testid="footer-disclaimer">
+        Demo personas are fictional. Sample videos are stock footage from Pexels and Pixabay, credited where they play.
+      </p>
     </footer>
   )
 }

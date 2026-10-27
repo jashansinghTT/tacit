@@ -76,6 +76,15 @@ CLS, JS bytes), `cls.mjs` (layout-shift sources), `keyboard.mjs` (focus-ring aud
 - Studio copy matches the backend (steps close on hand-object interactions) and the demo script
   ("Use a sample").
 
+## Credits and personas
+
+- Stock footage is credited where it is picked (Studio sample picker: "Video: Anastasia Shuraeva ·
+  Pexels License", linked) and wherever a sample-based skill's video plays ("Sample footage: … on
+  Pexels": Studio sample stream, Skill player, Audit expert video, Lesson). Parsed from
+  /api/samples (`lib/credits.ts`, `components/media/Credit.tsx`); skills link by
+  `source.sample_id`.
+- The landing footer says the demo personas are fictional and the sample videos are stock footage.
+
 ## Notes
 
 - Health dips: during QA's runs the top-bar pill read 5/9 and 8/9 for a while (busy models failing

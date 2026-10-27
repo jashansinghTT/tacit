@@ -89,6 +89,12 @@ export interface Sample {
   thumb: string
   duration: number
   kind: 'real' | 'ai-generated'
+  /** Stock-footage credit, "Name (profile url)". */
+  author?: string
+  /** "License name (license url)", sometimes followed by a note. */
+  license?: string
+  /** The clip's page on the stock site. */
+  source_url?: string
 }
 
 export interface SampleVerification {
@@ -214,6 +220,8 @@ export interface Skill {
   expert: PersonRef
   source: {
     kind: 'live' | 'upload' | 'sample'
+    /** The sample clip a sample-based skill was made from (its credit lives on /api/samples). */
+    sample_id?: string | null
     video: string | null
     fps: number
     duration: number

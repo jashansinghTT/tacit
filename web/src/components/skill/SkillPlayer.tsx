@@ -6,6 +6,7 @@ import { nearestFrame } from '@/lib/geometry'
 import { fmtClock } from '@/lib/format'
 import type { Playback } from '@/lib/playback'
 import { OverlayCanvas } from '@/components/overlay/OverlayCanvas'
+import { FootageCredit } from '@/components/media/Credit'
 import { ALL_LAYERS, type OverlayLayers } from '@/components/overlay/draw'
 import { IconButton, Segmented, Timeline } from '@/components/ui'
 
@@ -74,6 +75,7 @@ export function SkillPlayer({ skill, tracks, pb, className, showTimeline = true 
             </div>
           </div>
         )}
+        {hasVideo && <FootageCredit skill={skill} overlay className="absolute bottom-3 left-3 z-10" />}
         <OverlayCanvas getFrame={() => (tracks ? nearestFrame(tracks.frames, pb.timeRef.current) : null)} srcW={W} srcH={H} layers={layers} highlightObject={step?.objects?.[0] ?? null} />
         <div className="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
           <span className="telemetry flex items-center gap-1.5 rounded-sm bg-ink-950/75 px-2 py-1 text-[10px] text-fg-muted backdrop-blur">

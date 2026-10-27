@@ -74,3 +74,29 @@ test('hands-free answers a question before its voice arrives', async ({ page }) 
   await expect(page.getByTestId('expert-answer').first()).toBeVisible({ timeout: 20_000 })
   await expect(page.getByTestId('coach-question').first()).toContainText('voice coming')
 })
+
+// Stock footage is credited where it is picked and where it plays; personas are fictional.
+test('sample clips carry their footage credit', async ({ page }) => {
+  await page.goto('/studio')
+  await page.getByTestId('seg-sample').click()
+  const credit = page.locator('[data-testid^="sample-credit-"]').first()
+  await expect(credit).toBeVisible()
+  await expect(credit).toContainText(/^Video: .+ · .+/)
+  const author = credit.getByRole('link').first()
+  await expect(author).toHaveAttribute('target', '_blank')
+  await expect(author).toHaveAttribute('rel', /noopener/)
+  await expect(author).toHaveAttribute('href', /^https?:\/\//)
+  // the name is shown without its "(https://…)" part
+  await expect(credit).not.toContainText('(http')
+  await author.focus()
+  await expect(author).toBeFocused()
+})
+
+test('a sample-based skill credits its footage where the video plays', async ({ page }) => {
+  test.skip(REAL, 'mock data')
+  await page.goto('/skills/sk_sort')
+  await expect(page.getByTestId('footage-credit')).toContainText('Sample footage:')
+  await page.goto('/')
+  await page.getByTestId('footer-disclaimer').scrollIntoViewIfNeeded()
+  await expect(page.getByTestId('footer-disclaimer')).toContainText('Demo personas are fictional')
+})

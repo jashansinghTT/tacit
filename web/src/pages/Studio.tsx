@@ -17,6 +17,7 @@ import { ProcessingPanel } from '@/components/skill/ProcessingPanel'
 import { LatencyHud } from '@/components/studio/LatencyHud'
 import { CoachPanel } from '@/components/studio/CoachPanel'
 import { useCapture, type ChatLine } from '@/components/studio/useCapture'
+import { FootageCredit, SampleCreditLine } from '@/components/media/Credit'
 
 type Source = 'webcam' | 'sample' | 'upload'
 
@@ -33,24 +34,28 @@ function SamplePicker({ samples, value, onChange, loading }: { samples: Sample[]
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {samples.map((s) => (
-        <button
+        // The card is a wrapper: the select button and the credit links cannot nest.
+        <div
           key={s.id}
-          onClick={() => onChange(s.id)}
-          data-testid={`sample-${s.id}`}
-          aria-pressed={value === s.id}
-          className={cn('group overflow-hidden rounded-lg text-left transition-shadow', value === s.id ? 'shadow-[0_0_0_1.5px_var(--color-ion)]' : 'shadow-[0_0_0_1px_var(--color-line-strong)] hover:shadow-[0_0_0_1px_var(--color-line-bright)]')}
+          className={cn(
+            'flex flex-col rounded-lg bg-ink-800 transition-shadow has-[button:focus-visible]:shadow-[0_0_0_2px_var(--color-ion)]',
+            value === s.id ? 'shadow-[0_0_0_1.5px_var(--color-ion)]' : 'shadow-[0_0_0_1px_var(--color-line-strong)] hover:shadow-[0_0_0_1px_var(--color-line-bright)]',
+          )}
         >
-          <div className="relative aspect-video bg-ink-950">
-            <img src={s.thumb} alt="" className="size-full object-cover opacity-85" />
-            <span className="telemetry absolute right-2 bottom-2 rounded-xs bg-ink-950/80 px-1.5 py-0.5 text-[10px] text-fg-muted">{fmtDuration(s.duration)}</span>
-            {s.kind === 'ai-generated' && (
-              <Badge tone="fault" className="absolute top-2 left-2">
-                AI-generated
-              </Badge>
-            )}
-          </div>
-          <div className="bg-ink-800 px-3 py-2.5 text-[13px] text-fg">{s.title}</div>
-        </button>
+          <button onClick={() => onChange(s.id)} data-testid={`sample-${s.id}`} aria-pressed={value === s.id} className="group text-left outline-none">
+            <div className="relative aspect-video overflow-hidden rounded-t-lg bg-ink-950">
+              <img src={s.thumb} alt="" className="size-full object-cover opacity-85" />
+              <span className="telemetry absolute right-2 bottom-2 rounded-xs bg-ink-950/80 px-1.5 py-0.5 text-[10px] text-fg-muted">{fmtDuration(s.duration)}</span>
+              {s.kind === 'ai-generated' && (
+                <Badge tone="fault" className="absolute top-2 left-2">
+                  AI-generated
+                </Badge>
+              )}
+            </div>
+            <div className="px-3 pt-2.5 text-[13px] text-fg">{s.title}</div>
+          </button>
+          <SampleCreditLine sample={s} className="px-3 pt-1 pb-2.5" />
+        </div>
       ))}
     </div>
   )
@@ -429,10 +434,20 @@ export default function StudioPage() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
               <LayerToggles layers={layers} onChange={setLayers} />
-              <span className="flex items-center gap-1.5 text-xs text-fg-subtle">
-                {source === 'sample' ? <Play className="size-3.5" /> : <Camera className="size-3.5" />}
-                {source === 'sample' ? (sample?.title ?? 'Sample clip') : cam.stream ? cam.stream.getVideoTracks()[0]?.label || 'Camera' : 'No camera yet'}
-              </span>
+              {source === 'sample' && sample ? (
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-subtle">
+                  <span className="flex items-center gap-1.5">
+                    <Play className="size-3.5" />
+                    {sample.title}
+                  </span>
+                  <FootageCredit sampleId={sample.id} />
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-xs text-fg-subtle">
+                  <Camera className="size-3.5" />
+                  {cam.stream ? cam.stream.getVideoTracks()[0]?.label || 'Camera' : 'No camera yet'}
+                </span>
+              )}
             </div>
             <div className="border-t border-line px-4 py-3">
               <div className="mb-2 flex items-center justify-between text-xs">
