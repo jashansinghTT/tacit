@@ -1,0 +1,7 @@
+[Unit]
+Description=Tacit watchdog: restart what is down, refresh STATUS.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/tacit/deploy/watchdog.py
+TimeoutStartSec=900

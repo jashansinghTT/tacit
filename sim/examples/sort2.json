@@ -1,0 +1,6 @@
+[
+  {"op": "pick", "object": "bracket"},
+  {"op": "place", "target": "left bin"},
+  {"op": "pick", "object": "bolt"},
+  {"op": "place", "target": "right bin"}
+]
