@@ -91,6 +91,9 @@ def runs() -> list[dict]:
         m = STAMP.match(d.name)
         if not m:
             continue
+        if (d / "ABORTED.txt").exists():
+            out.append({"id": d.name, "kind": m.group(1), "flows": {}, "aborted": (d / "ABORTED.txt").read_text().strip()})
+            continue
         r = api_run(d) if m.group(1) == "api" else ui_run(d)
         if r and r["flows"]:
             out.append(r)
@@ -128,8 +131,9 @@ def key_timings(f: dict | None, n: int = 4) -> str:
 
 def main() -> int:
     rs = runs()
-    api = [r for r in rs if r["kind"] == "api"]
-    ui = [r for r in rs if r["kind"] == "ui"]
+    done = [r for r in rs if not r.get("aborted")]  # an aborted run is listed in the history but neither breaks nor extends a streak
+    api = [r for r in done if r["kind"] == "api"]
+    ui = [r for r in done if r["kind"] == "ui"]
     la, lu = (api[-1] if api else None), (ui[-1] if ui else None)
     lines = ["# QA results: the 7 E2E flows (SPEC section 9) on the real stack", "",
              "Rewritten by `scripts/e2e/report.py` after every run. API: `tests/e2e` (pytest, httpx, websockets). "
@@ -167,6 +171,9 @@ def main() -> int:
             lines.append(f"| X{n} {names.get(n, '')} | {cell(f)} | {(f.get('error') or '').splitlines()[0][:160] if f.get('error') else ''} |")
     lines += ["", "## History", "", "| Run | Kind | Passed | Failed |", "|---|---|---|---|"]
     for r in reversed(rs[-20:]):
+        if r.get("aborted"):
+            lines.append(f"| {r['id']} | {r['kind']} | aborted | {r['aborted'][:160]} |")
+            continue
         p = sum(1 for f in r["flows"].values() if f["outcome"] == "passed")
         failed = ", ".join(f"F{n}" for n, f in sorted(r["flows"].items()) if f["outcome"] != "passed") or "none"
         lines.append(f"| [{r['id']}](runs/{r['id']}/results.json) | {r['kind']} | {p}/{len(r['flows'])} | {failed} |")
