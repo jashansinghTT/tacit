@@ -50,8 +50,9 @@ Branch `work/polish` (worktree `~/tacit-wt/web`), from main 0c7ddb5 with main me
 
 - `npm run typecheck`, `npm run lint` (0 warnings): pass.
 - Mock smoke suite (`npx playwright test --project=smoke`): 23/23 (Robot Lab spec included).
-- Real stack: Exchange suite (`-c e2e/exchange.config.ts`) 3/3; Learn suite: see status.md (needs a
-  quiet window on chip 0).
+- Real stack (via the dev server on :5710 proxying the release backend): Exchange suite
+  (`-c e2e/exchange.config.ts`) 3/3, now working only on test skills with teardown; Learn suite
+  (`-c e2e/learn.config.ts`) 9/9, run at 22:30Z in the lead's window.
 - Demo walk of docs/DEMO.md on the release backend, each persona: `tools/demo-walk.mjs`
   (1440 with live capture, 1920 without), screenshots in `.orchestration/evidence/polish/walk-*`.
 
@@ -66,9 +67,18 @@ Branch `work/polish` (worktree `~/tacit-wt/web`), from main 0c7ddb5 with main me
 CLS, JS bytes), `cls.mjs` (layout-shift sources), `keyboard.mjs` (focus-ring audit),
 `overflow.mjs` (WIDTHS=…).
 
+## Also in this branch
+
+- Exchange e2e never lists or licenses demo data (test skills only, opened by id, teardown deletes
+  its listing, licence and ledger entry).
+- Busy models (`models[].busy`) show amber "busy" on the Box page, not down; the top-bar pill's
+  tooltip names busy and down models.
+- Studio copy matches the backend (steps close on hand-object interactions) and the demo script
+  ("Use a sample").
+
 ## Notes
 
 - Health dips: during QA's runs the top-bar pill read 5/9 and 8/9 for a while (busy models failing
-  health checks); reported to the lead.
+  health checks); fixed on the backend by the lead (busy = up for 2 min), shown as busy in the UI.
 - Both seeded skills are already listed, so DEMO.md step 6 ("List on Exchange") lands on "This skill
   is already on the Exchange"; list a fresh capture, or reseed, before the demo.

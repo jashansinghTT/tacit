@@ -1,7 +1,7 @@
 # Status: polish
 
-State: running (gate met except the real-stack Learn suite, waiting for a quiet chip-0 window)
-Updated: 2026-10-27T22:32:00+00:00
+State: review
+Updated: 2026-10-27T22:33:00+00:00
 
 ## Done (work/polish; details in handoff.md)
 - QA-9, QA-10 fixed (regression test for QA-9); plain-language error states (QA-12 mitigation).
@@ -22,8 +22,10 @@ Updated: 2026-10-27T22:32:00+00:00
 - Note for the lead: the Learn suite practises and certifies as Sam on a seeded lesson, so it
   touches demo-visible progress (idempotent for the certificate).
 
+- Real-stack Learn suite 9/9 (22:30Z window). Merge gate met; handoff.md written.
+
 ## Next
-Run the real-stack Learn suite when the lead gives a window after QA's timing runs, then State: review.
+Lead merges work/polish, rebuilds web/dist and deploys; QA runs the final round on that build.
 
 ## Blockers
 None.
