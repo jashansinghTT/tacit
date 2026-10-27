@@ -125,10 +125,23 @@ def main() -> None:
     ap.add_argument("--skip-gr00t", action="store_true")
     ap.add_argument("--extra-program", default=str(SIM / "examples" / "kit3.json"),
                     help="a second program to train and evaluate (empty to skip)")
+    ap.add_argument("--gr00t-latency-only", action="store_true",
+                    help="re-measure GR00T latency and rewrite results.md from the existing summary.json")
     args = ap.parse_args()
 
     program = json.loads(Path(args.program).read_text())
     out, work = Path(args.out), Path(args.work)
+    if args.gr00t_latency_only:
+        summary = json.loads((out / "summary.json").read_text())
+        lat = run_gr00t_latency(program)
+        lat["measured_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        lat["host_load"] = [round(x, 1) for x in os.getloadavg()]
+        summary["gr00t_latency"] = lat
+        (out / "gr00t_latency.json").write_text(json.dumps(lat, indent=1))
+        (out / "summary.json").write_text(json.dumps(summary, indent=1, default=str))
+        write_results(out, summary)
+        print(json.dumps({k: lat[k] for k in ("calls", "round_trip_ms", "device_ms", "host_load")}))
+        return
     out.mkdir(parents=True, exist_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     summary: dict = {"program": program, "program_file": Path(args.program).name,
@@ -191,7 +204,7 @@ def run_gr00t_latency(program) -> dict:
     """A full GR00T episode without video, to time the closed loop on its own."""
     from tacit_sim import Runner
 
-    runner = Runner(program, "gr00t", seed=1)
+    runner = Runner(program, "gr00t", seed=1)      # run_episode: synchronous queries
     t0 = time.time()
     r = runner.run_episode()
     wall = time.time() - t0
@@ -266,6 +279,7 @@ def write_results(out: Path, s: dict) -> None:
             "",
             "## GR00T N1.7 closed loop (chip 3, port 21030)",
             "",
+            (f"Measured {L['measured_at']} at host load average {L['host_load'][0]}. " if L.get("measured_at") else "") +
             f"Full episode (seed 1, {L['sim_seconds']} s of sim, {L['wall_seconds']} s wall): "
             f"{L['calls']} queries, success {L['episode']['success']}"
             + (f" ({L['episode']['reason']})" if L["episode"]["reason"] else "") + ".",
