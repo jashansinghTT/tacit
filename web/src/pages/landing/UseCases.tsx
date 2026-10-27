@@ -152,7 +152,7 @@ export function UseCases() {
   const { links } = useFeatured()
   return (
     <section className="relative px-4 py-16 lg:px-6" id="use-cases" data-testid="landing-usecases">
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto max-w-[1680px]">
         <div className="max-w-2xl">
           <div className="eyebrow">Use cases</div>
           <h2 className="mt-4 text-[clamp(2.2rem,4vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.035em] text-fg">
