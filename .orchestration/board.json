@@ -1,0 +1,82 @@
+{
+  "project": "tacit",
+  "updated_at": "2026-10-27T18:45:00Z",
+  "cards": [
+    {
+      "id": "backend",
+      "title": "Backend orchestrator: pipeline, model clients, APIs, jobs, DB, seed data",
+      "owner": "lead",
+      "state": "running",
+      "branch": "main",
+      "worktree": "~/tacit",
+      "acceptance": [
+        "Every endpoint in docs/API.md implemented",
+        "Pipeline F2 runs on a sample with real TT models",
+        "pytest backend/tests passes"
+      ],
+      "merge_gate": "backend tests pass; F1-F3 work on the real stack",
+      "handoff": ".orchestration/cards/backend/handoff.md"
+    },
+    {
+      "id": "vision",
+      "title": "tacit-vision cohost: HaMeR + Gaze-LLE + RF-DETR + VGGT on chip 0",
+      "owner": "tacit-vision",
+      "state": "ready",
+      "branch": "work/vision",
+      "worktree": "~/tacit-wt/vision",
+      "acceptance": [
+        "Fixtures of real responses committed",
+        "Cohost group serves on ports 21000-21004 from chip 0",
+        "deploy/vision-up.sh starts it from cold",
+        "README with measured numbers"
+      ],
+      "merge_gate": "group serves; outputs match standalone; handoff written",
+      "handoff": ".orchestration/cards/vision/handoff.md"
+    },
+    {
+      "id": "sim",
+      "title": "Robot sim, BC policy training, GR00T closed loop, web assets",
+      "owner": "tacit-sim",
+      "state": "ready",
+      "branch": "work/sim",
+      "worktree": "~/tacit-wt/sim",
+      "acceptance": [
+        "tacit_sim public API as in the card",
+        "Policy >= 80% success over 20 trials on sort2",
+        "GR00T loop runs a full episode on chip 3",
+        "GLB assets + scene.json in web/public/sim"
+      ],
+      "merge_gate": "sim tests pass; evidence videos; handoff written",
+      "handoff": ".orchestration/cards/sim/handoff.md"
+    },
+    {
+      "id": "web",
+      "title": "Website and app: landing, Studio, Skill, Learn, Robot Lab, Exchange, Box",
+      "owner": "tacit-web",
+      "state": "ready",
+      "branch": "work/web",
+      "worktree": "~/tacit-wt/web",
+      "acceptance": [
+        "All pages against the real API",
+        "typecheck, lint, build pass",
+        "Playwright smoke green",
+        "Screenshots of every page"
+      ],
+      "merge_gate": "no mock dependence; evidence; handoff written",
+      "handoff": ".orchestration/cards/web/handoff.md"
+    },
+    {
+      "id": "qa",
+      "title": "E2E suite on the real stack (SPEC section 9) and fix loop",
+      "owner": "tacit-qa",
+      "state": "backlog",
+      "branch": "work/qa",
+      "worktree": "~/tacit-wt/qa",
+      "acceptance": [
+        "All 7 E2E tests implemented and green on the real stack"
+      ],
+      "merge_gate": "suite green twice in a row",
+      "handoff": ".orchestration/cards/qa/handoff.md"
+    }
+  ]
+}

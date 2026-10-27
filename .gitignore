@@ -1,0 +1,29 @@
+# runtime
+data/
+logs/
+.tools/
+build/
+*.log
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+# node
+node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+# large assets
+*.mp4
+*.webm
+*.y4m
+*.wav
+*.npz
+*.pt
+*.pth
+*.onnx
+*.task
+*.tflite
+!web/public/**/*.mp4

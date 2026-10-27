@@ -1,0 +1,76 @@
+# Tacit model stack: which package runs on which chip, and where each model listens.
+# Read by deploy/stack.sh (start/stop) and by the backend (model client URLs).
+# `phase` picks the vision layout: "cohost" once models/cohost-vision passes its gate,
+# "standalone" (one package per chip, for bring-up) before that.
+
+host: 127.0.0.1
+tt_model: ~/tacit/.tools/ttm/bin/tt-model
+
+vision_layout: standalone   # standalone | cohost
+
+groups:
+  vision-cohost:
+    layout: cohost
+    package: models/cohost-vision          # local package dir (built by the vision card)
+    chips: [0]
+    base_port: 21000
+    members:
+      hamer:   {port: 21000, health: /health}
+      gaze:    {port: 21001, health: /health}
+      rfdetr:  {port: 21002, health: /health}
+      vggt:    {port: 21003, health: /health}
+    status_port: 21004
+
+  hamer:
+    layout: standalone
+    package: changh95/hamer-p150
+    chips: [0]
+    port: 21000
+    health: /health
+  gaze:
+    layout: standalone
+    package: changh95/gaze-lle-p150
+    chips: [3]
+    port: 21001
+    health: /health
+  rfdetr:
+    layout: standalone
+    package: changh95/rf-detr-p150
+    chips: []        # no free chip in the standalone layout; started on demand for bring-up
+    port: 21002
+    health: /health
+  vggt:
+    layout: standalone
+    package: changh95/vggt-1b-p150
+    chips: []
+    port: 21003
+    health: /health
+
+  speech:
+    package: jashansinghTT/cohost-speech-blackhole
+    profile: p150
+    chips: [1]
+    base_port: 21010
+    members:
+      whisper: {port: 21010, health: /health}
+      s2pro:   {port: 21011, health: /health}
+      music3:  {port: 21012, health: /health}
+    status_port: 21013
+
+  llm:
+    package: jashansinghTT/gpt-oss-20b-blackhole-fast
+    profile: p150
+    chips: [2]
+    port: 21020
+    health: /v1/models
+    model_id: openai/gpt-oss-20b
+
+  gr00t:
+    package: changh95/GR00T-N1.7-3B-p150
+    chips: [3]
+    port: 21030
+    health: /health
+
+backend:
+  host: 127.0.0.1
+  port: 8710
