@@ -62,6 +62,31 @@ async def _startup() -> None:
             jobs.run(jobs.create("process", skill_id, STAGES), lambda j, sid=skill_id: process_skill(j, sid))
     if os.environ.get("TACIT_SEED", "1") == "1":
         asyncio.create_task(seed.seed_sample_skills())
+    asyncio.create_task(backfill_ready_skills())
+
+
+async def backfill_ready_skills() -> None:
+    """Finish what a restart cut short for ready skills: motion previews and background narration."""
+    from .pipeline import preview
+    from .pipeline.process import narrate_rest, narration_lines
+    from .storage import media_dir
+    with session() as s:
+        ids = [r.id for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all()]
+    for sid in ids:
+        sk = load_skill(sid)
+        if not sk:
+            continue
+        if not sk.get("motion_thumb"):
+            frames = (read_json(tracks_path(sid)) or {}).get("frames", [])
+            mt = await asyncio.to_thread(preview.motion_thumb, frames, media_dir(sid) / "motion.jpg",
+                                         (sk.get("steps") or [{}])[0].get("t_start", 0.0) + 1.0 if sk.get("steps") else None)
+            if mt:
+                sk = load_skill(sid)
+                sk["motion_thumb"] = media_url(mt)
+                save_skill(sk)
+        missing = [(k, t) for k, t in narration_lines(sk) if k not in (sk.get("narration") or {})]
+        if missing:
+            await narrate_rest(sid, missing)
 
 
 def recover_interrupted_jobs() -> list[str]:
