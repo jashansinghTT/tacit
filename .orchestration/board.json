@@ -1,6 +1,6 @@
 {
   "project": "tacit",
-  "updated_at": "2026-10-27T21:13:20+00:00",
+  "updated_at": "2026-10-27T21:18:28+00:00",
   "cards": [
     {
       "id": "backend",
@@ -37,7 +37,7 @@
       "id": "sim",
       "title": "Robot sim, BC policy training, GR00T closed loop, web assets",
       "owner": "tacit-sim",
-      "state": "running",
+      "state": "approved (merge after freeze)",
       "branch": "work/sim",
       "worktree": "~/tacit-wt/sim",
       "acceptance": [
@@ -122,7 +122,7 @@
       "id": "web-robot",
       "title": "Robot Lab",
       "owner": "tacit-web-robot",
-      "state": "running",
+      "state": "merged",
       "branch": "work/web-robot",
       "worktree": "~/tacit-wt/web-robot",
       "acceptance": [
@@ -144,6 +144,34 @@
       ],
       "merge_gate": "bench numbers; tests pass",
       "handoff": ".orchestration/cards/liveperf/handoff.md"
+    },
+    {
+      "id": "polish",
+      "title": "The whole app as one product",
+      "owner": "tacit-web",
+      "state": "running",
+      "branch": "work/polish",
+      "worktree": "~/tacit-wt/web",
+      "acceptance": [
+        "demo script clean as every persona"
+      ],
+      "merge_gate": "checks + e2e + before/after evidence",
+      "handoff": ".orchestration/cards/polish/handoff.md"
+    },
+    {
+      "id": "showreel",
+      "title": "60-75 s showreel, first cut",
+      "owner": "tacit-showreel",
+      "state": "running",
+      "branch": "work/showreel",
+      "worktree": "~/tacit-wt/showreel",
+      "acceptance": [
+        "storyboard",
+        "claims ledger",
+        "previews + first cut"
+      ],
+      "merge_gate": "first cut for the user's review",
+      "handoff": ".orchestration/cards/showreel/handoff.md"
     }
   ]
 }
