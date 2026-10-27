@@ -24,9 +24,10 @@ export function HandSkeleton({ points, color, dim }: { points: MutableRefObject<
   const mats = useMemo(() => {
     const c = new THREE.Color(color)
     return {
-      joint: new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffffff').lerp(c, 0.45), toneMapped: false, transparent: true }),
-      bone: new THREE.MeshBasicMaterial({ color: c, toneMapped: false, transparent: true }),
-      outline: new THREE.MeshBasicMaterial({ color: '#05070a', transparent: true, opacity: 0.55, depthWrite: false }),
+      // drawn over the arm like an overlay: the ghost often sits inside the gripper it guides
+      joint: new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffffff').lerp(c, 0.45), toneMapped: false, transparent: true, depthTest: false }),
+      bone: new THREE.MeshBasicMaterial({ color: c, toneMapped: false, transparent: true, depthTest: false }),
+      outline: new THREE.MeshBasicMaterial({ color: '#05070a', transparent: true, opacity: 0.55, depthWrite: false, depthTest: false }),
     }
   }, [color])
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), a: new THREE.Vector3(), b: new THREE.Vector3(), mid: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), [])
@@ -40,7 +41,7 @@ export function HandSkeleton({ points, color, dim }: { points: MutableRefObject<
     j.visible = b.visible = o.visible = visible
     if (!pts || !visible) return
     const k = dim.current
-    mats.joint.opacity = mats.bone.opacity = 0.35 + 0.6 * k
+    mats.joint.opacity = mats.bone.opacity = 0.3 + 0.55 * k
     mats.outline.opacity = 0.2 + 0.35 * k
     for (let i = 0; i < 21; i++) {
       tmp.s.setScalar(FINGERTIPS.includes(i) || i === 0 ? 1.35 : 1)
@@ -63,9 +64,9 @@ export function HandSkeleton({ points, color, dim }: { points: MutableRefObject<
   })
   return (
     <group>
-      <instancedMesh ref={shadow} args={[geo.outline, mats.outline, HAND_CONNECTIONS.length]} frustumCulled={false} renderOrder={1} />
-      <instancedMesh ref={bones} args={[geo.bone, mats.bone, HAND_CONNECTIONS.length]} frustumCulled={false} renderOrder={2} />
-      <instancedMesh ref={joints} args={[geo.joint, mats.joint, 21]} frustumCulled={false} renderOrder={2} />
+      <instancedMesh ref={shadow} args={[geo.outline, mats.outline, HAND_CONNECTIONS.length]} frustumCulled={false} renderOrder={10} />
+      <instancedMesh ref={bones} args={[geo.bone, mats.bone, HAND_CONNECTIONS.length]} frustumCulled={false} renderOrder={11} />
+      <instancedMesh ref={joints} args={[geo.joint, mats.joint, 21]} frustumCulled={false} renderOrder={12} />
     </group>
   )
 }

@@ -1,7 +1,7 @@
 # Status: web-robot
 
 State: running
-Updated: 2026-10-27T20:15:00+00:00
+Updated: 2026-10-27T20:40:00+00:00
 
 ## Works (against the real backend on :8710, dev server :5713)
 - `/robot/:skillId` Robot Lab: MuJoCo scene drawn from `GET /api/robot/scene?skill_id=` (GLB Panda
@@ -30,9 +30,21 @@ Updated: 2026-10-27T20:15:00+00:00
 - Lead fixed replay (`finger_track(side=)`), made evaluate push `result.trials` live and persist
   `policy.last_eval`. Thanks.
 
+- `web/e2e/robot.spec.ts` (8 tests) passes on the mock (own server on 5723; 5712 is shared and
+  served another worktree's placeholder pages). Mock scene now uses the real sim format.
+- Unknown skill ids (landing/tour link to the mock's `sk_sort`) open the best ready skill with a
+  toast. Responsive pass at 1024 and 1920 done.
+
+## Open items for the lead
+- After a backend restart, an interrupted train job is marked failed but the skill's
+  `robot.policy` stays `{"status": "training"}` (sk_3b7c613d), so /robot shows "Training" forever.
+  Sent to the lead with a suggested fix.
+- The landing, hero and tour link to `sk_sort` (mock id); on the real box the lab redirects, but
+  the web card may want a real featured skill id.
+
 ## Next
-Playwright `web/e2e/robot.spec.ts` (real backend), mock-mode compatibility of `mock/robot.ts`,
-responsive pass (1024/1920), evidence screenshots + screen recording, handoff.
+Real-stack e2e run, evidence (screenshots + recording) on a seeded skill once its re-processing
+finishes, handoff.
 
 ## Blockers
 None.
