@@ -78,7 +78,8 @@ def consistency(res: dict, frames: list[dict], times: list[float]) -> dict:
     for i in range(S):
         m = valid_mask(pps[i]) & ~person_mask(nearest_frame(frames, times[i]), pps[i])
         c = dconf[i]
-        m &= c > np.percentile(c[m], 40) if m.any() else m
+        if m.any():
+            m &= c >= np.percentile(c[m], 40)
         masks.append(m)
 
     rng = np.random.default_rng(0)
@@ -249,7 +250,7 @@ def build_twin(frames: list[dict], res: dict | None, times: list[float], images:
     if res is not None and images:
         wp = res["world_points"][0] * scale
         conf = res["world_points_conf"][0] if "world_points_conf" in res else res["depth_conf"][0]
-        m = valid_mask(pp0) & (conf > np.percentile(conf[valid_mask(pp0)], 30))
+        m = valid_mask(pp0) & (conf >= np.percentile(conf[valid_mask(pp0)], 30))
         vs, us = np.nonzero(m)
         if len(us) > 60000:
             sel = np.random.default_rng(1).choice(len(us), 60000, replace=False)

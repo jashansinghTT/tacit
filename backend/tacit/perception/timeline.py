@@ -135,9 +135,9 @@ def carried_intervals(frames: list[dict]) -> list[dict]:
         pts = tr.points
         moving = []
         for (t0, x0, y0, i0), (t1, x1, y1, i1) in zip(pts, pts[1:]):
-            disp = math.hypot(x1 - x0, y1 - y0)
-            if disp > 0.04 * dg and (_hand_near(frames, i0, x0, y0, 0.2 * dg) or _hand_near(frames, i1, x1, y1, 0.2 * dg)
-                                     or t1 - t0 > 0.5):
+            speed = math.hypot(x1 - x0, y1 - y0) / max(t1 - t0, 1e-3)   # px per second
+            if speed > 0.08 * dg and (_hand_near(frames, i0, x0, y0, 0.2 * dg) or _hand_near(frames, i1, x1, y1, 0.2 * dg)
+                                      or t1 - t0 > 0.5):
                 moving.append((t0, x0, y0, i0, t1, x1, y1, i1))
         if not moving:
             continue
@@ -292,20 +292,27 @@ class LiveSegmenter:
                 if 0 < t - t0 < 0.6 and float(np.linalg.norm(ft["wrist"] - w0)) / dg / (t - t0) > 0.06:
                     moving = True
             self.last_wrist[side] = (t, ft["wrist"])
-            hist = self.closures.setdefault(side, deque(maxlen=60))
+            hist = self.closures.setdefault(side, deque(maxlen=90))
             hist.append(ft["closure"])
-            lo, hi = (np.percentile(hist, 30), np.percentile(hist, 70)) if len(hist) >= 10 else (1.25, 1.6)
+            # Thresholds sit between this hand's own open and closed poses once both have been seen.
+            open_ref, closed_ref = (np.percentile(hist, 90), np.percentile(hist, 10)) if len(hist) >= 10 else (1.8, 1.0)
+            span = open_ref - closed_ref
+            if span > 0.3:
+                mid = (open_ref + closed_ref) / 2
+                grasp_thr, release_thr = mid - 0.1 * span, mid + 0.1 * span
+            else:
+                grasp_thr, release_thr = 1.3, 1.5
             st = self.state.setdefault(side, {"held": None, "count": 0})
             obj = near_object(ft["center"], ft["size"], f.get("objects", []))
             if obj:
                 self.step_objects[obj] += 1
             self.step_hand[side] += 1
-            if st["held"] is None and obj and ft["closure"] < min(lo, 1.45):
+            if st["held"] is None and obj and ft["closure"] < grasp_thr:
                 st["count"] += 1
                 if st["count"] >= 2:
                     st["held"], st["count"] = obj, 0
                     events.append({"type": "event", "t": t, "kind": "grasp", "hand": side, "object": obj})
-            elif st["held"] is not None and ft["closure"] > max(hi, 1.5):
+            elif st["held"] is not None and ft["closure"] > release_thr:
                 st["count"] += 1
                 if st["count"] >= 2:
                     held, st["held"], st["count"] = st["held"], None, 0
