@@ -14,9 +14,9 @@ import { SimViewer, type ViewerLayers, type ViewPreset } from '@/features/robot/
 import { clearRun, emptyPose, startRun, useRunUi } from '@/features/robot/runStream'
 import { buildGhost } from '@/features/robot/retarget'
 import { JointTelemetry, PlaybackBar } from '@/features/robot/Live'
-import { LAB_MODES, MODE_META, ModeList, type LabMode, type ModeState } from '@/features/robot/ModeList'
+import { LAB_MODES, MODE_META, ModeTabs, type LabMode, type ModeState } from '@/features/robot/ModeList'
 import { EvaluatePanel, Gr00tPanel, PolicyPanel, ReplayPanel, TrainPanel } from '@/features/robot/ModePanels'
-import { ExplainerStrip, programTasks } from '@/features/robot/Explainer'
+import { ExplainerStrip, uniqueTasks } from '@/features/robot/Explainer'
 import { useLabJobs } from '@/features/robot/useLabJobs'
 
 const RUN_LABEL: Record<RunMode, string> = { replay: 'Replay', policy: 'Policy', gr00t: 'GR00T', scripted: 'Scripted' }
@@ -253,7 +253,7 @@ export default function RobotLabPage() {
   if (skill.isError && (skill.error as { status?: number }).status === 404) return <UnknownSkill id={skillId} />
 
   const s = skill.data
-  const tasks = programTasks(status.data?.program ?? [])
+  const tasks = uniqueTasks(status.data?.program ?? [])
   const evalLive = jobs.evaluate.running ? { ok: evalTrials.filter((t) => t.success).length, n: evalTrials.length } : null
 
   return (
@@ -373,17 +373,21 @@ export default function RobotLabPage() {
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-5 xl:col-span-4">
-              <Panel title="Modes" eyebrow="What the robot does" pad={false} bodyClassName="p-1.5">
-                <ModeList value={mode} onChange={setMode} states={modeStates} />
-              </Panel>
+            <div className="flex min-w-0 flex-col gap-3 xl:col-span-4">
+              <ModeTabs value={mode} onChange={setMode} states={modeStates} />
               <Panel
                 id="robot-mode-panel"
                 role="tabpanel"
                 aria-labelledby={`robot-mode-${mode}`}
                 eyebrow="Mode"
                 title={MODE_META[mode].title}
+                actions={
+                  <Badge tone={modeStates[mode].tone} dot pulse={modeStates[mode].busy}>
+                    {modeStates[mode].label}
+                  </Badge>
+                }
                 data-testid={`panel-${mode}`}
+                className="-mt-2"
               >
                 {mode === 'replay' && (
                   <ReplayPanel

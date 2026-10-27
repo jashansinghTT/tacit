@@ -282,7 +282,7 @@ export function EvaluatePanel({ jobs, status, onWatch }: { jobs: LabJobs; status
       </div>
       {!trained && <p className="text-[12px] text-fg-subtle">Train a policy first; evaluation runs it on fresh scenes.</p>}
       <div className="flex items-center gap-4">
-        <ScoreRing value={rate} size={84} stroke={7} label="success rate" sub="success" />
+        <ScoreRing value={rate} size={84} stroke={7} label="success rate" />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="telemetry text-2xl font-medium text-fg" data-testid="eval-score">
             {trials.length ? (

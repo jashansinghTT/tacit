@@ -37,6 +37,13 @@ export function programTasks(program: RobotAction[]): string[] {
   return out
 }
 
+/** The same tasks with repeats folded: ["cup → bottle ×2", "bolt → tray"]. */
+export function uniqueTasks(program: RobotAction[]): string[] {
+  const counts = new Map<string, number>()
+  for (const t of programTasks(program)) counts.set(t, (counts.get(t) ?? 0) + 1)
+  return [...counts.entries()].map(([t, n]) => (n > 1 ? `${t} ×${n}` : t))
+}
+
 export function ExplainerStrip({
   skill,
   status,
@@ -56,7 +63,7 @@ export function ExplainerStrip({
 }) {
   const policy = status?.policy
   const program = status?.program ?? []
-  const tasks = programTasks(program)
+  const tasks = uniqueTasks(program)
   const curve = train.lossCurve.length ? train.lossCurve : (policy?.loss_curve ?? [])
   const loss = curve.length ? curve[curve.length - 1][1] : null
   const demos = training ? (train.demosTotal ?? null) : (policy?.demos ?? null)
