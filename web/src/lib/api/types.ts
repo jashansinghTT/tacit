@@ -35,6 +35,8 @@ export interface BoxModel {
   role: string
   port: number
   healthy: boolean
+  /** Health check timed out but it answered within the last 2 min: working, not down. */
+  busy?: boolean
   p50_ms: number | null
   calls: number
   errors?: number

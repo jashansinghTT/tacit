@@ -99,7 +99,7 @@ function ChipMap({ box, selected, onSelect }: { box: BoxStatus; selected: number
                     <div className="relative mt-1 text-[13px] font-medium text-fg">{groupInfo(c.group)?.label ?? c.group}</div>
                     <div className="relative mt-3 space-y-1">
                       {c.models.map((m) => (
-                        <div key={m.name} className={cn('flex items-center justify-between gap-2 rounded-[4px] px-2 py-1 text-[11px]', m.healthy ? 'bg-ion/[0.08] text-ion' : 'bg-fault-soft text-fault')}>
+                        <div key={m.name} className={cn('flex items-center justify-between gap-2 rounded-[4px] px-2 py-1 text-[11px]', m.busy ? 'bg-warn-soft text-warn' : m.healthy ? 'bg-ion/[0.08] text-ion' : 'bg-fault-soft text-fault')} title={m.busy ? `${m.name} is busy` : undefined}>
                           <span className="truncate">{m.name}</span>
                           <span className="telemetry shrink-0 text-fg-muted">{fmtMs(m.p50_ms)}</span>
                         </div>
@@ -144,8 +144,13 @@ function ChipPanel({ c, hist, highlight, queue }: { c: BoxChip; hist: Map<string
             <div key={m.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3" data-testid={`model-${m.name}`}>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <StatusDot tone={m.healthy ? 'ok' : 'fault'} />
+                  <StatusDot tone={m.busy ? 'warn' : m.healthy ? 'ok' : 'fault'} pulse={m.busy} />
                   <span className="truncate text-[13px] font-medium text-fg">{m.name}</span>
+                  {m.busy && (
+                    <Badge tone="warn" title="Its health check timed out while it was working; it answered within the last two minutes">
+                      busy
+                    </Badge>
+                  )}
                   <BackendBadge backend={m.backend} model={m.name} chip={m.backend === 'cpu' ? null : c.id} />
                 </div>
                 <div className="telemetry mt-0.5 pl-4 text-[11px] text-fg-subtle">

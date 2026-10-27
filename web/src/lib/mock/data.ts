@@ -406,7 +406,7 @@ export function seedBox(): BoxStatus {
       { id: 0, board: 'p300c', group: 'tacit-vision', status: 'ok', memory: { dram_gib: 11.6, dram_total_gib: 32, l1_used_kib: 1180, l1_total_kib: 1464 },
         models: [m('HaMeR', '3D hands', 21000, 4.9, 12046, 1.8), m('Gaze-LLE', 'gaze', 21001, 7.1, 6023, 1.3), m('RF-DETR', 'parts and objects', 21002, 11.8, 6023, 1.1), m('VGGT-1B', '3D rebuild, verification', 21003, 412, 37, 7.4)] },
       { id: 1, board: 'p300c', group: 'cohost-speech', status: 'ok', memory: { dram_gib: 14.2, dram_total_gib: 32, l1_used_kib: 1302, l1_total_kib: 1464 },
-        models: [m('Whisper large-v3', 'speech to text', 21010, 182, 214, 3.4), m('S2 Pro', 'text to speech', 21011, 96, 388, 6.1), m('MiniMax Music 3', 'lesson intro music', 21012, 2890, 6, 4.7)] },
+        models: [m('Whisper large-v3', 'speech to text', 21010, 182, 214, 3.4), { ...m('S2 Pro', 'text to speech', 21011, 96, 388, 6.1), busy: true }, m('MiniMax Music 3', 'lesson intro music', 21012, 2890, 6, 4.7)] },
       { id: 2, board: 'p300c', group: 'gpt-oss-20b', status: 'ok', memory: { dram_gib: 24.9, dram_total_gib: 32 },
         models: [m('gpt-oss-20b', 'coach, writer, tutor', 21020, 38, 1290, 24.9)] },
       { id: 3, board: 'p300c', group: 'gr00t', status: 'ok', memory: { dram_gib: 9.3, dram_total_gib: 32 },
