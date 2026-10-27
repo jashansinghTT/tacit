@@ -108,12 +108,14 @@ def processed(api) -> SkillRun:
     api.patch(f"/api/skills/{sid}", json={"title": lib.QA_PREFIX + sample.get("title", "sample")}).raise_for_status()
     t1 = time.perf_counter()
     job_id = api.post(f"/api/skills/{sid}/process").json()["job_id"]
-    job = lib.wait_job(api, job_id, timeout_s=float(os.environ.get("QA_PROCESS_TIMEOUT", 1200)))
+    restarts = lib.Recorder("processed", RUN_DIR)
+    job = lib.wait_process(api, sid, job_id, float(os.environ.get("QA_PROCESS_TIMEOUT", 1200)), restarts)
     process_s = time.perf_counter() - t1
     sk = api.get(f"/api/skills/{sid}").json()
     if sk.get("title") and not sk["title"].startswith(lib.QA_PREFIX):
         api.patch(f"/api/skills/{sid}", json={"title": lib.QA_PREFIX + sk["title"]})
     run = SkillRun(sid, job, created_s, process_s, sample)
+    run.flags = restarts.flags
     PROCESSED.append(run)
     return run
 

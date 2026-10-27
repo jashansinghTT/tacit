@@ -36,7 +36,8 @@ it is fixed.
 
 ## QA-3 backend (+ speech): interactive TTS waits minutes behind batch narration, then times out
 
-- Owner: backend (lead); S2 Pro speed is the speech cohost's. State: open. Found 2026-10-27 19:52Z.
+- Owner: backend (lead); S2 Pro speed is the speech cohost's. State: fixed by the lead (one S2 Pro slot,
+  interactive first, `speech_queue` in `/api/box`), QA to verify in the next full run. Found 2026-10-27 19:52Z.
 - Seen (19:44 to 19:52Z): `POST /api/speech/tts` for one short sentence took 94 s; the next two calls failed
   after 120 s with `model_unavailable` ("S2 Pro (chip 1) is unavailable: "). A direct `POST :21011/v1/tts` for
   "Pick up the bracket with your right hand." (1.8 s of audio) returned after **118 s**, although S2 Pro itself

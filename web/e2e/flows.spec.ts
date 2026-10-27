@@ -64,14 +64,38 @@ class Run {
 }
 
 async function persona(page: Page, id: 'u_maria' | 'u_sam' | 'u_priya' | 'u_atlas') {
+  // Once per tab: later switches (localStorage + reload) must stick.
   await page.addInitScript((p) => {
     try {
+      if (sessionStorage.getItem('qa.persona')) return
+      sessionStorage.setItem('qa.persona', p)
       localStorage.setItem('tacit.persona', p)
       localStorage.setItem('tacit.tour.seen', '1')
     } catch {
       /* ignore */
     }
   }, id)
+}
+
+/** Records every media element that plays (narration uses `new Audio()`, outside the DOM). */
+async function trackMedia(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __qaMedia: HTMLMediaElement[] }
+    w.__qaMedia = []
+    const play = HTMLMediaElement.prototype.play
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      if (!w.__qaMedia.includes(this)) w.__qaMedia.push(this)
+      return play.call(this)
+    }
+  })
+}
+
+/** Seconds of audio actually played from `/media/` sources whose URL matches `re`. */
+async function playedAudio(page: Page, re = '/media/'): Promise<number> {
+  return page.evaluate((r) => {
+    const w = window as unknown as { __qaMedia?: HTMLMediaElement[] }
+    return (w.__qaMedia ?? []).filter((m) => (m.currentSrc || m.src).includes(r)).reduce((a, m) => a + (m.currentTime || 0), 0)
+  }, re)
 }
 
 const words = (s: string) => new Set(s.toLowerCase().split(/\s+/).map((w) => w.replace(/[.,!?;:'"]/g, '')).filter((w) => w.length > 2))
@@ -282,54 +306,76 @@ test.describe('with the practice camera', () => {
 })
 
 async function learnFlow(page: Page, run: Run) {
-  {
-    await persona(page, 'u_sam')
-    const skillId = await sharedSkill(page)
-    await page.goto(`/learn/${skillId}`)
-    await expect(page.locator('h1').first()).toBeVisible()
-    await run.shot('lesson')
-    // Narration: a playing <audio> element with real duration.
-    await page.getByTestId('narration-play').first().click()
-    await run.time('narration starts playing', 3, async () => {
-      await expect
-        .poll(async () => page.evaluate(() => [...document.querySelectorAll('audio')].some((a) => !a.paused && a.currentTime > 0.2)), { timeout: 15_000 })
-        .toBeTruthy()
-    })
-    // Practice with the fake camera.
-    await page.getByTestId('practice-start').click()
-    const score = page.getByTestId('practice-score')
-    await run.time('first practice score', 5, async () => {
-      await expect(score).toBeVisible({ timeout: 30_000 })
-    })
-    await expect(page.getByTestId('practice-hint')).not.toBeEmpty({ timeout: 30_000 })
-    await page.waitForTimeout(4000)
-    run.note(`practice score ${await score.innerText()}, hint "${await page.getByTestId('practice-hint').innerText()}"`)
-    await run.shot('practice')
-    await page.getByTestId('practice-stop').click().catch(() => {})
-    // Tutor by text.
-    await page.getByTestId('tutor-input').fill('Why does the first step matter?')
-    await page.getByTestId('tutor-send').click()
-    const reply = page.getByTestId('tutor-answer').last()
-    await run.time('tutor text answer starts', 3, async () => {
-      await expect(reply).not.toBeEmpty({ timeout: 30_000 })
-    })
-    await expect(page.getByTestId('tutor-answer-done').last()).toBeVisible({ timeout: 60_000 })
-    await run.shot('tutor-text')
-    // Tutor by voice (fake mic plays question.wav).
-    const questionText = fs.readFileSync(path.join(MEDIA, 'question.txt'), 'utf8').trim()
-    const before = await page.getByTestId('tutor-question').count()
-    await page.getByTestId('tutor-mic').click()
-    await page.waitForTimeout(6000)
-    await page.getByTestId('tutor-mic').click().catch(() => {})
-    await run.time('voice question transcribed and answered', 20, async () => {
-      await expect(page.getByTestId('tutor-question')).toHaveCount(before + 1, { timeout: 60_000 })
-    })
-    const asked = await page.getByTestId('tutor-question').last().innerText()
-    run.note(`voice question heard as: ${asked}`)
-    expect(overlap(asked, questionText)).toBeGreaterThanOrEqual(0.5)
-    await expect(page.getByTestId('tutor-answer-done').last()).toBeVisible({ timeout: 60_000 })
-    await run.shot('tutor-voice')
-  }
+  await persona(page, 'u_sam')
+  await trackMedia(page)
+  const skillId = await sharedSkill(page)
+  const sk = await api<{ quiz: { answer: number }[]; steps: unknown[] }>(page, `/api/skills/${skillId}`)
+  await page.goto(`/learn/${skillId}`)
+  await expect(page.getByTestId('lesson-title')).toBeVisible({ timeout: 20_000 })
+  await run.shot('lesson')
+  // Narration (S2 Pro): watch mode voices the intro, then each step.
+  await page.getByTestId('play-intro').click().catch(() => {})
+  const unblock = page.getByTestId('narration-unblock')
+  if (await unblock.isVisible().catch(() => false)) await unblock.click()
+  await run.time('narration starts playing', 3, async () => {
+    await expect.poll(() => playedAudio(page, '/media/tts/'), { timeout: 20_000, message: 'no narration played' }).toBeGreaterThan(0.3)
+  })
+  await run.shot('narration')
+  // Practice on the fake camera: a live match score and a hint.
+  await page.getByTestId('seg-practise').click()
+  await page.getByTestId('practice-start').click()
+  await expect(page.getByTestId('practice-stage')).toHaveAttribute('data-state', /live|running|tracking/, { timeout: 20_000 })
+  await run.time('first practice score', 5, async () => {
+    await expect(page.getByTestId('score-ring')).toContainText(/\d/, { timeout: 30_000 })
+  })
+  await run.time('practice hint shown', 10, async () => {
+    await expect(page.getByTestId('practice-hint')).toBeVisible({ timeout: 45_000 })
+  })
+  await page.waitForTimeout(3000)
+  run.note(`practice: score ${(await page.getByTestId('score-ring').innerText()).replace(/\s+/g, ' ')}; hint "${(await page.getByTestId('practice-hint').innerText()).trim()}"`)
+  await run.shot('practice')
+  await page.getByTestId('practice-stop').click()
+  // Tutor by text: streamed text, then spoken sentences.
+  const answers = page.getByTestId('tutor-answer')
+  const n0 = await answers.count()
+  await page.getByTestId('tutor-input').fill('Why does the first step matter?')
+  const heardBefore = await playedAudio(page, '/media/tts/')
+  await page.getByTestId('tutor-send').click()
+  await run.time('tutor text: first words', 3, async () => {
+    await expect(answers.nth(n0).getByTestId('tutor-answer-text')).not.toBeEmpty({ timeout: 30_000 })
+  })
+  await run.time('tutor text: answer complete', 30, async () => {
+    await expect(answers.nth(n0)).toHaveAttribute('data-status', 'done', { timeout: 120_000 })
+  })
+  await run.time('tutor text: answer spoken', 15, async () => {
+    await expect.poll(() => playedAudio(page, '/media/tts/'), { timeout: 120_000, message: 'the tutor answer was not spoken' }).toBeGreaterThan(heardBefore + 0.3)
+  })
+  await run.shot('tutor-text')
+  // Tutor by voice: the fake microphone plays question.wav.
+  const questionText = fs.readFileSync(path.join(MEDIA, 'question.txt'), 'utf8').trim()
+  await page.getByTestId('tutor-mic').click()
+  await expect(page.getByTestId('tutor-recording')).toBeVisible()
+  await page.waitForTimeout(7000)
+  if (await page.getByTestId('tutor-recording').isVisible().catch(() => false)) await page.getByTestId('tutor-mic').click()
+  await run.time('tutor voice: question transcribed', 5, async () => {
+    await expect(answers).toHaveCount(n0 + 2, { timeout: 60_000 })
+    await expect(page.getByTestId('tutor-question').last()).not.toBeEmpty({ timeout: 60_000 })
+  })
+  const asked = (await page.getByTestId('tutor-question').last().innerText()).trim()
+  run.note(`voice question heard as: ${asked}`)
+  expect(overlap(asked, questionText), `heard "${asked}"`).toBeGreaterThanOrEqual(0.5)
+  await run.time('tutor voice: answer complete', 30, async () => {
+    await expect(answers.last()).toHaveAttribute('data-status', 'done', { timeout: 120_000 })
+  })
+  await expect(answers.last().getByTestId('tutor-answer-text')).not.toBeEmpty()
+  await run.shot('tutor-voice')
+  // Quiz and certificate.
+  await page.getByTestId('rail-quiz').click()
+  for (const [qi, q] of sk.quiz.entries()) await page.getByTestId(`quiz-q-${qi}-c-${q.answer}`).click()
+  await page.getByTestId('quiz-submit').click()
+  await expect(page.getByTestId('quiz-result')).toHaveAttribute('data-passed', 'true', { timeout: 20_000 })
+  await expect(page.getByTestId('certificate-image')).toBeVisible({ timeout: 20_000 })
+  await run.shot('certificate')
 }
 
 // ------------------------------------------------------------------------------------ F5, F6, F7
@@ -339,28 +385,42 @@ test.describe('the rest', () => {
     await persona(page, 'u_priya')
     const skillId = await sharedSkill(page)
     await page.goto(`/robot/${skillId}`)
-    await expect(page.getByTestId('robot-viewer')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('sim-viewer')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('robot-program')).toBeVisible()
+    await page.waitForTimeout(1500)
     await run.shot('robot-lab')
-    await page.getByTestId('robot-train').click()
+    await page.getByTestId('mode-train').click()
+    await page.getByTestId('run-train').click()
     await run.time('train the policy (UI)', 300, async () => {
-      await expect(page.getByTestId('policy-status')).toContainText(/trained/i, { timeout: 30 * 60_000 })
+      await expect(page.getByTestId('train-progress')).toHaveAttribute('data-status', /done|failed/, { timeout: 30 * 60_000 })
     })
-    await expect(page.getByTestId('loss-curve')).toBeVisible()
+    await expect(page.getByTestId('train-progress')).toHaveAttribute('data-status', 'done')
+    await expect(page.getByTestId('loss-chart')).toBeVisible()
     await run.shot('trained')
-    await page.getByTestId('robot-evaluate').click()
+    await page.getByTestId('mode-evaluate').click()
+    await page.getByTestId('run-evaluate').click()
     await run.time('evaluate 20 trials (UI)', 180, async () => {
-      await expect(page.getByTestId('eval-result')).toBeVisible({ timeout: 30 * 60_000 })
+      await expect(page.getByTestId('trial-cell')).toHaveCount(20, { timeout: 30 * 60_000 })
+      await expect(page.getByTestId('eval-score')).toContainText(/\d+\s*%/, { timeout: 30 * 60_000 })
     })
-    const pct = Number((await page.getByTestId('eval-result').innerText()).match(/(\d+)\s*%/)?.[1] ?? 0)
+    await expect.poll(async () => (await page.getByTestId('eval-score').innerText()).trim(), { timeout: 30 * 60_000 }).toMatch(/\d+\s*%/)
+    await page.waitForTimeout(2000)
+    const pct = Number((await page.getByTestId('eval-score').innerText()).match(/(\d+)\s*%/)?.[1] ?? 0)
     run.note(`evaluation shows ${pct}%`)
-    expect(pct).toBeGreaterThanOrEqual(80)
     await run.shot('evaluated')
+    expect(pct, 'policy success rate shown').toBeGreaterThanOrEqual(80)
     await page.getByTestId('mode-gr00t').click()
-    await page.getByTestId('robot-run').click()
+    await page.getByTestId('run-gr00t').click()
     await run.time('GR00T camera frames appear', 10, async () => {
-      await expect(page.getByTestId('gr00t-camera').first()).toBeVisible({ timeout: 60_000 })
+      for (const cam of ['exterior', 'wrist']) {
+        await expect
+          .poll(async () => page.getByTestId(`camera-${cam}`).locator('img').evaluate((i: HTMLImageElement) => i.naturalWidth), { timeout: 60_000 })
+          .toBeGreaterThan(0)
+      }
     })
+    await expect(page.getByTestId('gr00t-latency')).toContainText(/\d+\s*ms/, { timeout: 30_000 })
     await page.waitForTimeout(5000)
+    run.note(`GR00T latency panel: ${(await page.getByTestId('gr00t-latency').innerText()).replace(/\s+/g, ' ')}`)
     await run.shot('gr00t-run')
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])
@@ -372,38 +432,61 @@ test.describe('the rest', () => {
     const skillId = await sharedSkill(page)
     const expert = (await api<{ expert: { id: string } }>(page, `/api/skills/${skillId}`)).expert.id
     const before = await api<{ total: number }>(page, '/api/earnings', { user: expert })
+    await page.goto('/')
+    await page.evaluate((e) => localStorage.setItem('tacit.persona', e), expert)
     await page.goto(`/exchange/sell/${skillId}`)
-    await expect(page.locator('h1').first()).toBeVisible()
-    await run.shot('sell')
-    await page.getByTestId('consent-confirm').check()
-    await page.getByTestId('sell-publish').click()
-    await expect(page).toHaveURL(/\/exchange\/lst_/, { timeout: 20_000 })
+    await expect(page.getByTestId('sell-steps')).toBeVisible({ timeout: 20_000 })
+    await run.shot('sell-check')
+    // Walk the wizard: check, consent (the expert confirms), prices, split, market, review.
+    for (let i = 0; i < 8 && !(await page.getByTestId('sell-publish').isVisible().catch(() => false)); i++) {
+      if (await page.getByTestId('sell-step-consent').isVisible().catch(() => false)) {
+        await page.getByTestId('consent-confirm').click()
+        await run.shot('sell-consent')
+      }
+      await page.getByTestId('sell-next').click()
+    }
+    await run.shot('sell-review')
+    await run.time('publish the listing', 3, async () => {
+      await page.getByTestId('sell-publish').click()
+      await expect(page.getByTestId('sell-published')).toBeVisible({ timeout: 20_000 })
+    })
+    await page.getByTestId('open-listing').click()
+    await expect(page).toHaveURL(/\/exchange\/lst_/)
     const listingId = page.url().split('/exchange/')[1].split(/[?#]/)[0]
-    await run.shot('listed')
-    // Buyer
+    run.note(`listing ${listingId}`)
+    // The buyer licenses it.
     await page.evaluate(() => localStorage.setItem('tacit.persona', 'u_atlas'))
-    await page.goto(`/exchange/${listingId}`)
-    await page.getByTestId('license-robot_deploy').click()
-    await page.getByTestId('license-confirm').click()
-    await expect(page.getByTestId('license-receipt')).toBeVisible({ timeout: 20_000 })
-    await run.shot('licensed')
-    const [dl] = await Promise.all([page.waitForEvent('download'), page.getByTestId('download-pack').click()])
-    const file = path.join(RUN_DIR, 'pack.zip')
+    await page.reload()
+    await expect(page.getByTestId('license-panel')).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByTestId('verification-certificate')).toBeVisible()
+    await run.shot('listing')
+    await page.getByTestId('license-option-robot_deploy').click()
+    await page.getByTestId('license-button').click()
+    await page.getByTestId('agree-terms').click()
+    await run.time('license (UI)', 3, async () => {
+      await page.getByTestId('confirm-license').click()
+      await expect(page.getByTestId('license-receipt')).toBeVisible({ timeout: 20_000 })
+    })
+    await expect(page.getByTestId('receipt-amount')).toContainText('499')
+    await expect(page.getByTestId(`royalty-${expert}`)).toContainText('349.3')
+    await run.shot('receipt')
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), page.getByTestId('download-pack').click()])
+    const file = path.join(RUN_DIR, `pack-${Date.now()}.zip`)
     await dl.saveAs(file)
     const names = zipNames(file)
     fs.unlinkSync(file)
     run.note(`pack: ${names.length} files`)
-    for (const n of ['skill.json', 'SOP.md', 'motion/tracks.json', 'certificates/verification.json', 'LICENSE.txt']) {
+    for (const n of ['skill.json', 'SOP.md', 'motion/tracks.json', 'certificates/verification.json', 'certificates/consent.json', 'LICENSE.txt']) {
       expect(names.some((x) => x.endsWith(n)), `pack lacks ${n}`).toBeTruthy()
     }
-    expect(names.filter((n) => /\.(mp4|webm|mov|avi|mkv|m4v)$/i.test(n)), 'video in the pack').toEqual([])
-    // Expert earnings
+    expect(names.filter((n) => /\.(mp4|webm|mov|avi|mkv|m4v|y4m)$/i.test(n)), 'video in the pack').toEqual([])
+    // The expert sees the royalty.
     await page.evaluate((e) => localStorage.setItem('tacit.persona', e), expert)
     await page.goto('/earnings')
     const after = await api<{ total: number }>(page, '/api/earnings', { user: expert })
     expect(after.total - before.total).toBeCloseTo(349.3, 1)
-    await expect(page.getByTestId('earnings-total')).toBeVisible()
-    await expect(page.getByText(/349\.3/).first()).toBeVisible()
+    await expect(page.getByTestId('earnings-total')).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByTestId('earnings-ledger')).toContainText('349.3')
     await run.shot('earnings')
     await run.finish()
     expect(run.consoleErrors, `console errors:\n${run.consoleErrors.join('\n')}`).toEqual([])

@@ -115,6 +115,28 @@ def wait_job(api: httpx.Client, job_id: str, timeout_s: float, on_change=None) -
         time.sleep(1.0)
 
 
+def wait_process(api: httpx.Client, skill_id: str, job_id: str, timeout_s: float, rec: "Recorder | None" = None) -> dict:
+    """Wait for a skill's process job. When a backend restart interrupts it, the backend re-runs it under a new
+    job id; follow that one (at most 3 times) and flag the restart, since it is an operations event."""
+    deadline = time.monotonic() + timeout_s
+    for _ in range(4):
+        job = wait_job(api, job_id, max(60.0, deadline - time.monotonic()))
+        if job["status"] != "failed" or "interrupted" not in str(job.get("error") or ""):
+            return job
+        if rec:
+            rec.flag(f"backend restarted during processing ({job_id} interrupted at {job.get('stage')}); followed the re-run")
+        new = None
+        for _ in range(60):
+            new = (api.get(f"/api/skills/{skill_id}").json() or {}).get("job_id")
+            if new and new != job_id:
+                break
+            time.sleep(2)
+        if not new or new == job_id:
+            return job
+        job_id = new
+    return job
+
+
 def stage_times(job: dict) -> dict[str, float]:
     return {s["name"]: round((s.get("ms") or 0) / 1000, 2) for s in job.get("stages", [])}
 

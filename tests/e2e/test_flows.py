@@ -72,6 +72,8 @@ def test_2_sample_process_ready(api, rec, processed):
     job, sid = processed.job, processed.skill_id
     rec.note(f"skill {sid} from sample {processed.sample.get('id')}")
     rec.mark("create skill from sample", processed.created_s, limit_s=2)
+    for f in getattr(processed, "flags", []):
+        rec.flag(f)
     if not job.get("reused"):
         dur = (api.get(f"/api/skills/{sid}").json().get("source") or {}).get("duration") or 30
         # A person waits for a few minutes at most; scale with the clip (about 4x its length, at least 3 min).
@@ -271,7 +273,7 @@ def test_3_live_capture_coach_and_answer(api, rec, scratch):
     assert len(overlap) >= 0.5 * len(lib.words(ANSWER)), f"transcript does not match the answer: {tr['text']!r}"
     assert log["saved"] and log["saved"].get("job_id"), f"no saved message after stop: errors {log['errors']}"
     with rec.time("process the live capture", limit_s=180):
-        job = lib.wait_job(api, log["saved"]["job_id"], timeout_s=900)
+        job = lib.wait_process(api, sid, log["saved"]["job_id"], 900, rec)
     rec.save("job.json", job)
     assert job["status"] == "done", f"processing the capture failed: {job.get('error')}"
     sk = api.get(f"/api/skills/{sid}").json()
@@ -368,11 +370,9 @@ def test_4_learn_narration_practice_tutor(api, rec, scratch, ready_skill):
     with rec.time("GET /api/learn/lessons", limit_s=1):
         lessons = api.get("/api/learn/lessons", params={"include_test": 1}, headers=sam).json()
     offered = {x["skill_id"] for x in lessons}
-    if sid not in offered:
-        # QA skills are test skills, hidden from the trainee's list; every real ready skill must be offered.
-        ready = {x["id"] for x in api.get("/api/skills", params={"status": "ready"}).json() if not x.get("test")}
-        assert ready and ready <= offered, f"ready skills not offered as lessons: {sorted(ready - offered)}"
-        rec.note(f"the QA skill is hidden from /api/learn/lessons (test skill); {len(ready)} real ready skills are offered")
+    assert sid in offered, "the ready skill is not offered as a lesson (with include_test=1)"
+    ready = {x["id"] for x in api.get("/api/skills", params={"status": "ready"}).json()}
+    assert ready <= offered, f"ready skills not offered as lessons: {sorted(ready - offered)}"
     with rec.time("GET lesson", limit_s=1):
         lesson = api.get(f"/api/learn/lessons/{sid}").json()
     rec.save("lesson.json", lesson)
@@ -618,6 +618,9 @@ def test_7_box_nine_models_four_chips(api, rec):
         assert all(m.get("backend") == "tt" for m in c["models"]), f"chip {c['id']} has non-TT members"
     cohosts = [c for c in box["chips"] if c.get("memory")]
     assert cohosts, "no cohost memory reported"
+    q = box.get("speech_queue")
+    assert q is not None and {"interactive", "batch", "busy"} <= set(q), f"no speech_queue in /api/box: {q}"
+    rec.note(f"speech queue: {q}")
     idle = [m["name"] for c in box["chips"] for m in c["models"] if m.get("p50_ms") is None]
     if idle:
         rec.note(f"no latency yet (no calls since start): {idle}")
