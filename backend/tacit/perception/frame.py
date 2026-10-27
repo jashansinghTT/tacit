@@ -66,9 +66,9 @@ async def begin(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: tu
 
     if "gaze" in kinds and det["head"]:
         jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]], priority=priority))
-    if "hamer" in kinds:
-        for hd in det["hands"]:
-            jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right", priority=priority))
+    if "hamer" in kinds and det["hands"]:
+        jobs["hamer"] = asyncio.ensure_future(vision.hamer_hands(
+            b64, scale, [(hd["bbox"], hd["side"] == "right") for hd in det["hands"]], priority=priority))
     return {"t": t, "t0": t0, "det": det, "jobs": jobs, "t_mp": t_mp, "t_enc": t_enc}
 
 
@@ -88,12 +88,15 @@ async def finish(started: dict) -> dict:
             served.append(sb)
             timing["rfdetr"] = sb["ms"]
     hands = det["hands"]
-    for hd in hands:
-        r = results.get(f"hamer:{hd['side']}")
+    per_hand = results.get("hamer")
+    if isinstance(per_hand, BaseException):
+        per_hand = [per_hand] * len(hands)
+    for k, hd in enumerate(hands):
+        r = per_hand[k] if per_hand is not None and k < len(per_hand) else None
         if r is None:
             hd["source"] = "mediapipe"
             continue
-        if isinstance(r, Exception):
+        if isinstance(r, BaseException):
             errors.append(str(r))
             hd["source"] = "mediapipe"
             continue

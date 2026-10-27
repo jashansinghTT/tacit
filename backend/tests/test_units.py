@@ -659,3 +659,34 @@ def test_cohost_members_share_one_decode_per_frame():
         Member.Image.open(io.BytesIO(b"not an image"))
     assert Member.Image.BILINEAR == Image.BILINEAR          # everything else is PIL's own
 
+
+async def test_both_hands_of_a_frame_go_in_one_request_when_hamer_serves_it(monkeypatch):
+    """vision.hamer_hands: one /predict_hands call for two hands when the HaMeR image serves it (a rejected box is
+    that hand's error only), else one /predict per hand; the same answer per hand either way."""
+    import respx
+
+    from tacit.models import vision
+    from tacit.models.base import ModelUnavailable
+    fx = json.loads((Path(__file__).parent / "fixtures" / "hamer" / "response.json").read_text())
+    url = vision.endpoints()["hamer"].url
+    hands = [([10.0, 20.0, 110.0, 120.0], True), ([300.0, 20.0, 400.0, 120.0], False)]
+    for route in (False, True):
+        monkeypatch.setattr(vision, "_HANDS_ROUTE", {"ok": False, "checked": -1e9})
+        paths = {"/predict": {}, **({"/predict_hands": {}} if route else {})}
+        with respx.mock(assert_all_called=False) as mock:
+            mock.get(f"{url}/openapi.json").respond(json={"paths": paths})
+            one = mock.post(f"{url}/predict").respond(json=fx)
+            both = mock.post(f"{url}/predict_hands").respond(
+                json={"hands": [fx, {"error": {"status": 400, "detail": "bbox lies entirely outside"}}]})
+            out = await vision.hamer_hands("AAAA", 0.5, hands, priority=vision.LIVE)
+            single = await vision.hamer_hands("AAAA", 0.5, hands[:1], priority=vision.LIVE)
+        assert out[0][0] == vision._hand(fx, 0.5) and single[0][0] == vision._hand(fx, 0.5)
+        if route:
+            assert both.call_count == 1 and one.call_count == 1          # the single hand still uses /predict
+            sent = json.loads(both.calls[0].request.content)
+            assert [h["bbox"] for h in sent["hands"]] == [[5.0, 10.0, 55.0, 60.0], [150.0, 10.0, 200.0, 60.0]]
+            assert [h["is_right"] for h in sent["hands"]] == [True, False] and sent["return_vertices"] is False
+            assert isinstance(out[1], ModelUnavailable) and "HTTP 400" in str(out[1])
+        else:
+            assert both.call_count == 0 and one.call_count == 3
+            assert out[1][0] == vision._hand(fx, 0.5)

@@ -10,7 +10,9 @@ from contextlib import asynccontextmanager
 
 import numpy as np
 
-from .base import post_json, served
+import httpx
+
+from .base import ModelUnavailable, client, post_json, served
 from ..config import endpoints
 
 LIVE, BATCH, SLOW = 0, 1, 2
@@ -118,15 +120,56 @@ async def gaze(image_b64: str, scale: float, head_boxes: list[list[float]], prio
     return out, served(endpoints()["gaze"], ms)
 
 
+def _hand(res: dict, scale: float) -> dict:
+    return {"cam_t": [round(float(v), 4) for v in res.get("cam_t_full", [0, 0, 0])],
+            "rotmats": res.get("rotmats"), "betas": res.get("betas"),
+            "focal": float(res.get("focal_length") or 0.0), "image_size": res.get("image_size"), "scale": scale}
+
+
 async def hamer(image_b64: str, scale: float, bbox: list[float], is_right: bool, priority: int = BATCH) -> tuple[dict, dict]:
     """3D hand for one box: MANO rotations, shape and camera-space translation."""
     b = [v * scale for v in bbox]
     res, ms = await _call("hamer", "/predict", {"image": image_b64, "bbox": b, "is_right": is_right,
                                                  "return_vertices": False}, priority, timeout=15)
-    out = {"cam_t": [round(float(v), 4) for v in res.get("cam_t_full", [0, 0, 0])],
-           "rotmats": res.get("rotmats"), "betas": res.get("betas"),
-           "focal": float(res.get("focal_length") or 0.0), "image_size": res.get("image_size"), "scale": scale}
-    return out, served(endpoints()["hamer"], ms)
+    return _hand(res, scale), served(endpoints()["hamer"], ms)
+
+
+_HANDS_ROUTE = {"ok": False, "checked": -1e9}
+
+
+async def _serves_hands() -> bool:
+    """Does the HaMeR on chip 0 serve POST /predict_hands (the co-host image since liveperf)? Checked once a
+    minute from its OpenAPI listing, so an image swap is picked up without a failed call."""
+    if time.monotonic() - _HANDS_ROUTE["checked"] > 60.0:
+        _HANDS_ROUTE["checked"] = time.monotonic()
+        try:
+            r = await client().get(endpoints()["hamer"].url + "/openapi.json", timeout=2.0)
+            _HANDS_ROUTE["ok"] = r.status_code == 200 and "/predict_hands" in (r.json().get("paths") or {})
+        except (httpx.HTTPError, ValueError):
+            _HANDS_ROUTE["ok"] = False
+    return _HANDS_ROUTE["ok"]
+
+
+async def hamer_hands(image_b64: str, scale: float, hands: list[tuple[list[float], bool]],
+                      priority: int = BATCH) -> list:
+    """3D hands for several boxes of one frame: one request (one decode, one HTTP round trip) when HaMeR serves
+    /predict_hands, else one ``hamer`` call per hand. Per hand, what ``hamer`` returns or the exception it raised."""
+    if len(hands) < 2 or not await _serves_hands():
+        return list(await asyncio.gather(*(hamer(image_b64, scale, b, r, priority=priority) for b, r in hands),
+                                         return_exceptions=True))
+    ep = endpoints()["hamer"]
+    body = {"image": image_b64, "hands": [{"bbox": [v * scale for v in b], "is_right": r} for b, r in hands],
+            "return_vertices": False}
+    try:
+        res, ms = await _call("hamer", "/predict_hands", body, priority, timeout=15)
+    except ModelUnavailable as e:
+        return [e] * len(hands)
+    out = []
+    for one in res.get("hands", []):
+        err = one.get("error")
+        out.append(ModelUnavailable(ep, f"HTTP {err.get('status')}: {err.get('detail')}") if err
+                   else (_hand(one, scale), served(ep, ms)))
+    return out
 
 
 async def vggt(images_b64: list[str], outputs: tuple[str, ...] = ("depth", "depth_conf", "world_points", "world_points_conf"),
