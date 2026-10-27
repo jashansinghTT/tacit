@@ -47,7 +47,10 @@ export default function earn(T) {
     rise(word.words[0], prog(t, b21 + 0.1, 0.65, outExpo))
     // 70% rolls up on beat 3 of the bar, settling on a light spring.
     const roll = spring(t, b21 + 2 * beat, { zeta: 0.7, omega: 9 })
-    pctNum.textContent = `${Math.round(Math.max(0, Math.min(1.02, roll)) * 70)}%`
+    // The number never passes 70 (it is the claim); the spring's overshoot goes into scale.
+    pctNum.textContent = `${Math.round(Math.max(0, Math.min(1, roll)) * 70)}%`
+    pctNum.style.transform = `scale(${1 + 0.06 * Math.max(0, roll - 1) / 0.05})`
+    pctNum.style.transformOrigin = '100% 60%'
     pct.style.opacity = String(Math.min(1, Math.max(0, roll * 3)))
     rise(sub.words[0], prog(t, b21 + 3 * beat, 0.65, outExpo))
     const out = prog(t, b23 - 0.32, 0.32, inQuint)

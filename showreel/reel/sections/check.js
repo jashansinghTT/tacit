@@ -14,6 +14,13 @@ export default function check(T) {
   const b13 = T.bar(13)
   let real, fake, rs, rf, word, stamps, labels, divider, beamEl, start, startCol, frameImg, delay, fill
   const tBeam = b13 - 0.55
+  /** When (s, relative to bar 13) the beam passes stage row y: inverts its inOutCubic sweep. */
+  const beamAt = (y) => {
+    const target = clamp((y + 30) / 1140)
+    let lo = 0, hi = 1
+    for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (inOutCubic(m) < target) lo = m; else hi = m }
+    return tBeam + 0.55 * lo - b13
+  }
   s.blur = [[T.bar(14) + 2 * T.beat - 0.05, T.bar(14) + 2 * T.beat + 0.12, 4], [T.bar(15) - 0.05, T.bar(15) + 0.12, 4],
     [T.bar(16) - 0.4, T.bar(16), 6]]
 
@@ -80,11 +87,11 @@ export default function check(T) {
       startCol[i * 3] = frameImg[o]
       startCol[i * 3 + 1] = frameImg[o + 1]
       startCol[i * 3 + 2] = frameImg[o + 2]
-      delay[i] = 0.45 * (y / R.H) + 0.25 * rnd()
+      delay[i] = beamAt(y) + 0.12 + 0.3 * rnd()
     }
     // Filler points on a jittered grid so the frame of points has no holes; they fall away as the
     // rebuild assembles (they have no 3D point to go to).
-    const cols = 300, rows = 169
+    const cols = 340, rows = 191
     fill = { n: cols * rows, xy: new Float32Array(cols * rows * 2), col: new Uint8ClampedArray(cols * rows * 3), d: new Float32Array(cols * rows) }
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       const k = j * cols + i
@@ -93,7 +100,7 @@ export default function check(T) {
       const sx = cx + (x - R.W / 2) / (1.5 * zoom), sy = cy + (y - R.H / 2) / (1.5 * zoom)
       const o = (Math.min(1439, Math.max(0, Math.round(sy * 2))) * 2560 + Math.min(2559, Math.max(0, Math.round(sx * 2)))) * 4
       fill.col[k * 3] = frameImg[o]; fill.col[k * 3 + 1] = frameImg[o + 1]; fill.col[k * 3 + 2] = frameImg[o + 2]
-      fill.d[k] = 0.45 * (y / R.H) + 0.25 * rnd()
+      fill.d[k] = beamAt(y) + 0.06 + 0.25 * rnd()
     }
     frameImg = null
 
@@ -179,17 +186,17 @@ export default function check(T) {
     beamEl.style.opacity = t < b13 + 0.05 ? '1' : '0'
 
     rs.clear()
-    const morph = (i) => prog(t, b13 + delay[i] * 1.2, 1.1, inOutCubic)
+    const morph = (i) => prog(t, b13 + delay[i], 1.15, inOutCubic)
     const split = prog(t, b14, 0.9, inOutCubic)
     const exit = prog(t, b16 - 0.4, 0.4, inQuint)
     if (t < b13 + 2) {
       const D = R.DPR
       for (let k = 0; k < fill.n; k++) {
-        const e = prog(t, b13 + fill.d[k] * 1.2, 0.7, inCubic)
+        const e = prog(t, b13 + fill.d[k], 0.7, inCubic)
         if (e >= 1) continue
         const x = fill.xy[k * 2], y = fill.xy[k * 2 + 1] + e * e * 220
         const a = 1 - e
-        rs.splat(x * D, y * D, 9 + e, fill.col[k * 3] * a, fill.col[k * 3 + 1] * a, fill.col[k * 3 + 2] * a, 5)
+        rs.splat(x * D, y * D, 9 + e, Math.min(255, fill.col[k * 3] * 1.12) * a, Math.min(255, fill.col[k * 3 + 1] * 1.12) * a, Math.min(255, fill.col[k * 3 + 2] * 1.12) * a, 6)
       }
     }
     drawCloud(rs, real, viewReal(t), t, { morph: t < b13 + 2.6 ? morph : null, size: mix(3.5, 4, split) })

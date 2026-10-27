@@ -92,6 +92,13 @@ const STILLS = [
   { name: 'robot_lab', url: '/robot/sk_c28f1461', persona: 'u_maria', wait: 5000 },
   { name: 'robot_eval', url: '/robot/sk_c28f1461', persona: 'u_maria', wait: 4000,
     act: async (page) => { await page.locator('[data-testid=mode-evaluate]').click(); await page.waitForTimeout(3000) } },
+  { name: 'gr00tcam', url: '/robot/sk_c28f1461', persona: 'u_maria', wait: 5000, viewport: true,
+    act: async (page) => {
+      await page.evaluate(() => document.querySelector('[data-testid=seg-exterior]').click())
+      await page.waitForTimeout(2000)
+      await isolate(page, '[data-testid=sim-viewer]', { hideInside: ['[data-testid=run-status]', '[data-testid^=seg-]', 'button', 'div:has(> [data-testid^=seg-])'] })
+      await page.waitForTimeout(4000)
+    } },
   { name: 'robot_gr00t', url: '/robot/sk_c28f1461', persona: 'u_maria', wait: 4000,
     act: async (page) => { await page.locator('[data-testid=mode-gr00t]').click(); await page.waitForTimeout(3000) } },
 ]
@@ -108,7 +115,7 @@ if (shot === 'stills') {
       await page.evaluate(() => document.fonts.ready)
       mkdirSync(OUT, { recursive: true })
       await page.screenshot({ path: `${OUT}/${st.name}.png`, timeout: 180000 })
-      await page.screenshot({ path: `${OUT}/${st.name}_full.png`, fullPage: true, timeout: 180000 })
+      if (!st.viewport) await page.screenshot({ path: `${OUT}/${st.name}_full.png`, fullPage: true, timeout: 180000 })
       console.log('still', st.name)
     } catch (e) {
       console.log('still failed', st.name, e.message.split('\n')[0])

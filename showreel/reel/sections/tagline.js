@@ -1,6 +1,8 @@
 // 10. Tagline on the final lift, over the landing page's 3D hero: the Franka mirroring an expert's
-// ghost hands. Words land one per beat; focus racks from the type to the scene.
-// Technique: rack focus (scene blurred behind sharp type, then pulled into focus) and a slow push.
+// ghost hands. Words land one per beat; focus racks from the type to the scene. Then, on the last bar
+// before the lockup, a recap: eight flash-cuts on the half-beat, each a real frame of an earlier
+// section (borrowed from that section at the given time).
+// Technique: rack focus and a slow push, then a beat-cut sizzle.
 import { R } from '../main.js'
 import { sequence } from '../lib/seq.js'
 import { line, rise } from '../lib/type.js'
@@ -9,9 +11,17 @@ import { inOutCubic, inOutSine, mix, outExpo, prog } from '../lib/ease.js'
 export const HERO_FRAMES = 220
 
 export default function tagline(T) {
-  const s = { id: 'tagline', z: 10, post: 1.2 }
-  let hero, plate, l1, l2, shade
-  const b25 = T.bar(25), b26 = T.bar(26), b28 = T.bar(28)
+  const s = { id: 'tagline', z: 10 }
+  let hero, plate, l1, l2, shade, flash, typeBox
+  const b25 = T.bar(25), b26 = T.bar(26), b27 = T.bar(27), b28 = T.bar(28)
+  // The recap: [section, time] per half-beat of bar 27.
+  const RECAP = [['hands', 19.45], ['watch', 28.3], ['check', 33.6], ['check', 37.4],
+    ['teach', 42.4], ['do', 48.9], ['earn', 54.4], ['box', 59.6]]
+  s.borrow = (t) => {
+    if (t < b27 || t >= b28) return []
+    const k = Math.min(RECAP.length - 1, Math.floor((t - b27) / (T.beat / 2)))
+    return [{ id: RECAP[k][0], at: RECAP[k][1] }]
+  }
   const beat = T.beat
   s.build = (root) => {
     plate = R.el('div', 'abs', root)
@@ -23,6 +33,9 @@ export default function tagline(T) {
     box.style.cssText = 'left:150px;top:96px'
     l1 = line(box, ['Teach', 'a', 'robot'], { size: 168 })
     l2 = line(box, ['by', { t: 'showing', serif: true, grad: true }, 'it.'], { size: 168 })
+    typeBox = box
+    flash = R.el('div', 'abs', root)
+    flash.style.cssText = 'inset:0;background:#e6faff;opacity:0'
   }
   s.render = (t) => {
     hero.set(Math.max(0, t - b25))
@@ -36,9 +49,15 @@ export default function tagline(T) {
     // After the focus pull the type softens slightly, so the scene leads.
     const soft = prog(t, b26 + 0.4, 1.0, inOutCubic)
     for (const l of [l1, l2]) l.el.style.opacity = String(mix(1, 0.92, soft))
-    // Into the end card: the scene falls to black, the type goes with it.
-    const end = prog(t, b28, 0.8, inOutCubic)
-    s.layer.style.opacity = String(1 - end)
+    // The recap bar: the scene and type step aside for the borrowed shots (lower layers); a flash
+    // marks each cut.
+    const recap = t >= b27 && t < b28
+    plate.style.opacity = shade.style.opacity = typeBox.style.opacity = recap ? '0' : '1'
+    if (recap) {
+      const since = (t - b27) % (T.beat / 2)
+      flash.style.opacity = String(0.22 * Math.exp(-since * 22))
+    } else flash.style.opacity = '0'
+    s.layer.style.opacity = t >= b28 ? '0' : '1'
   }
   return s
 }

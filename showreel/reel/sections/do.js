@@ -24,10 +24,13 @@ export default function act(T) {
     plate = R.el('div', 'abs', root)
     plate.style.cssText = 'inset:0'
     robot = sequence(plate, { dir: '/data/captures/robot/frames', count: 80, fps: 30 })
-    // GR00T's own view: the over-the-shoulder camera it is fed (rendered in the browser).
+    // The Robot Lab's GR00T-cam viewpoint: the over-the-shoulder camera position GR00T is fed.
     gplate = R.el('div', 'abs', root)
-    gplate.style.cssText = 'inset:0'
-    gcam = sequence(gplate, { dir: '/data/captures/gr00tcam/frames', count: 45, fps: 30 })
+    gplate.style.cssText = 'inset:0;overflow:hidden'
+    gcam = R.el('img', 'plate', gplate)
+    gcam.src = '/data/captures/stills/gr00tcam.png'
+    gcam.style.cssText = 'left:0;top:0;width:1920px;height:1080px;transform-origin:860px 640px'
+    R.wait(gcam.decode())
     const wbox = R.el('div', 'abs', root)
     wbox.style.cssText = 'left:104px;bottom:70px'
     word = line(wbox, ['Do.'], { size: 290, style: 'text-shadow:0 10px 60px rgba(0,0,0,0.6)' })
@@ -89,8 +92,7 @@ export default function act(T) {
     const gOn = t >= tGr00t
     gplate.style.display = gOn ? 'block' : 'none'
     if (gOn) {
-      gcam.set(Math.max(0, t - tGr00t))
-      gcam.camera(960, 540, mix(1.05, 1.14, prog(t, tGr00t, b21 - tGr00t)))
+      gcam.style.transform = `scale(${mix(1.16, 1.26, prog(t, tGr00t, b21 - tGr00t))})`
       gplate.style.filter = `brightness(${0.8 + 0.6 * Math.exp(-(t - tGr00t) * 7)})`
     }
     const kg = spring(t, tGr00t + 0.1, { zeta: 0.6, omega: 15 })

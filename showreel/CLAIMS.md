@@ -42,6 +42,7 @@ for the first cut (`data/showreel/first-cut.mp4`). If a source changes, the clai
 | 6 | Lesson panes | Screenshots of the Lesson page (English, Spanish, 3D twin) from the running app, 2026-10-27 |
 | 7 | The Franka | A Robot Lab "replay the human" run (MuJoCo on the backend's CPU), recorded from the app |
 | 7 | Trial tiles | Drawn from the 20 trial results in `robot_vase.json` (one tile per trial) |
+| 7 | GR00T beat | The Robot Lab's "GR00T cam" viewpoint (the over-the-shoulder camera position GR00T is fed), a still from the app. The ghost hand and wrist path in it are the lab's overlays, not part of GR00T's input |
 | 8 | Exchange and Earnings panes | Screenshots of the app. The ledger rows are demo licenses (no payment taken) |
 | 9 | Chip tiles | Drawn from `box.json` |
 | 10 | Robot arm with ghost hands | The landing page's 3D hero, captured from the app: an illustrative scene, not a recorded run |

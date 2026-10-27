@@ -18,7 +18,7 @@ export default function teach(T) {
   const s = { id: 'teach', z: 6 }
   let cam, panes, marker, word, sub, glow
   const b16 = T.bar(16), b17 = T.bar(17), b18 = T.bar(18)
-  const PUSH = 0.42
+  const PUSH = 0.5
   s.blur = [[b18 - PUSH, b18, 6]]
   s.build = (root) => {
     glow = R.el('div', 'abs', root)
@@ -62,14 +62,14 @@ export default function teach(T) {
       el.style.zIndex = String(Math.round(z + 2000))
     })
     // The push: the whole camera zooms into the twin's hand, ease-in, into the cut.
-    const push = prog(t, b18 - PUSH, PUSH, inQuint)
+    const push = prog(t, b18 - PUSH, PUSH) // linear; eased once below
     cam.style.transform = 'none'
     if (push > 0) {
       // Zoom into the hand and carry it to the centre, where Do picks up her ghost hands.
       const r = marker.getBoundingClientRect()
       const e = inCubic(push)
       cam.style.transformOrigin = `${r.left}px ${r.top}px`
-      cam.style.transform = `translate(${(960 - r.left) * e}px, ${(540 - r.top) * e}px) scale(${mix(1, 7, e)})`
+      cam.style.transform = `translate(${(960 - r.left) * e}px, ${(540 - r.top) * e}px) scale(${mix(1, 12, e)})`
     }
     rise(word.words[0], prog(t, b16 + 0.05, 0.65, outExpo))
     rise(sub.words[0], prog(t, b17 + 0.05, 0.65, outExpo))

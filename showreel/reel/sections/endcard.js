@@ -12,19 +12,21 @@ const TEXT_PX = (15 / 22) * MARK
 
 export default function endcard(T) {
   const s = { id: 'endcard', z: 11 }
-  let fx, word, tag, fine, markCx, cy = 470
+  let fx, word, tag, fine, lock, markCx, cy = 470
   const b28 = T.bar(28), b29 = T.bar(29)
   s.build = (root) => {
     root.style.background = '#040506'
-    fx = R.canvas(root)
-    word = R.el('div', '', root, 'tacit')
+    lock = R.el('div', 'abs', root)
+    lock.style.cssText = 'inset:0;transform-origin:50% 48%'
+    fx = R.canvas(lock)
+    word = R.el('div', '', lock, 'tacit')
     word.style.cssText = `position:absolute;font-size:${TEXT_PX}px;font-weight:600;letter-spacing:-0.03em;line-height:1;color:#eceef1;white-space:nowrap`
     tag = R.el('div', 'mono abs', root, 'Nine models · four Tenstorrent chips · one box')
-    tag.style.cssText += ';left:0;right:0;text-align:center;top:640px;font-size:30px;color:#a3a9b2;white-space:nowrap'
+    tag.style.cssText += ';left:0;right:0;text-align:center;top:640px;font-size:34px;color:#c9ced5;white-space:nowrap'
     fine = R.el('div', 'abs', root,
       'Music: MiniMax-Music3, machine-generated on chip 1 of this box &nbsp;·&nbsp; Footage: Anastasia Shuraeva, Pexels; ' +
       'AI-made comparison clip: flutie8211, Pixabay')
-    fine.style.cssText = 'left:0;right:0;bottom:64px;text-align:center;font-family:"Geist Mono",monospace;font-size:17px;letter-spacing:0.02em;color:#6e7580'
+    fine.style.cssText = 'left:0;right:0;bottom:60px;text-align:center;font-family:"Geist Mono",monospace;font-size:19px;letter-spacing:0.02em;color:#8a919b'
     root.style.display = 'block'
     const r = word.getBoundingClientRect()
     root.style.display = ''
@@ -48,6 +50,8 @@ export default function endcard(T) {
     tag.style.opacity = String(kt)
     tag.style.letterSpacing = `${mix(0.5, 0.22, kt)}em`
     fine.style.opacity = String(prog(t, b29 + 0.6, 0.9, inOutCubic))
+    // A slow push so the hold never sits still.
+    lock.style.transform = `scale(${mix(1, 1.045, prog(t, b28, s.end - b28, (x) => x))})`
     // Fade to black at the very end.
     const end = prog(t, s.end - 0.7, 0.7, inOutCubic)
     s.layer.style.opacity = String(1 - end)

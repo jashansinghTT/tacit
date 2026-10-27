@@ -71,10 +71,17 @@ window.reel = {
   loaded: false,
   duration: 0,
   async seek(t) {
+    // A section may borrow others: show their layers as rendered at another time (the recap).
+    const borrowed = new Map()
     for (const s of T.sections) {
-      const on = t >= s.start - (s.pre ?? 0) && t < s.end + (s.post ?? 0)
-      s.layer.classList.toggle('on', on)
-      if (on) s.render(t, s, R, T)
+      if (s.borrow && t >= s.start && t < s.end) for (const b of s.borrow(t) ?? []) borrowed.set(b.id, b.at)
+    }
+    for (const s of T.sections) {
+      const own = t >= s.start - (s.pre ?? 0) && t < s.end + (s.post ?? 0)
+      const at = borrowed.get(s.id)
+      s.layer.classList.toggle('on', own || at !== undefined)
+      if (own) s.render(t, s, R, T)
+      else if (at !== undefined) s.render(at, s, R, T)
     }
     while (pending.length) await pending.shift()
     // Let layout and paint settle before the screenshot.
