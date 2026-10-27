@@ -6,7 +6,7 @@
       "id": "backend",
       "title": "Backend orchestrator: pipeline, model clients, APIs, jobs, DB, seed data",
       "owner": "lead",
-      "state": "final build deployed 22:32:55Z (a56321c)",
+      "state": "released: backend deployed 22:32:55Z, web/dist 23:20Z",
       "branch": "main",
       "worktree": "~/tacit",
       "acceptance": [
@@ -149,7 +149,7 @@
       "id": "polish",
       "title": "The whole app as one product",
       "owner": "tacit-web",
-      "state": "merged (a56321c); follow-up: footage credits + fictional-persona note (in progress)",
+      "state": "merged (a56321c, 8aba0cb credits)",
       "branch": "work/polish",
       "worktree": "~/tacit-wt/web",
       "acceptance": [
@@ -162,7 +162,7 @@
       "id": "showreel",
       "title": "60-75 s showreel, first cut",
       "owner": "tacit-showreel",
-      "state": "running",
+      "state": "merged: first cut ready for the user's review (data/showreel/first-cut.mp4); no final render without the user",
       "branch": "work/showreel",
       "worktree": "~/tacit-wt/showreel",
       "acceptance": [
@@ -174,5 +174,6 @@
       "handoff": ".orchestration/cards/showreel/handoff.md"
     }
   ],
-  "updated": "2026-10-27T23:00Z"
+  "updated": "2026-10-27T23:30Z",
+  "state": "released"
 }

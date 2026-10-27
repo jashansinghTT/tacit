@@ -8,8 +8,8 @@ Demo script: [docs/DEMO.md](docs/DEMO.md) (about 6 minutes). Why it matters: [do
 **State: released.** Every card is merged and the final build is live (backend deployed 22:32 UTC; web
 rebuilt 23:20 UTC with footage credits). QA's end-to-end suites passed three rounds in a row in both the API
 suite and the browser suite against the real deployment, 7/7 flows each (SPEC section 9), the last round on
-the final build. Services run under systemd; the watchdog keeps them up. The showreel first cut is the last
-open item (rendering; for your review, no final render without you).
+the final build. Services run under systemd; the watchdog keeps them up. A 74 s showreel first cut is ready
+for your review (no final render without you). No agent sessions are running; only the watchdog is.
 
 ## What works end to end (real hardware, nine models on four Blackhole chips)
 - **Watch:** record live with a webcam or use a sample. Hands in 3D (HaMeR), gaze (Gaze-LLE) and parts
@@ -51,7 +51,10 @@ open item (rendering; for your review, no final render without you).
   `QA_WEB_URL=http://127.0.0.1:8710 scripts/e2e/ui.sh --no-merge --no-build` (browser).
 
 ## Needs you
-- **Showreel first cut** for review: .orchestration/evidence/showreel/ (revised cut rendering now).
+- **Showreel first cut** for review: `data/showreel/first-cut.mp4` (74 s, 1080p, soundtrack made by MiniMax
+  Music 3 on chip 1), previews in .orchestration/evidence/showreel/, every on-screen claim sourced in
+  showreel/CLAIMS.md. Your two open choices (handoff in .orchestration/cards/showreel/handoff.md): the long
+  opening (title at 22 s) and the soundtrack take.
 - Reflex: running its code here was blocked by the auto-mode safety check (external code). To drive a
   glove, start Reflex yourself (`MOCK=1 ./application/dev.sh`); Tacit finds it at :8000 (or REFLEX_URL).
 - MotionSites is on the free plan (3 prompts used): https://motionsites.ai/unlimited
