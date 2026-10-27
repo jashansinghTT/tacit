@@ -43,9 +43,13 @@ def listing_dict(l: Listing) -> dict:
             "steps_count": len(skill.get("steps", [])), "duration": (skill.get("source") or {}).get("duration")}
 
 
-def list_listings(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None) -> list[dict]:
+def list_listings(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None,
+                  include_test: bool = False) -> list[dict]:
     with session() as s:
         rows = s.exec(select(Listing)).all()
+        if not include_test:
+            test_ids = {r.id for r in s.exec(select(SkillRow).where(SkillRow.test == True)).all()}  # noqa: E712
+            rows = [l for l in rows if l.skill_id not in test_ids]
     out = [listing_dict(l) for l in rows]
     if q:
         ql = q.lower()

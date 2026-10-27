@@ -138,25 +138,40 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
         log.warning("writer fallback: %s", e)
         struct, docs = _fallback_structure(steps), {"sop_markdown": "", "quiz": [], "safety": []}
         job.stage_progress(1.0, f"LLM unavailable, used drafts ({e})")
-    by_index = {s.get("index"): s for s in struct.get("steps", [])}
     out_steps = []
-    for s in steps:
-        w = by_index.get(s["index"], {})
-        kf_rgb = frame_at(src, s["t_start"] + 0.5 * (s["t_end"] - s["t_start"]))
-        kf = save_jpeg(kf_rgb, media_dir(skill_id) / f"kf_{s['index']:02d}.jpg", width=960) if kf_rgb is not None else None
-        answered = next((q for q in skill.get("qa", []) if q.get("step_index") == s["index"] and q.get("answer")), None)
-        why = answered["answer"] if answered and w.get("why_source") != "expert" else w.get("why")
-        out_steps.append({"id": f"st{s['index']}", "index": s["index"], "t_start": round(s["t_start"], 2), "t_end": round(s["t_end"], 2),
-                          "title": w.get("title") or s.get("draft"), "instruction": w.get("instruction") or s.get("draft"),
-                          "why": why or "", "why_source": "expert" if answered else w.get("why_source", "inferred"),
-                          "keyframe": media_url(kf) if kf else None, "objects": s.get("objects", []), "hand": s.get("hand"),
-                          "gaze_target": s.get("gaze_target"), "tips": w.get("tips", [])[:2]})
+    groups = merge_groups(struct.get("steps", []), steps)
+    old_to_new: dict[int, int] = {}
+    for k, (w, g) in enumerate(groups, 1):
+        t_start, t_end = min(s["t_start"] for s in g), max(s["t_end"] for s in g)
+        for s in g:
+            old_to_new[s["index"]] = k
+        objects = list(dict.fromkeys(o for s in g for o in s.get("objects", []) if o))
+        hand = max(g, key=lambda s: s["t_end"] - s["t_start"]).get("hand")
+        gaze = next((s.get("gaze_target") for s in g if s.get("gaze_target")), None)
+        kf_rgb = frame_at(src, t_start + 0.5 * (t_end - t_start))
+        kf = save_jpeg(kf_rgb, media_dir(skill_id) / f"kf_{k:02d}.jpg", width=960) if kf_rgb is not None else None
+        olds = {s["index"] for s in g}
+        answered = next((q for q in skill.get("qa", []) if q.get("step_index") in olds and q.get("answer")), None)
+        why = answered["answer"] if answered else (w.get("why") or "")
+        draft = g[0].get("draft")
+        out_steps.append({"id": f"st{k}", "index": k, "t_start": round(t_start, 2), "t_end": round(t_end, 2),
+                          "title": w.get("title") or draft, "instruction": w.get("instruction") or draft,
+                          "why": _clean_why(why), "why_source": "expert" if answered else w.get("why_source", "inferred"),
+                          "keyframe": media_url(kf) if kf else None, "objects": objects, "hand": hand,
+                          "gaze_target": gaze, "tips": (w.get("tips") or [])[:2]})
+    for q in skill.get("qa", []):
+        if q.get("step_index") in old_to_new:
+            q["step_index"] = old_to_new[q["step_index"]]
+            q["step_id"] = f"st{q['step_index']}"
     pending = {p.get("index"): p.get("question") for p in struct.get("pending_questions", []) if p.get("question")}
     for st in out_steps:
         if st["why_source"] != "expert" and st["index"] in pending and not any(q.get("step_index") == st["index"] for q in skill.get("qa", [])):
             skill.setdefault("qa", []).append({"step_index": st["index"], "step_id": st["id"], "t": st["t_end"],
                                                "question": pending[st["index"]], "answer": None, "pending": True})
-    skill.update({"title": struct.get("title") or skill.get("title"), "summary": struct.get("summary", ""), "steps": out_steps,
+    title = struct.get("title") or skill.get("title")
+    if skill.get("test") and not title.startswith("QA "):
+        title = "QA " + title
+    skill.update({"title": title, "summary": struct.get("summary", ""), "steps": out_steps,
                   "sop_markdown": docs.get("sop_markdown", ""), "quiz": docs.get("quiz", [])[:5], "safety": docs.get("safety", [])[:4]})
     skill.setdefault("robot", {})["program"] = struct.get("robot_program") or []
     save_skill(skill)
@@ -216,6 +231,41 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     save_skill(skill)
     job.finish_stage("ready", detail=f"{len(out_steps)} steps, verification {skill['verification']['status']}")
     return {"skill_id": skill_id, "steps": len(out_steps), "verification": skill["verification"]["status"]}
+
+
+def merge_groups(written: list[dict], observed: list[dict]) -> list[tuple[dict, list[dict]]]:
+    """Pair each written step with the observed steps it covers (the writer may merge repeats).
+
+    Uses the writer's `covers` lists when they are consistent (every observed step at most once, in
+    order); otherwise falls back to matching by index, one observed step per written step.
+    """
+    by_obs = {s["index"]: s for s in observed}
+    groups, seen = [], set()
+    ok = bool(written)
+    for w in written:
+        cov = [i for i in (w.get("covers") or []) if isinstance(i, int) and i in by_obs and i not in seen]
+        if not cov:
+            ok = False
+            break
+        seen.update(cov)
+        groups.append((w, [by_obs[i] for i in sorted(cov)]))
+    if ok and groups:
+        for i in sorted(set(by_obs) - seen):  # observed steps nobody claimed join the nearest earlier group
+            prev = max((g for g in groups if g[1][0]["index"] < i), key=lambda g: g[1][0]["index"], default=groups[0])
+            prev[1].append(by_obs[i])
+        for _, g in groups:
+            g.sort(key=lambda s: s["index"])
+        return sorted(groups, key=lambda wg: wg[1][0]["t_start"])
+    by_index = {w.get("index"): w for w in written}
+    return [(by_index.get(s["index"], {}), [s]) for s in observed]
+
+
+def _clean_why(text: str) -> str:
+    t = (text or "").strip()
+    for prefix in ("Inferred:", "inferred:", "Expert:", "expert:"):
+        if t.startswith(prefix):
+            t = t[len(prefix):].strip()
+    return t[:1].upper() + t[1:] if t else t
 
 
 def narration_lines(skill: dict) -> list[tuple[str, str]]:

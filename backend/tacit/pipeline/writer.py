@@ -43,7 +43,8 @@ async def write_structure(skill: dict, steps: list[dict], objects_seen: list[str
 Return JSON with exactly these keys:
 {{"title": "skill name, at most 7 words",
   "summary": "one sentence: what the skill achieves and why it matters",
-  "steps": [{{"index": 1, "title": "...", "instruction": "...", "why": "...", "why_source": "expert|inferred",
+  "steps": [{{"index": 1, "covers": [<timeline step indices this step stands for, in order>], "title": "...",
+             "instruction": "...", "why": "... (no 'Inferred:' prefix)", "why_source": "expert|inferred",
              "tips": ["at most 2 short tips a new hire would miss"]}}],
   "robot_program": [{{"op": "pick", "object": "<object name>"}}, {{"op": "place", "target": "<object or place name>"}}],
   "pending_questions": [{{"index": <step index>, "question": "one short question to ask the expert about why"}}]}}
