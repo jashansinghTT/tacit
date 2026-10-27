@@ -95,28 +95,41 @@ class Runner:
             self._stop.set()
             th.join(timeout=5)
 
-    def run_episode(self) -> dict:
-        """Run to the end without pacing or camera streaming. Returns {success, steps, reason}."""
+    def run_episode(self, on_step=None) -> dict:
+        """Run to the end without pacing or camera streaming. Returns {success, steps, reason}.
+
+        `on_step(env)` (optional) is called after every control step on the simulation's thread,
+        so it may render (e.g. evidence videos).
+        """
         if self.mode == "gr00t":
             # GR00T needs rendering, which must stay on one thread: run on a fresh one.
             box: dict = {}
-            th = threading.Thread(target=lambda: box.update(r=self._episode_blocking()), daemon=True)
+
+            def work():
+                try:
+                    box["r"] = self._episode_blocking(on_step)
+                except BaseException as e:  # re-raised on the caller's thread
+                    box["e"] = e
+
+            th = threading.Thread(target=work, daemon=True)
             th.start()
             th.join()
+            if "e" in box:
+                raise box["e"]
             return box["r"]
-        return self._episode_blocking()
+        return self._episode_blocking(on_step)
 
     def stop(self) -> None:
         self._stop.set()
 
     # ------------------------------------------------------------------ internals
 
-    def _episode_blocking(self) -> dict:
-        for _ in self._run(realtime=False, stream=False):
+    def _episode_blocking(self, on_step=None) -> dict:
+        for _ in self._run(realtime=False, stream=False, on_step=on_step):
             pass
         return self.result
 
-    def _run(self, realtime: bool, stream: bool):
+    def _run(self, realtime: bool, stream: bool, on_step=None):
         env = SimEnv(self.program, seed=self.seed)
         layout = env.layout
         cams = None
@@ -134,8 +147,8 @@ class Runner:
             elif self.mode == "replay":
                 from .retarget import PathFollower, retarget_wrist_path
                 hp = self.human_path
-                if isinstance(hp, dict) and "points" in hp and hp.get("frame") != "camera" and "scale" in hp:
-                    path = hp
+                if isinstance(hp, dict) and "points" in hp and "scale" in hp:
+                    path = hp            # already retargeted
                 elif isinstance(hp, dict):
                     path = retarget_wrist_path(hp["points"], hp["times"], hp.get("grip"))
                 else:
@@ -157,7 +170,7 @@ class Runner:
                 limit = int(self.max_seconds / DT)
 
             if stream:
-                yield {
+                meta = {
                     "type": "meta", "mode": self.mode, "seed": self.seed,
                     "joints": ARM_JOINTS + FINGER_JOINTS,
                     "objects": [o.name for o in layout.objects],
@@ -165,6 +178,10 @@ class Runner:
                     "dt": round(DT, 6),
                     "instruction": instruction(layout),
                 }
+                if follower is not None:
+                    # The path the robot follows; its times start at the first "replay" state.
+                    meta["human"] = {k: path.get(k) for k in ("times", "points", "grip", "transform")}
+                yield meta
                 yield self._state(env, self._phase(env, follower))
             wall0 = time.perf_counter()
             done_steps = 0
@@ -206,6 +223,8 @@ class Runner:
                         for name in ("exterior", "wrist"):
                             yield {"type": "camera", "name": name, "t": round(env.t, 4),
                                    "jpeg": jpeg_b64(f[name], 80)}
+                if on_step is not None:
+                    on_step(env)
                 if realtime:
                     lag = wall0 + env.t - time.perf_counter()
                     if lag > 0:
@@ -281,8 +300,8 @@ class Runner:
 
 
 def run_episode(program, mode: str = "scripted", seed: int = 0, policy_path=None, human_path=None,
-                gr00t_url: str | None = None, **kw) -> dict:
-    return Runner(program, mode, seed, policy_path, human_path, gr00t_url, **kw).run_episode()
+                gr00t_url: str | None = None, on_step=None, **kw) -> dict:
+    return Runner(program, mode, seed, policy_path, human_path, gr00t_url, **kw).run_episode(on_step)
 
 
 def evaluate_policy(program, policy_path, trials: int = 20, seed: int = 0, on_trial=None) -> dict:
