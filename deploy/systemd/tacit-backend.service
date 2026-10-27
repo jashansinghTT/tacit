@@ -1,0 +1,14 @@
+[Unit]
+Description=Tacit backend (API + web app on 127.0.0.1:8710)
+After=network-online.target docker.service
+
+[Service]
+Type=simple
+ExecStart=%h/tacit/deploy/run-backend.sh
+Restart=always
+RestartSec=5
+StandardOutput=append:%h/tacit/logs/backend.log
+StandardError=append:%h/tacit/logs/backend.log
+
+[Install]
+WantedBy=default.target

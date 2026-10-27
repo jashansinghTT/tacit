@@ -125,7 +125,9 @@ Server → client:
 - `{"type": "analysis", "t": 1.23, "hands": [...], "pose": {...}, "head": {...}, "gaze": {...}, "objects": [...], "timing_ms": {"mediapipe": 9.1, "hamer": 5.0, "gaze": 7.2, "rfdetr": 4.4, "total": 31.0}, "served_by": [...]}` (same shapes as Tracks frames).
 - `{"type": "event", "t": 4.9, "kind": "grasp|release|move|look|pause", "hand": "right", "object": "bracket"}`
 - `{"type": "step", "step": {...partial step...}}` when a step boundary closes.
-- `{"type": "coach", "id": "q3", "t": 5.1, "text": "Why did you take the bracket from the left bin?", "audio": "/media/...wav"}`
+- `{"type": "coach", "id": "q3", "t": 5.1, "text": "Why did you take the bracket from the left bin?", "audio": "/media/...wav" | null, "pending_audio": true|false}`: the text arrives first; when `pending_audio` is true the voice follows as
+  `{"type": "coach_audio", "id": "q3", "audio": "/media/tts/....wav", "duration": 1.8}` (S2 Pro takes ~2x real time).
+- Answers may also be sent with `"question_id": "q3"` to attach them to a specific question.
 - `{"type": "transcript", "question_id": "q3", "text": "Because the left ones are pre-drilled.", "ms": 410}`
 - `{"type": "saved", "skill_id": "sk_ab12cd", "job_id": "job_..."}` after `stop` (processing starts).
 - `{"type": "error", "message": "..."}`
@@ -134,6 +136,7 @@ Server → client:
 
 ### `POST /api/speech/tts` `{"text": "...", "voice": "default", "lang": "en"}` → `{"audio": "/media/tts/<hash>.wav", "duration": 2.3, "served_by": [...]}` (cached by text hash)
 ### `POST /api/speech/stt` multipart `file` (wav/webm) → `{"text": "...", "served_by": [...]}`
+### `POST /api/skills/{id}/answer` multipart `file` (voice) or `text`, plus `step_index` or `question` → `{"text", "skill"}`: the expert answers a pending why-question after capture; the step's `why` becomes theirs.
 
 ## Learn (training use case)
 
@@ -147,8 +150,10 @@ Server: `{"type": "analysis", ...}` (hands only), `{"type": "feedback", "step_in
 ### `GET /api/learn/progress` (manager) → `[{"trainee": {...}, "skill_id": "...", "steps_done": 4, "steps_total": 5, "best_score": 0.86, "passed": true, "updated_at": "..."}]`
 
 ### `POST /api/tutor/{skill_id}/ask` `{"question": "...", "lang": "en"}` or multipart `audio`
-→ `text/event-stream`: `event: transcript` (if audio), `event: delta` `{"text": ".."}` × n, `event: done`
-`{"text": "...", "audio": "/media/tts/...wav", "sources": ["st2", "qa:q3"], "served_by": [...]}`
+→ `text/event-stream`: `event: transcript` `{"text"}` (if audio was sent), `event: delta` `{"text": ".."}` × n,
+`event: audio` `{"index": 0, "audio": "/media/tts/...wav", "duration": 2.1}` × n (one per sentence, in order; play them
+back to back as they arrive), `event: done` `{"text": "...", "audio_parts": 2, "sources": ["st2"], "question": "..."}`.
+Multipart form fields: `audio` (wav/webm), `question`, `lang`, `history` (JSON list of `{role, content}`).
 
 ## Robot Lab
 
