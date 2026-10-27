@@ -1,0 +1,1 @@
+Stopped by QA at 22:14Z after F2 failed on a test-side check (S2 Pro narration served from the TT cache, which the check did not allow; fixed in 28fd7b4). F1 passed; F3 was in progress. Does not count.

@@ -626,7 +626,8 @@ def test_6_exchange_list_license_pack_earnings(api, rec, ready_skill):
         assert has_policy and has_demos, "the skill has a trained policy but the pack lacks the policy or the demonstrations"
     with rec.time("earnings", limit_s=1):
         after = api.get("/api/earnings", headers={"X-Tacit-User": expert}).json()
-    assert abs(after["total"] - before["total"] - 349.3) < 0.01, f"earnings {before['total']} -> {after['total']}"
+    # Other sessions may license the same expert's skills meanwhile, so the total rises by at least this royalty.
+    assert after["total"] - before["total"] >= 349.3 - 0.01, f"earnings {before['total']} -> {after['total']}"
     assert any(e["listing_id"] == listing["id"] and abs(e["amount"] - 349.3) < 0.01 for e in after["entries"]), \
         "no ledger entry for this license"
 

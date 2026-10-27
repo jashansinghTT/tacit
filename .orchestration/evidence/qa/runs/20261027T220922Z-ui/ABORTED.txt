@@ -1,0 +1,1 @@
+Stopped by QA at 22:16Z after F3 and F4 failed on test-side transcript checks (the looping fake microphone was caught mid-sentence; a new 'waiting for the voice chip' placeholder); fixed in 28fd7b4. F1 and F2 passed. Does not count.
