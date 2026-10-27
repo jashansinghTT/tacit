@@ -12,6 +12,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from .. import jobs
 from ..config import SKILLS, endpoints
 from ..db import now
+from .. import reflex
 from ..storage import load_skill, new_id, read_json, save_skill, twin_path
 
 log = logging.getLogger("tacit.robot")
@@ -45,19 +46,34 @@ def robot_dir(skill_id: str):
     return d
 
 
-def wrist_path(skill_id: str) -> tuple[list[list[float]], list[float]] | None:
-    """The expert's dominant wrist path from the twin (y up metres), for Replay."""
+def wrist_path(skill_id: str) -> tuple[list[list[float]], list[float], list[float]] | None:
+    """The expert's working wrist in camera space (metres, OpenCV axes) with a 0..1 grip, for Replay.
+
+    The twin stores y-up points re-centred on the work area; `camera.position` is where the camera
+    sits in that frame, so the camera-space point is (x - cx, -(y - cy), -(z - cz)).
+    """
     twin = read_json(twin_path(skill_id))
     if not twin:
         return None
-    pts, ts = [], []
+    cam = (twin.get("camera") or {}).get("position") or [0.0, 0.0, 0.0]
+    counts = {"left": 0, "right": 0}
     for fr in twin["frames"]:
-        hands = fr.get("hands") or {}
-        h = hands.get("right") or hands.get("left")
-        if h:
-            pts.append(h[0])
-            ts.append(fr["t"])
-    return (pts, ts) if len(pts) >= 5 else None
+        for side in counts:
+            if (fr.get("hands") or {}).get(side):
+                counts[side] += 1
+    side = max(counts, key=counts.get)
+    curls = {row[0]: row[1:] for row in reflex.finger_track(skill_id, hand=side)["frames"]}
+    pts, ts, grip = [], [], []
+    for fr in twin["frames"]:
+        h = (fr.get("hands") or {}).get(side)
+        if not h:
+            continue
+        x, y, z = h[0]
+        pts.append([x - cam[0], -(y - cam[1]), -(z - cam[2])])
+        ts.append(fr["t"])
+        c = curls.get(round(fr["t"], 3))
+        grip.append(round(sum(c[1:]) / 4, 3) if c else 0.0)
+    return (pts, ts, grip) if len(pts) >= 5 else None
 
 
 def _bridge(job: jobs.Job, loop: asyncio.AbstractEventLoop):
@@ -76,8 +92,11 @@ async def train(job: jobs.Job, skill_id: str, demos: int, epochs: int) -> dict:
     save_skill(skill)
     job.start_stage("demos", models=["MuJoCo@cpu"], detail=f"{demos} randomised demonstrations")
     cb = _bridge(job, loop)
-    ds = await asyncio.to_thread(ts.generate_demos, prog, demos, 0, str(rd / "demos"))
-    ds = ds if isinstance(ds, dict) else getattr(ds, "__dict__", {"path": str(rd / "demos")})
+    def on_episode(i: int, n: int, ok: bool) -> None:
+        loop.call_soon_threadsafe(job.stage_progress, (i + 1) / max(1, n), f"{i + 1}/{n} demonstrations")
+
+    ds = await asyncio.to_thread(ts.generate_demos, prog, demos, 0, str(rd / "demos"), True, None, on_episode)
+    ds = ds.to_dict() if hasattr(ds, "to_dict") else dict(ds)
     job.finish_stage("demos", detail=f"{ds.get('n', demos)} demos, scripted success {ds.get('success_rate', 0):.0%}")
     job.start_stage("train", models=["PyTorch@cpu"])
     curve: list[list[float]] = []
@@ -107,7 +126,7 @@ async def evaluate(job: jobs.Job, skill_id: str, trials: int, seed: int) -> dict
     job.start_stage("evaluate", models=["MuJoCo@cpu", "Tacit-BC@cpu"], detail=f"{trials} randomised trials")
     done: list[dict] = []
 
-    def on_trial(i: int, r: dict) -> None:
+    def on_trial(i: int, n: int, r: dict) -> None:
         done.append(r)
         loop.call_soon_threadsafe(job.stage_progress, (i + 1) / trials, f"{sum(1 for x in done if x.get('success'))}/{len(done)} succeeded")
 
@@ -124,6 +143,8 @@ def start_run(skill_id: str, mode: str, seed: int, realtime: bool = True) -> str
     skill = load_skill(skill_id)
     if mode == "policy" and ((skill.get("robot") or {}).get("policy") or {}).get("status") != "trained":
         raise ValueError("Train the policy first.")
+    if mode == "replay" and not wrist_path(skill_id):
+        raise ValueError("This skill has no recorded hand path to replay.")
     rid = new_id("rr")
     RUNS[rid] = {"skill_id": skill_id, "mode": mode, "seed": seed, "realtime": realtime, "created": now()}
     return rid
@@ -143,8 +164,9 @@ async def stream(ws: WebSocket, run_id: str) -> None:
         kwargs["policy_path"] = skill["robot"]["policy"]["policy_path"]
     if meta["mode"] == "replay":
         wp = wrist_path(meta["skill_id"])
-        if wp:
-            kwargs["human_path"] = ts.retarget_wrist_path(*wp)
+        if not wp:
+            raise ValueError("This skill has no recorded hand path to replay.")
+        kwargs["human_path"] = ts.retarget_wrist_path(wp[0], wp[1], wp[2])
     if meta["mode"] == "gr00t":
         kwargs["gr00t_url"] = endpoints()["gr00t"].url
     runner = ts.Runner(program_for(skill), meta["mode"], **kwargs)
