@@ -28,7 +28,7 @@ import numpy as np
 
 from .demos import instruction, max_steps
 from .env import DT, HOME_TCP, SimEnv
-from .expert import ScriptedExpert, natural_yaw
+from .expert import V_MAX, ScriptedExpert, _step_toward, natural_yaw
 from .program import parse_program
 from .scene import ARM_JOINTS, FINGER_JOINTS
 
@@ -141,7 +141,7 @@ class Runner:
                 else:
                     raise ValueError("human_path must be a dict with points and times")
                 follower = PathFollower(path)
-                limit = int((follower.duration + 1.5) / DT)
+                limit = int((follower.duration + 4.0) / DT)
             elif self.mode == "gr00t":
                 from .gr00t import Gr00tClient, Gr00tController
                 from .render import Cameras
@@ -165,7 +165,7 @@ class Runner:
                     "dt": round(DT, 6),
                     "instruction": instruction(layout),
                 }
-                yield self._state(env)
+                yield self._state(env, self._phase(env, follower))
             wall0 = time.perf_counter()
             done_steps = 0
             reason = None
@@ -182,10 +182,16 @@ class Runner:
                         pos, yaw, grip = ctrl.act(env)
                         env.step_ee(pos, yaw, grip)
                 elif self.mode == "replay":
-                    pos, grip = follower.target(env.t + DT)
-                    env.step_ee(pos, natural_yaw(pos), grip)
-                    want, _ = follower.target(env.t)
-                    follower.errors.append(float(np.linalg.norm(env.tcp_pos() - want)))
+                    if follower.t0 is None:
+                        # Approach the path's first point, then play the path at its own timing.
+                        start, _ = follower.target(0.0)
+                        env.step_ee(_step_toward(env.tcp_pos(), start, V_MAX), natural_yaw(start), 0.0)
+                        if np.linalg.norm(env.tcp_pos() - start) < 0.01:
+                            follower.t0 = env.t
+                    else:
+                        want, grip = follower.target(env.t + DT - follower.t0)
+                        env.step_ee(want, natural_yaw(want), grip)
+                        follower.errors.append(float(np.linalg.norm(env.tcp_pos() - want)))
                 else:
                     info = gr.step()
                     if info is not None:
@@ -193,7 +199,7 @@ class Runner:
                         if stream:
                             yield {"type": "gr00t", **info}
                 if stream:
-                    yield self._state(env)
+                    yield self._state(env, self._phase(env, follower))
                     if self.mode == "gr00t" and k % self.camera_every == 0:
                         f = gr.frame(env.steps)
                         from .render import jpeg_b64
@@ -210,7 +216,7 @@ class Runner:
                     reason = f"dropped the {dropped[0]} off the table"
                     break
                 if self.mode == "replay":
-                    if env.t >= follower.duration + 0.5:
+                    if follower.t0 is not None and env.t - follower.t0 >= follower.duration + 0.3:
                         break
                     continue
                 if env.monitor.phase == "done":
@@ -220,6 +226,8 @@ class Runner:
             else:
                 if self.mode != "replay":
                     reason = f"timed out during {env.monitor.label}"
+                elif follower.t0 is None:
+                    reason = "could not reach the start of the path"
 
             if self.mode == "replay":
                 err = float(np.mean(follower.errors)) if follower.errors else 0.0
@@ -253,7 +261,13 @@ class Runner:
                 client.close()
 
     @staticmethod
-    def _state(env: SimEnv) -> dict:
+    def _phase(env: SimEnv, follower) -> str:
+        if follower is not None:
+            return "approach" if follower.t0 is None else "replay"
+        return env.monitor.label
+
+    @staticmethod
+    def _state(env: SimEnv, phase: str) -> dict:
         q = env.qpos9()
         return {
             "type": "state",
@@ -262,7 +276,7 @@ class Runner:
             "objects": env.object_poses(),
             "ee": [round(float(v), 4) for v in env.tcp_pos()],
             "gripper": round(float(np.mean(q[7:9])), 5),
-            "phase": env.monitor.label,
+            "phase": phase,
         }
 
 

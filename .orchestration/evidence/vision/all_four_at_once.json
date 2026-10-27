@@ -1,0 +1,36 @@
+{
+ "hamer": {
+  "n": 10,
+  "wall_ms_p50": 33.2,
+  "wall_ms_p95": 916.9,
+  "wall_ms_max": 916.9,
+  "elapsed_s": 1.25,
+  "identical_to_baseline": "10/10"
+ },
+ "gaze": {
+  "n": 10,
+  "wall_ms_p50": 34.6,
+  "wall_ms_p95": 916.7,
+  "wall_ms_max": 916.7,
+  "elapsed_s": 1.22,
+  "identical_to_baseline": "10/10"
+ },
+ "rfdetr": {
+  "n": 10,
+  "wall_ms_p50": 37.1,
+  "wall_ms_p95": 922.5,
+  "wall_ms_max": 922.5,
+  "elapsed_s": 1.26,
+  "identical_to_baseline": "10/10"
+ },
+ "vggt": {
+  "n": 10,
+  "wall_ms_p50": 1102.7,
+  "wall_ms_p95": 1212.3,
+  "wall_ms_max": 1212.3,
+  "elapsed_s": 12.1,
+  "identical_to_baseline": "10/10"
+ },
+ "wall_s": 12.11,
+ "errors": []
+}

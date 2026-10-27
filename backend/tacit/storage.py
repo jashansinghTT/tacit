@@ -69,6 +69,7 @@ def save_skill(skill: dict) -> dict:
         row.listing_id = skill.get("listing_id")
         row.source_kind = (skill.get("source") or {}).get("kind", "upload")
         row.sample_id = (skill.get("source") or {}).get("sample_id")
+        row.test = bool(skill.get("test"))
         s.add(row)
         s.commit()
     return skill

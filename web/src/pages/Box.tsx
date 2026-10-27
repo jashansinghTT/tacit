@@ -39,27 +39,28 @@ function useHistory(box: BoxStatus | undefined) {
 }
 
 function ChipMap({ box, selected, onSelect }: { box: BoxStatus; selected: number | null; onSelect: (id: number) => void }) {
+  // Group chips by the board the backend reports (two p300c boards, two chips each).
   const boards = useMemo(() => {
-    const byBoard: BoxChip[][] = []
+    const byBoard = new Map<string, BoxChip[]>()
     box.chips.forEach((c, i) => {
-      const b = Math.floor(i / 2)
-      byBoard[b] = [...(byBoard[b] ?? []), c]
+      const key = /#\d+/.test(c.board) ? c.board : `${c.board} #${Math.floor(i / 2)}`
+      byBoard.set(key, [...(byBoard.get(key) ?? []), c])
     })
-    return byBoard
+    return [...byBoard.entries()]
   }, [box])
   return (
     <div className="relative overflow-hidden rounded-xl bg-ink-950 p-6 shadow-[inset_0_0_0_1px_var(--color-line)] [perspective:1400px]" data-tour="chip-map" data-testid="chip-map">
       <div className="pointer-events-none absolute inset-0 dot-bg opacity-60" />
       <div className="relative grid gap-6 md:grid-cols-2 [transform:rotateX(16deg)] [transform-origin:50%_100%] [transform-style:preserve-3d]">
-        {boards.map((chips, b) => (
-          <div key={b} className="relative rounded-xl bg-gradient-to-br from-[#0f1a17] to-[#0b1210] p-5 shadow-[0_0_0_1px_rgb(61_220_151/0.15),0_30px_60px_-20px_rgb(0_0_0/0.9)]">
+        {boards.map(([board, chips]) => (
+          <div key={board} className="relative rounded-xl bg-gradient-to-br from-[#0f1a17] to-[#0b1210] p-5 shadow-[0_0_0_1px_rgb(61_220_151/0.15),0_30px_60px_-20px_rgb(0_0_0/0.9)]">
             <svg className="pointer-events-none absolute inset-0 size-full opacity-40" aria-hidden>
               {Array.from({ length: 12 }, (_, i) => (
                 <path key={i} d={`M0 ${20 + i * 22} H${60 + (i % 3) * 30} l14 14 H1000`} stroke="#3ddc97" strokeOpacity="0.12" fill="none" />
               ))}
             </svg>
             <div className="relative mb-4 flex items-center justify-between">
-              <span className="telemetry text-[10px] tracking-widest text-ok/70">P300C · BOARD {b}</span>
+              <span className="telemetry text-[10px] tracking-widest text-ok/70">{board.toUpperCase()}</span>
               <span className="telemetry text-[10px] text-fg-faint">PCIe</span>
             </div>
             <div className="relative grid grid-cols-2 gap-4">
@@ -138,7 +139,8 @@ function ChipPanel({ c, hist, highlight }: { c: BoxChip; hist: Map<string, numbe
                   <BackendBadge backend={m.backend} model={m.name} />
                 </div>
                 <div className="telemetry mt-0.5 pl-4 text-[11px] text-fg-subtle">
-                  {m.role} · :{m.port} · {fmtInt(m.calls)} calls{m.dram_gib != null && ` · ${m.dram_gib.toFixed(1)} GiB`}
+                  {m.role} · :{m.port} · {fmtInt(m.calls)} calls{m.dram_gib != null && ` · ${m.dram_gib.toFixed(2)} GiB`}
+                  {m.errors ? <span className="text-warn"> · {fmtInt(m.errors)} errors</span> : null}
                   {m.l1_kib != null && ` · L1 ${m.l1_kib} KiB`}
                 </div>
               </div>

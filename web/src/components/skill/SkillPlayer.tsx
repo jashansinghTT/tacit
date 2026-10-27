@@ -9,8 +9,9 @@ import { OverlayCanvas } from '@/components/overlay/OverlayCanvas'
 import { ALL_LAYERS, type OverlayLayers } from '@/components/overlay/draw'
 import { IconButton, Segmented, Timeline } from '@/components/ui'
 
+/** The step whose time range contains t (steps need not cover the whole clip). */
 export function stepAt(skill: Skill, t: number) {
-  return skill.steps.find((s) => t >= s.t_start && t < s.t_end) ?? (t >= (skill.steps.at(-1)?.t_end ?? 0) ? skill.steps.at(-1) : skill.steps[0])
+  return skill.steps.find((s) => t >= s.t_start && t < s.t_end) ?? null
 }
 
 const LAYER_BTNS: { key: keyof OverlayLayers; label: string; icon: typeof Hand }[] = [

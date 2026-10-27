@@ -30,12 +30,14 @@ export interface Health {
 }
 
 export interface BoxModel {
+  key?: string
   name: string
   role: string
   port: number
   healthy: boolean
   p50_ms: number | null
   calls: number
+  errors?: number
   backend: Backend
   // Optional extras the backend may add (cohost status per member).
   dram_gib?: number
@@ -49,7 +51,14 @@ export interface BoxChip {
   group: string
   status: 'ok' | 'degraded' | 'down' | 'idle' | string
   models: BoxModel[]
-  memory?: { dram_gib: number; dram_total_gib: number; l1_used_kib?: number; l1_total_kib?: number }
+  memory?: {
+    dram_gib: number
+    dram_total_gib: number
+    l1_used_kib?: number
+    l1_total_kib?: number
+    members?: Record<string, number>
+    device_owner?: string | null
+  }
 }
 
 export interface BoxStatus {
@@ -345,6 +354,15 @@ export interface CoachMsg {
   t: number
   text: string
   audio: string | null
+  /** True when the voice is still being synthesised and follows as `coach_audio`. */
+  pending_audio?: boolean
+}
+
+export interface CoachAudioMsg {
+  type: 'coach_audio'
+  id: string
+  audio: string
+  duration: number
 }
 
 export interface TranscriptMsg {
@@ -370,6 +388,7 @@ export type CaptureServerMsg =
   | CaptureEventMsg
   | StepMsg
   | CoachMsg
+  | CoachAudioMsg
   | TranscriptMsg
   | SavedMsg
   | ErrorMsg

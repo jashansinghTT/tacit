@@ -152,3 +152,15 @@ def test_reflex_curls_open_vs_fist_and_movement_file():
     exec(compile(src, "movement.py", "exec"), ns)  # the generated module must be valid Reflex input
     assert ns["TITLE"] == "Sort the cup" and len(ns["steps"]()) == len(steps)
     assert reflex.movement_name("sk_ab12cd", 2) == "tacit_sk_ab12cd_step2"
+
+
+def test_merge_groups_follows_covers_and_falls_back():
+    from tacit.pipeline.process import merge_groups
+    obs = [{"index": i, "t_start": float(i), "t_end": i + 0.8} for i in range(1, 6)]
+    written = [{"index": 1, "covers": [1, 2], "title": "A"}, {"index": 2, "covers": [3], "title": "B"},
+               {"index": 3, "covers": [5], "title": "C"}]
+    groups = merge_groups(written, obs)
+    assert [w["title"] for w, _ in groups] == ["A", "B", "C"]
+    assert [[s["index"] for s in g] for _, g in groups] == [[1, 2], [3, 4], [5]]   # 4 joins the nearest earlier group
+    fallback = merge_groups([{"index": 1, "title": "A"}], obs)
+    assert len(fallback) == 5 and fallback[0][0]["title"] == "A" and fallback[1][0] == {}

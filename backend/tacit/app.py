@@ -56,8 +56,40 @@ async def _startup() -> None:
     init_db()
     seed.seed_users()
     seed.samples()
+    interrupted = recover_interrupted_jobs()
+    if os.environ.get("TACIT_RESUME_JOBS", "1") == "1":
+        for skill_id in interrupted:
+            jobs.run(jobs.create("process", skill_id, STAGES), lambda j, sid=skill_id: process_skill(j, sid))
     if os.environ.get("TACIT_SEED", "1") == "1":
         asyncio.create_task(seed.seed_sample_skills())
+
+
+def recover_interrupted_jobs() -> list[str]:
+    """Jobs that were running when the backend stopped are marked failed; their skills go back to draft.
+    Returns the skills whose processing should be started again."""
+    from .db import JobRow, now
+    resume = []
+    with session() as s:
+        for row in s.exec(select(JobRow).where(JobRow.status.in_(("queued", "running")))).all():
+            row.status, row.error, row.finished_at = "failed", "interrupted by a backend restart", now()
+            payload = json.loads(row.payload or "{}")
+            payload.update(status="failed", error=row.error)
+            row.payload = json.dumps(payload)
+            s.add(row)
+            if row.kind == "process" and row.skill_id:
+                resume.append(row.skill_id)
+        s.commit()
+    for skill_id in resume:
+        sk = load_skill(skill_id)
+        if sk and sk.get("status") == "processing":
+            sk["status"] = "draft"
+            save_skill(sk)
+    for skill_id in [r for r in resume]:
+        if not load_skill(skill_id):
+            resume.remove(skill_id)
+    if resume:
+        log.warning("resuming %d interrupted processing jobs: %s", len(resume), resume)
+    return resume
 
 
 def user_id(x_tacit_user: str | None) -> str:
@@ -86,6 +118,42 @@ async def samples_():
     return seed.samples()
 
 
+@app.get("/api/music/intro")
+async def music_intro():
+    """An 8 s instrumental lesson intro made once by MiniMax Music 3 on chip 1 (cached: music holds the
+    speech chip for ~50 s, so it is never generated while people are talking to the coach)."""
+    p = MEDIA / "music" / "lesson-intro.wav"
+    if not p.exists():
+        return err(404, "not_found", "no intro music yet")
+    return {"audio": media_url(p), "duration": 8.0, "model": "MiniMax Music 3", "chip": 1,
+            "credit": "Music generated with MiniMax-Music3"}
+
+
+@app.get("/api/samples/{sample_id}/verify")
+async def sample_verify(sample_id: str, refresh: bool = False):
+    """VGGT verification of a sample clip (cached): the Check page compares a real recording with an AI-made one."""
+    from .pipeline import geometry
+    from .pipeline.video import probe
+    sample = next((x for x in seed.samples() if x["id"] == sample_id), None)
+    if not sample:
+        return err(404, "not_found", f"no sample {sample_id}")
+    cache = SAMPLES / f"{sample_id}.verify.json"
+    if cache.exists() and not refresh:
+        return json.loads(cache.read_text())
+    video = MEDIA / "samples" / os.path.basename(sample["video"])
+    dur = probe(video)["duration"]
+    times = geometry.pick_times(dur, 4)
+    res, imgs, sb = await geometry.reconstruct(video, times)
+    metrics = geometry.consistency(res, [], times)
+    _, cloud = geometry.build_twin([], res, times, imgs, (imgs[0].shape[1], imgs[0].shape[0]) if imgs else (1280, 720))
+    (MEDIA / "samples" / f"{sample_id}.pointcloud.bin").write_bytes(cloud)
+    out = {"sample_id": sample_id, "kind": sample.get("kind"), "status": geometry.verdict(metrics["score"]), "score": metrics["score"],
+           "method": "VGGT multi-view consistency", "details": metrics, "times": times,
+           "pointcloud": f"/media/samples/{sample_id}.pointcloud.bin", "points": len(cloud) // 24, "served_by": [sb]}
+    cache.write_text(json.dumps(out))
+    return out
+
+
 # ------------------------------------------------------------------------------------ skills
 def summary(row: SkillRow) -> dict:
     with session() as s:
@@ -93,15 +161,15 @@ def summary(row: SkillRow) -> dict:
     return {"id": row.id, "title": row.title, "summary": row.summary, "status": row.status, "created_at": row.created_at,
             "expert": {"id": row.expert_id, "name": u.name if u else row.expert_id}, "thumb": row.thumb, "duration": row.duration,
             "steps_count": row.steps_count, "verification_status": row.verification_status, "listed": bool(row.listing_id),
-            "listing_id": row.listing_id, "source_kind": row.source_kind}
+            "listing_id": row.listing_id, "source_kind": row.source_kind, "test": row.test}
 
 
 @app.get("/api/skills")
-async def skills_list(status: str | None = None, expert_id: str | None = None):
+async def skills_list(status: str | None = None, expert_id: str | None = None, include_test: bool = False):
     with session() as s:
-        q = select(SkillRow)
-        rows = s.exec(q).all()
-    out = [summary(r) for r in rows if (not status or r.status == status) and (not expert_id or r.expert_id == expert_id)]
+        rows = s.exec(select(SkillRow)).all()
+    out = [summary(r) for r in rows if (not status or r.status == status) and (not expert_id or r.expert_id == expert_id)
+           and (include_test or not r.test)]
     return sorted(out, key=lambda r: r["created_at"], reverse=True)
 
 
@@ -140,6 +208,7 @@ async def skills_create(request: Request, x_tacit_user: str | None = Header(defa
 def _new_skill(sid: str, expert: dict, source: dict, title: str | None) -> dict:
     from .db import now
     skill = {"id": sid, "title": title or "New skill", "title_hint": title, "summary": "", "status": "draft", "created_at": now(),
+             "test": bool(title and title.startswith("QA ")),
              "expert": expert, "source": source, "steps": [], "qa": [], "verification": {"status": "pending"}, "robot": {},
              "consent": {"motion": True, "gaze": True, "voice_text": True, "raw_video": False, "signed_by": expert["id"], "signed_at": now()}}
     return save_skill(skill)
@@ -353,7 +422,7 @@ async def stt_(file: UploadFile = File(...)):
 async def lessons(x_tacit_user: str | None = Header(default=None)):
     uid = user_id(x_tacit_user)
     with session() as s:
-        rows = s.exec(select(SkillRow).where(SkillRow.status == "ready")).all()
+        rows = [r for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if not r.test]
         prog = {p.skill_id: p for p in s.exec(select(LessonProgress).where(LessonProgress.trainee_id == uid)).all()}
     out = []
     for r in rows:
@@ -607,8 +676,8 @@ async def robot_ws(ws: WebSocket, run_id: str):
 
 # ------------------------------------------------------------------------------------ exchange
 @app.get("/api/exchange/listings")
-async def ex_list(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None):
-    return market.list_listings(q, industry, robot, verified)
+async def ex_list(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None, include_test: bool = False):
+    return market.list_listings(q, industry, robot, verified, include_test)
 
 
 @app.get("/api/exchange/listings/{listing_id}")
