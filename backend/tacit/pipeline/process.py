@@ -258,10 +258,10 @@ async def _process_skill(job: jobs.Job, skill_id: str) -> dict:
 
 
 def merge_groups(written: list[dict], observed: list[dict]) -> list[tuple[dict, list[dict]]]:
-    """Pair each written step with the observed steps it covers (the writer may merge repeats).
+    """One step per observed interaction, each paired with the written step that describes it.
 
     Uses the writer's `covers` lists when they are consistent (every observed step at most once, in
-    order); otherwise falls back to matching by index, one observed step per written step.
+    order), numbering a written step that covers several; otherwise matches by index.
     """
     by_obs = {s["index"]: s for s in observed}
     groups, seen = [], set()
@@ -279,10 +279,7 @@ def merge_groups(written: list[dict], observed: list[dict]) -> list[tuple[dict, 
             prev[1].append(by_obs[i])
         for _, g in groups:
             g.sort(key=lambda s: s["index"])
-        # Each observed interaction stays its own step: perception already found them, and a lesson,
-        # an audit and the trainee's practice need one step per action. A written step that covers
-        # several becomes one step each, numbered.
-        split = []
+        split = []  # a lesson, an audit and practice need one step per action, even when the writer merged them
         for w, g in groups:
             if len(g) == 1:
                 split.append((w, g))

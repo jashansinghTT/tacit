@@ -102,6 +102,87 @@ def is_l1(t) -> bool:
     return t.memory_config().buffer_type == ttnn.BufferType.L1
 
 
+class _DecodeCache:
+    """Decoded images of the last few frames, shared by every member in the process.
+
+    A live frame goes to three or four members at once (and to HaMeR once per hand), each of which decodes the
+    same JPEG. The first decode is kept; the others get a copy of it. A decode of the same bytes already under
+    way is waited for rather than repeated."""
+
+    def __init__(self, size: int = 8):
+        import threading
+        from collections import OrderedDict
+
+        self.size = size
+        self.items: "OrderedDict[bytes, object]" = OrderedDict()
+        self.pending: dict = {}
+        self.lock = threading.Lock()
+        self.hits = self.misses = 0
+
+    def open(self, data: bytes):
+        import hashlib
+        import io
+        import threading
+
+        from PIL import Image
+
+        key = hashlib.blake2b(data, digest_size=16).digest()
+        with self.lock:
+            hit = self.items.get(key)
+            wait = None if hit is not None else self.pending.get(key)
+            mine = hit is None and wait is None
+            if mine:
+                self.pending[key] = threading.Event()
+        if wait is not None:
+            wait.wait(timeout=2.0)
+            with self.lock:
+                hit = self.items.get(key)
+        if hit is not None:
+            self.hits += 1
+            return hit.copy()
+        try:
+            im = Image.open(io.BytesIO(data))
+            im.load()
+        finally:
+            if mine:
+                with self.lock:
+                    self.pending.pop(key).set()
+        self.misses += 1
+        with self.lock:
+            self.items[key] = im
+            while len(self.items) > self.size:
+                self.items.popitem(last=False)
+        return im.copy()
+
+
+DECODES = _DecodeCache()
+
+
+class _SharedPIL:
+    """Stands in for ``PIL.Image`` in a member's app module: ``Image.open`` on in-memory bytes goes through the
+    shared decode cache; everything else is PIL's own. The member's own checks and conversions run unchanged on
+    what it returns (a loaded copy of the decoded image)."""
+
+    def __getattr__(self, name: str):
+        from PIL import Image
+
+        return getattr(Image, name)
+
+    def open(self, fp, *args, **kwargs):
+        import io
+
+        from PIL import Image
+
+        if isinstance(fp, io.BytesIO) and not args and not kwargs:
+            return DECODES.open(fp.getvalue())
+        return Image.open(fp, *args, **kwargs)
+
+
+def share_decodes(app_module) -> None:
+    """Let ``app_module`` (a member's server module that did ``from PIL import Image``) decode through DECODES."""
+    app_module.Image = _SharedPIL()
+
+
 def programs(mesh) -> int:
     return mesh.num_program_cache_entries() if hasattr(mesh, "num_program_cache_entries") else -1
 

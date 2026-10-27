@@ -1,1 +1,1 @@
-FREEZE until 2026-10-27T22:35:34+00:00 (QA release runs): no backend restarts, no web/dist rebuilds, no model restarts
+FREEZE until 2026-10-27T23:20:00+00:00 (QA release runs on the 21:49:50Z deploy, main 27010cd): no backend restarts, no web/dist rebuilds, no model restarts

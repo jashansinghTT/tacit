@@ -5,6 +5,7 @@ Hand boxes feed HaMeR and the head box (from the face landmarks of the pose) fee
 from __future__ import annotations
 
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import mediapipe as mp
 import numpy as np
@@ -43,8 +44,12 @@ class MediaPipeRunner:
             min_pose_detection_confidence=0.4, min_tracking_confidence=0.4))
         self._lock = threading.Lock()
         self._last_ts = -1
+        # the pose model runs on its own thread while the hand model runs on the caller's: two separate graphs,
+        # so a frame costs the slower of the two instead of their sum
+        self._pose_thread = ThreadPoolExecutor(max_workers=1, thread_name_prefix="mediapipe-pose")
 
     def close(self) -> None:
+        self._pose_thread.shutdown(wait=True)
         self.hands.close()
         self.pose.close()
 
@@ -55,11 +60,12 @@ class MediaPipeRunner:
             if self.video:
                 ts = max(t_ms, self._last_ts + 1)
                 self._last_ts = ts
+                pose_job = self._pose_thread.submit(self.pose.detect_for_video, image, ts)
                 hr = self.hands.detect_for_video(image, ts)
-                pr = self.pose.detect_for_video(image, ts)
             else:
+                pose_job = self._pose_thread.submit(self.pose.detect, image)
                 hr = self.hands.detect(image)
-                pr = self.pose.detect(image)
+            pr = pose_job.result()
 
         hands = []
         for i, lms in enumerate(hr.hand_landmarks):

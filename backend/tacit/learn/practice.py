@@ -17,7 +17,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from ..db import LessonProgress, now, select, session
 from ..models.base import decode_image
 from ..models import vision
-from ..perception.frame import analyze
+from ..perception.frame import LiveAnalyzer
 from ..perception.mediapipe_runner import MediaPipeRunner
 from ..perception.timeline import hand_feats, near_object
 from ..storage import load_skill, read_json, tracks_path
@@ -162,6 +162,8 @@ async def run(ws: WebSocket, session_id: str) -> None:
         return
     pr = Practice(skill, meta["trainee_id"])
     runner = MediaPipeRunner(video=True)
+    # one frame deep: a frame's MediaPipe runs while the previous frame's RF-DETR call is on chip 0
+    analyzer = LiveAnalyzer(runner, kinds=("rfdetr",), priority=vision.LIVE)
     latest: list = [None]
     evt = asyncio.Event()
     closed = False
@@ -175,9 +177,11 @@ async def run(ws: WebSocket, session_id: str) -> None:
             t, jpeg = latest[0]
             try:
                 rgb = await asyncio.to_thread(lambda: decode_image(base64.b64encode(jpeg).decode()))
-                f = await analyze(rgb, t, runner, kinds=("rfdetr",), priority=vision.LIVE)
+                f = await analyzer.push(rgb, t)   # the previous frame's analysis (None for the first)
             except Exception as e:  # noqa: BLE001 - one bad frame must not end the session
                 await ws.send_json({"type": "error", "message": f"frame skipped: {e}"})
+                continue
+            if f is None:
                 continue
             await ws.send_json({"type": "analysis", "t": f["t"], "hands": f["hands"], "objects": f["objects"],
                                 "size": f["size"], "timing_ms": f["timing_ms"], "served_by": f["served_by"]})
@@ -211,6 +215,7 @@ async def run(ws: WebSocket, session_id: str) -> None:
         closed = True
         evt.set()
         task.cancel()
+        analyzer.cancel()
         try:
             prog = pr.save_progress()
             try:  # tell the trainee first: closing MediaPipe takes several seconds
