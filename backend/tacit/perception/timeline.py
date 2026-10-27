@@ -576,9 +576,11 @@ def interaction_steps(frames: list[dict], max_steps: int = 12) -> list[dict]:
     ctx["facing"] = facing = faces_camera(frames)
     steps = []
     for g in _group(active, ctx["points"], times, ctx["support"], scale):
+        picked = None
         for i0, i1, phase in _split_set_down(g, times):
             part = [e for e in g if e.i1 >= i0 and e.i0 <= i1]
-            steps.append(_step(part, i0, i1, phase, frames, ctx, scale))
+            steps.append(_step(part, i0, i1, phase, frames, ctx, scale, main=picked if phase == "place" else None))
+            picked = next(e.track for e in g if e.track.id == steps[-1]["track"])
     # steps follow each other: one that starts inside the previous one starts where that one ends
     steps.sort(key=lambda s: s["i_start"])
     kept: list[dict] = []
@@ -627,10 +629,12 @@ def _approach(step: dict, pts: dict, times: list[float], scale: float, facing: b
 
 
 def _step(part: list[Episode], i0: int, i1: int, phase: str | None, frames: list[dict], ctx: dict,
-          scale: float) -> dict:
-    """One step from the episodes that cover frames [i0, i1]: who, with what, and which kind of action."""
+          scale: float, main=None) -> dict:
+    """One step from the episodes that cover frames [i0, i1]: who, with what, and which kind of action
+    (``main``: the object, when it is already known: what was picked up is what is set down)."""
     times = ctx["times"]
-    names = _names(ctx["tracks"], frames, ctx["facing"], scale, frames[i0])
+    # an object keeps the name it got in the first step that used it (where it is from the expert then)
+    names = {**_names(ctx["tracks"], frames, ctx["facing"], scale, frames[i0]), **ctx.setdefault("named", {})}
     dur = max(times[i1] - times[i0], 1e-3)
 
     def inside(e: Episode) -> float:
@@ -639,7 +643,7 @@ def _step(part: list[Episode], i0: int, i1: int, phase: str | None, frames: list
     per_obj = Counter()
     for e in part:   # the object handled (moved, held up) is the step's object, then the one touched longest
         per_obj[e.track.id] += inside(e) + 4 * dt * sum(1 for i in e.held if i0 <= i <= i1)
-    main = next(e.track for e in part if e.track.id == per_obj.most_common(1)[0][0])
+    main = main or next(e.track for e in part if e.track.id == per_obj.most_common(1)[0][0])
     # the hand is the one that works with that object; both hands only when they share it about equally
     on_main = Counter()
     for e in part:
@@ -669,6 +673,8 @@ def _step(part: list[Episode], i0: int, i1: int, phase: str | None, frames: list
         last = main.box_near(i1, span=10) or main.rest_box()
         target = _target_near(center(last), ctx["tracks"], i1, main.id, names, scale)
     others = [names[t] for t, _ in per_obj.most_common() if t != main.id]
+    for tid in [main.id] + [t for t, _ in per_obj.most_common()]:
+        ctx["named"].setdefault(tid, names[tid])
     return {"i_start": i0, "i_end": i1, "hand": hand, "kind": kind, "object": names[main.id], "label": main.label,
             "track": main.id, "target": target,
             "objects": [names[main.id]] + [o for o in dict.fromkeys([target] + others) if o and o != names[main.id]]}
