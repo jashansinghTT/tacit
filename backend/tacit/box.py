@@ -39,7 +39,7 @@ async def box_status(max_age: float = 4.0) -> dict:
             group = ep.group
             st = stats(k)
             models.append({"key": k, "name": ep.name, "role": ep.role, "port": int(ep.url.rsplit(":", 1)[1]), "healthy": ok,
-                           "p50_ms": st.p50(), "calls": st.calls, "errors": st.errors, "backend": "tt"})
+                           "p50_ms": st.p50(), "calls": st.calls, "errors": st.errors, "busy": st.busy, "backend": "tt"})
         mem = None
         if co.get(chip):
             d = co[chip].get("dram_gib_per_chip") or {}

@@ -428,6 +428,27 @@ async def test_narration_waits_while_a_capture_is_open():
     await asyncio.wait_for(waiter, 1)
 
 
+async def test_narration_holds_off_while_someone_talks_to_the_tutor():
+    import asyncio
+    import time
+    from tacit.models.speech import _Gate
+    gate = _Gate()
+    gate.HOLD_S = 0.3
+    await gate.wait_quiet(max_wait=5)            # nobody has talked yet: no wait
+    await gate.acquire(gate.INTERACTIVE)        # the tutor speaks
+    gate.release()
+    t0 = time.monotonic()
+    await gate.wait_quiet(max_wait=5)
+    assert time.monotonic() - t0 >= 0.25        # narration waited for a follow-up question
+    t0 = time.monotonic()
+    await gate.acquire(gate.BATCH)              # narration itself does not extend the hold
+    gate.release()
+    await gate.wait_quiet(max_wait=5)
+    assert time.monotonic() - t0 < 0.1
+    gate.person_active()
+    await asyncio.wait_for(gate.wait_quiet(max_wait=0.1), 1)   # never past max_wait
+
+
 def test_episode_count_reads_both_meta_formats(tmp_path):
     import json
     from tacit.exchange.market import _count_episodes
@@ -690,3 +711,43 @@ async def test_both_hands_of_a_frame_go_in_one_request_when_hamer_serves_it(monk
         else:
             assert both.call_count == 0 and one.call_count == 3
             assert out[1][0] == vision._hand(fx, 0.5)
+
+
+async def test_a_busy_model_is_up_and_a_refused_one_is_down():
+    import httpx
+    import respx
+    from tacit.config import endpoints
+    from tacit.models import base
+    key = "hamer"
+    url = endpoints()[key].url + endpoints()[key].health
+    with respx.mock(assert_all_called=False) as mock:
+        route = mock.get(url)
+        route.side_effect = [httpx.Response(200), httpx.ReadTimeout("busy"), httpx.ConnectError("refused"),
+                             httpx.ReadTimeout("busy")]
+        assert await base.health(key) is True
+        assert await base.health(key) is True and base.stats(key).busy      # answered just now: busy, not down
+        assert await base.health(key) is False                             # refused: down at once
+        base.stats(key).ok_at -= base.BUSY_GRACE_S + 1
+        assert await base.health(key) is False                             # only timeouts for too long: down
+
+
+def test_the_first_spoken_piece_of_an_answer_is_a_clause():
+    from tacit.app import _sentence_cuts
+
+    def pieces(text, clause):
+        out = []
+        for n in _sentence_cuts(text, clause):
+            out.append(text[:n].strip())
+            text = text[n:]
+        return out
+    text = "First, lift the stem gently by its base, then push it in. Check it stands straight. "
+    assert pieces(text, True) == ["First, lift the stem gently by its base,", "then push it in.", "Check it stands straight."]
+    assert pieces(text, False) == ["First, lift the stem gently by its base, then push it in.", "Check it stands straight."]
+
+
+def test_the_tutor_uses_an_inferred_why_without_crediting_the_expert():
+    from tacit.pipeline.writer import tutor_messages
+    skill = {"title": "Vase", "expert": {"name": "Maria Lopez"},
+             "steps": [{"index": 1, "title": "Insert stem", "why": "So it stands upright.", "why_source": "inferred"}]}
+    sys = tutor_messages(skill, "Why does the first step matter?")[0]["content"]
+    assert "So it stands upright." in sys and "use it to answer why questions" in sys and "without crediting Maria" in sys
