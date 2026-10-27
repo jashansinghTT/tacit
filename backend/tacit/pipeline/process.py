@@ -18,7 +18,7 @@ from ..perception.mediapipe_runner import MediaPipeRunner
 from ..perception.timeline import IGNORE, segment_steps
 from ..storage import (load_skill, media_dir, media_url, pointcloud_path, read_json, save_skill, skill_dir,
                        tracks_path, twin_path, write_json)
-from . import geometry, writer
+from . import geometry, preview, writer
 from .video import frame_at, frames as video_frames, probe, save_jpeg, transcode
 
 log = logging.getLogger("tacit.process")
@@ -201,6 +201,10 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     twin, cloud = geometry.build_twin(frames, res, times, imgs or [], (info["width"], info["height"]))
     write_json(twin_path(skill_id), twin)
     pointcloud_path(skill_id).write_bytes(cloud)
+    mt = preview.motion_thumb(frames, media_dir(skill_id) / "motion.jpg",
+                              t=out_steps[0]["t_start"] + 1.0 if out_steps else None)
+    if mt:
+        skill["motion_thumb"] = media_url(mt)
     job.finish_stage("twin", detail=f"{len(twin['frames'])} frames, {len(cloud) // 24} points")
 
     # narrate -------------------------------------------------------------------------------
@@ -212,7 +216,7 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     narration = {}
     for k, (key, text) in enumerate(first):
         try:
-            path, dur, sb = await speech.tts(text)
+            path, dur, sb = await speech.tts_sentences(text)
             narration[key] = {"audio": media_url(path), "duration": round(dur, 2), "text": text}
             extra_served.append(sb)
         except ModelUnavailable as e:
@@ -285,7 +289,7 @@ def _background(coro) -> None:
 async def narrate_rest(skill_id: str, lines: list[tuple[str, str]]) -> None:
     for key, text in lines:
         try:
-            path, dur, _ = await speech.tts(text)
+            path, dur, _ = await speech.tts_sentences(text)
         except ModelUnavailable:
             log.warning("background narration stopped for %s", skill_id)
             return

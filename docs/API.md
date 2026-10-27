@@ -152,7 +152,7 @@ Server: `{"type": "analysis", ...}` (hands only), `{"type": "feedback", "step_in
 ### `POST /api/tutor/{skill_id}/ask` `{"question": "...", "lang": "en"}` or multipart `audio`
 → `text/event-stream`: `event: transcript` `{"text"}` (if audio was sent), `event: delta` `{"text": ".."}` × n,
 `event: audio` `{"index": 0, "audio": "/media/tts/...wav", "duration": 2.1}` × n (one per sentence, in order; play them
-back to back as they arrive), `event: done` `{"text": "...", "audio_parts": 2, "sources": ["st2"], "question": "..."}`.
+back to back as they arrive), `event: done` `{"text": "...", "audio_parts": 2, "sources": ["st2"], "question": "..."}` as soon as the text is final (audio events for the remaining sentences may follow it), then `event: end` closes the stream.
 Multipart form fields: `audio` (wav/webm), `question`, `lang`, `history` (JSON list of `{role, content}`).
 
 ## Robot Lab
@@ -183,3 +183,30 @@ The sim frame is MuJoCo's: metres, z up. The web viewer converts to three.js y-u
 ## Errors
 `{"error": {"code": "not_found|bad_request|model_unavailable|internal", "message": "...", "detail": {}}}` with a
 matching HTTP status. `model_unavailable` (503) names the model and chip.
+
+## Added after v1 (all live on 8710)
+
+### Samples, music
+- `GET /api/samples/{id}/verify[?refresh=1]` → VGGT verification of a sample clip (cached): `{sample_id, kind, status, score, details {views, reproj_rel, depth_stability, camera_drift, static_pixels}, times, pointcloud, points}`. `smp_fake` (AI-made) is `suspect` (0.24); the real samples are `verified` (0.90, 0.97). Point cloud format as `/api/skills/{id}/pointcloud`.
+- `GET /api/music/intro` → `{audio, duration, model: "MiniMax Music 3", chip: 1, credit}`: an 8 s instrumental lesson intro (made once; credit line must be shown where it plays).
+
+### Skills
+- Skills carry `motion_thumb`: a motion-only preview (skeleton, hands, parts, gaze on a dark grid; no video pixels). Listings use it as `thumb`; never show `thumb` (a video frame) to buyers.
+- `test: true` on skills titled "QA ..."; hidden from `/api/skills`, `/api/learn/lessons` and `/api/exchange/listings` unless `include_test=1`.
+
+### Quality and safety audit (use case 5)
+- `POST /api/skills/{id}/audit` multipart `file` (a worker's recorded run), `worker` (name) → `{job_id, audit_id}`; the job's stages are `decode, perceive, align, report`.
+- `GET /api/skills/{id}/audits` → `[{id, worker, created_at, summary, narrative, video}]`.
+- `GET /api/skills/{id}/audits/{audit_id}` → `{id, skill_id, worker, video, created_at, narrative, summary {steps_total, done, out_of_order, missing, gaze_checks_ok, score}, steps: [{index, title, status: "done"|"missing"|"out_of_order", score, expert_seconds, run_t, run_seconds, gaze_check {expert_looked_at, worker_looked_at, ok}}]}`.
+
+### Multilingual lessons (use case 6)
+- `GET /api/learn/lessons/{skill_id}?lang=es|fr|de|zh|ja|ko|pt|hi` → the same lesson with translated title, summary, steps, quiz and safety (gpt-oss-20b, cached). Narration in that language is spoken in the background: `narration_audio` is null until it is ready (poll, or play `POST /api/speech/tts` meanwhile). The response lists `languages`.
+
+### Reflex glove
+- `GET /api/reflex/status` → `{connected, url, mock, state, command, movement, fingers}`.
+- `GET /api/skills/{id}/fingers[?step=N&hand=left|right]` → `{fingers, hand, frames: [[t, thumb, index, middle, ring, pinky]], fps}` (curls 0 open .. 1 closed).
+- `GET /api/skills/{id}/reflex.py[?step=N&speed=1]` → a Reflex movement file (download).
+- `POST /api/reflex/guide {skill_id, step_index?, speed?, url?}` → teaches and plays the movement on a Reflex backend, or `{connected: false, steps, seconds}` for the virtual glove. `POST /api/reflex/stop`.
+
+### Box
+- `GET /api/box` also returns `speech_queue: {listen, interactive, batch, busy}` (the chip-1 voice gate).

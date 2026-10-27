@@ -150,7 +150,7 @@ function sortSkill(): Skill {
     safety: ['Handle brackets by the long edge; the short edge is sharp.', 'Keep fingers clear of the outbound rail when pushing the tray.'],
     verification: {
       status: 'verified', score: 0.94, method: 'VGGT multi-view consistency',
-      details: { views: 4, reproj_px: 1.6, depth_stability: 0.96 }, checked_at: iso(9, 15),
+      details: { views: 4, reproj_rel: 0.016, depth_stability: 0.995, camera_drift: 0.0014, static_pixels: 60441 }, checked_at: iso(9, 15),
       pointcloud: '/api/skills/sk_sort/pointcloud',
     },
     robot: {
@@ -212,7 +212,7 @@ function briefSkill(b: Brief): Skill {
     safety: b.safety ?? ['Wear safety glasses.'],
     verification: {
       status: b.verification ?? 'verified', score: b.score, method: 'VGGT multi-view consistency',
-      details: b.verification === 'suspect' ? { views: 4, reproj_px: 9.7, depth_stability: 0.41 } : { views: 4, reproj_px: 1.9, depth_stability: 0.93 },
+      details: b.verification === 'suspect' ? { views: 4, reproj_rel: 0.128, depth_stability: 0.94, camera_drift: 0.19 } : { views: 4, reproj_rel: 0.018, depth_stability: 0.992, camera_drift: 0.0017 },
       checked_at: iso(b.daysAgo), pointcloud: `/api/skills/${b.id}/pointcloud`,
     },
     robot: {

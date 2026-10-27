@@ -164,3 +164,55 @@ def test_merge_groups_follows_covers_and_falls_back():
     assert [[s["index"] for s in g] for _, g in groups] == [[1, 2], [3, 4], [5]]   # 4 joins the nearest earlier group
     fallback = merge_groups([{"index": 1, "title": "A"}], obs)
     assert len(fallback) == 5 and fallback[0][0]["title"] == "A" and fallback[1][0] == {}
+
+
+async def test_tts_gate_serves_interactive_before_batch():
+    import asyncio
+    from tacit.models.speech import _Gate
+    gate, order = _Gate(), []
+
+    async def use(name, prio, hold=0.02):
+        await gate.acquire(prio)
+        order.append(name)
+        await asyncio.sleep(hold)
+        gate.release()
+
+    await gate.acquire(gate.BATCH)          # a narration line holds the voice
+    tasks = [asyncio.create_task(use("batch-2", gate.BATCH)), asyncio.create_task(use("batch-3", gate.BATCH))]
+    await asyncio.sleep(0)
+    tasks.append(asyncio.create_task(use("coach", gate.INTERACTIVE)))
+    await asyncio.sleep(0)
+    gate.release()
+    await asyncio.gather(*tasks)
+    assert order == ["coach", "batch-2", "batch-3"]
+    assert gate.waiting() == {"listen": 0, "interactive": 0, "batch": 0, "busy": False}
+
+
+def test_sentence_split_and_wav_concat():
+    import io, wave
+    from tacit.models.speech import _concat_wavs, _sentences
+    assert _sentences("Step 1. Pick up the cup. Hold it by the body so it does not slip.") == \
+        ["Step 1. Pick up the cup.", "Hold it by the body so it does not slip."]
+    def wav(n):
+        b = io.BytesIO()
+        with wave.open(b, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b"\x01\x00" * n)
+        return b.getvalue()
+    out = _concat_wavs([wav(1600), wav(3200)])
+    with wave.open(io.BytesIO(out)) as w:
+        assert w.getnframes() == 1600 + 3200 + int(16000 * 0.12)
+
+
+
+def test_audit_compare_marks_done_missing_and_order():
+    from tacit.learn.audit import compare
+    skill = {"steps": [{"index": 1, "title": "cup", "t_start": 0.0, "t_end": 2.0, "objects": ["cup"], "hand": "right"},
+                       {"index": 2, "title": "bowl", "t_start": 2.0, "t_end": 4.0, "objects": ["bowl"], "hand": "right"},
+                       {"index": 3, "title": "spoon", "t_start": 4.0, "t_end": 6.0, "objects": ["spoon"], "hand": "right"}]}
+    frames = _frames_cup_left_to_right(60)
+    run_steps = [{"t_start": 0.0, "t_end": 2.0, "objects": ["cup"], "hand": "right"},
+                 {"t_start": 2.0, "t_end": 4.0, "objects": ["bowl"], "hand": "right"}]
+    rep = compare(skill, frames, frames, run_steps)
+    statuses = [r["status"] for r in rep["steps"]]
+    assert statuses[0] == "done" and statuses[1] == "done" and statuses[2] == "missing"
+    assert rep["summary"]["missing"] == 1

@@ -52,6 +52,21 @@ def ok(url: str) -> bool:
         return False
 
 
+def backend_settled() -> bool:
+    """False while systemd is starting or stopping the unit, or it started under 90 s ago (a deploy)."""
+    show = subprocess.run(["systemctl", "--user", "show", "tacit-backend.service", "-p", "ActiveState",
+                           "-p", "ActiveEnterTimestampMonotonic"], capture_output=True, text=True).stdout
+    props = dict(line.split("=", 1) for line in show.splitlines() if "=" in line)
+    if props.get("ActiveState") in ("activating", "deactivating", "reloading"):
+        return False
+    try:
+        since_us = int(props.get("ActiveEnterTimestampMonotonic", "0"))
+        uptime_us = time.monotonic() * 1e6  # CLOCK_MONOTONIC, the same clock systemd uses
+        return since_us == 0 or uptime_us - since_us > 90e6
+    except ValueError:
+        return True
+
+
 def allowed(state: dict, name: str) -> bool:
     hist = [t for t in state.get(name, []) if time.time() - t < 3600]
     state[name] = hist
@@ -65,7 +80,7 @@ def main() -> None:
         time.sleep(10)  # a service that is just (re)starting gets a second look before any restart
         health = {k: health[k] or ok(u) for k, u in CHECKS.items()}
     actions = []
-    if not health["backend"] and allowed(state, "backend"):
+    if not health["backend"] and backend_settled() and allowed(state, "backend"):
         subprocess.run(["systemctl", "--user", "restart", "tacit-backend.service"], check=False)
         state["backend"].append(time.time())
         actions.append("restarted backend")
