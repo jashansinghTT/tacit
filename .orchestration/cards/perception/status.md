@@ -1,10 +1,10 @@
 # Status: perception
 
 State: review
-Updated: 2026-10-27T20:26:00+00:00
+Updated: 2026-10-27T20:25:57+00:00
 
 ## Merge gate: met
-Step precision and recall >= 0.7 on both clips, tests pass (28/28 backend tests in the worktree, including
+Step precision and recall >= 0.7 on both clips, tests pass (30/30 backend tests on the branch merged with main at 865b270, including
 a regression test of this gate on the clips' real tracks), numbers recorded below and in
 `.orchestration/evidence/perception/`.
 
