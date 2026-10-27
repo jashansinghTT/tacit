@@ -14,8 +14,12 @@ from .mediapipe_runner import MediaPipeRunner
 KINDS = ("hamer", "gaze", "rfdetr")
 
 
+NOT_TARGETS = {"person", "dining table", "chair", "bench", "couch", "bed"}  # the expert's own body, the table itself
+
+
 def label_point(x: float, y: float, objects: list[dict], hands: list[dict]) -> str:
     """Name what a gaze point lands on: the smallest object box containing it, else the nearest object or a hand."""
+    objects = [o for o in objects if o["label"] not in NOT_TARGETS]
     inside = [o for o in objects if o["box"][0] <= x <= o["box"][2] and o["box"][1] <= y <= o["box"][3]]
     if inside:
         return min(inside, key=lambda o: (o["box"][2] - o["box"][0]) * (o["box"][3] - o["box"][1]))["label"]

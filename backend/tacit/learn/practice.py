@@ -202,10 +202,10 @@ async def run(ws: WebSocket, session_id: str) -> None:
         closed = True
         evt.set()
         task.cancel()
-        runner.close()
         prog = pr.save_progress()
-        try:
+        try:  # tell the trainee first: closing MediaPipe takes several seconds
             await ws.send_json({"type": "saved", **prog})
             await ws.close()
         except RuntimeError:
             pass
+        await asyncio.to_thread(runner.close)

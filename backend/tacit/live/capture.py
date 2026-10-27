@@ -245,7 +245,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         s.closed = True
         s.new_frame.set()
         loop.cancel()
-        s.runner.close()
+        await asyncio.to_thread(s.runner.close)
         try:
             await ws.close()
         except RuntimeError:
