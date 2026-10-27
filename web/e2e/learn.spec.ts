@@ -30,7 +30,17 @@ test.afterEach(() => {
   expect(errors, 'no errors in the browser console').toEqual([])
 })
 
-const shot = (page: Page, name: string, fullPage = false) => page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png`, fullPage })
+/**
+ * Evidence screenshot. Full-page captures of a scrolled page repeat the sticky header and rails,
+ * so lesson screens are taken as viewport shots scrolled to the part that matters.
+ */
+async function shot(page: Page, name: string, opts: { fullPage?: boolean; at?: string } = {}) {
+  if (opts.at) await page.getByTestId(opts.at).evaluate((el) => (el as unknown as { scrollIntoView: (o: object) => void }).scrollIntoView({ block: 'start' }))
+  else await page.evaluate('window.scrollTo(0, 0)')
+  if (opts.at) await page.evaluate('window.scrollBy(0, -72)')
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png`, fullPage: opts.fullPage })
+}
 
 async function openLesson(page: Page) {
   await page.goto(lessonUrl)
@@ -46,7 +56,7 @@ test('learn: the trainee sees lessons with progress', async ({ page }) => {
   await expect(page.getByTestId('continue-lesson')).toBeVisible()
   await expect(page.getByTestId('learn-stats')).toContainText('Lessons')
   await page.waitForTimeout(800)
-  await shot(page, 'learn', true)
+  await shot(page, 'learn', { fullPage: true })
   await page.getByTestId(`lesson-card-${fx.skillId}`).click()
   await expect(page).toHaveURL(new RegExp(`${lessonUrl}$`))
 })
@@ -65,7 +75,7 @@ test('lesson: the step demo loops with narration, captions and the expert\'s why
     await expect(page.getByTestId('captions').locator('p')).toBeVisible({ timeout: 30_000 })
   }
   await page.waitForTimeout(600)
-  await shot(page, 'lesson-watch', true)
+  await shot(page, 'lesson-watch')
 
   await page.getByTestId('step-next').click()
   await expect(page.getByTestId('lesson-main')).toHaveAttribute('data-step', '2')
@@ -88,7 +98,7 @@ test('practice: the camera gets a live score, a hint and saved progress', async 
   await expect(page.getByTestId('practice-hint')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByTestId('trainee-overlay')).toBeVisible()
   await page.waitForTimeout(1500)
-  await shot(page, 'lesson-practice')
+  await shot(page, 'lesson-practice', { at: 'mode-bar' })
   await page.getByTestId('practice-stop').click()
   await expect(page.getByTestId('practice-saving').or(page.getByTestId('practice-saved'))).toBeVisible()
   await expect(page.getByTestId('practice-saved')).toContainText('Progress saved', { timeout: 25_000 })
@@ -150,7 +160,7 @@ test('guide: the virtual glove plays the step and the Reflex file downloads', as
   expect(file.status()).toBe(200)
   expect(await file.text()).toContain('def steps()')
   await page.waitForTimeout(1200)
-  await shot(page, 'lesson-guide', true)
+  await shot(page, 'lesson-guide', { at: 'mode-bar' })
 })
 
 test('quiz: a passing quiz earns a downloadable certificate', async ({ page }) => {
@@ -167,7 +177,8 @@ test('quiz: a passing quiz earns a downloadable certificate', async ({ page }) =
   const cert = await page.request.get(href!)
   expect(cert.status()).toBe(200)
   expect(await cert.text()).toContain('SKILL CERTIFICATE')
-  await shot(page, 'lesson-certificate', true)
+  await shot(page, 'lesson-quiz', { at: 'quiz' })
+  await shot(page, 'lesson-certificate', { at: 'quiz-result' })
 })
 
 test('team: the manager sees trainee progress, captured skills and robot readiness', async ({ page }) => {
@@ -181,5 +192,5 @@ test('team: the manager sees trainee progress, captured skills and robot readine
   await expect(row.getByTestId('robot-cell')).toBeVisible()
   await expect(page.getByTestId('team-activity')).toContainText('Sam Okafor')
   await page.waitForTimeout(600)
-  await shot(page, 'team', true)
+  await shot(page, 'team', { fullPage: true })
 })

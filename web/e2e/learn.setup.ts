@@ -1,6 +1,6 @@
 // Picks the lesson to test and builds the fake capture media from the box's own data:
 // the camera plays the expert's recording of step 1 (so practice has real hands to match), and
-// the microphone plays a "why" question the coach voiced during a capture.
+// the microphone plays a question voiced by the box's own speech model (S2 Pro).
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import type { FullConfig } from '@playwright/test'
@@ -68,15 +68,34 @@ export default async function setup(config: FullConfig) {
   const dur = step.t_end - step.t_start + 1
   ffmpeg(['-ss', String(t0), '-t', String(dur), '-i', src, '-vf', 'scale=640:-2,fps=15', '-q:v', '4', `${MEDIA_DIR}/practice.mjpeg`])
 
-  // A question the coach voiced during any capture on this box.
+  // The spoken question: voiced by S2 Pro now, or else one the coach voiced during a capture.
   let question: string | null = null
-  for (const l of [pick, ...lessons]) {
-    const sk = await json<SkillRecord>(base, `/api/skills/${l.skill_id}`).catch(() => null)
-    const qa = sk?.qa?.find((q) => q.question_audio && /\?\s*$/.test(q.question))
-    if (qa?.question_audio) {
-      await download(base, qa.question_audio, `${MEDIA_DIR}/question_raw.wav`)
-      question = qa.question
-      break
+  const ask = 'Why do I use my left hand for this step?'
+  try {
+    const r = await fetch(base + '/api/speech/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: ask, voice: 'default', lang: 'en' }),
+      signal: AbortSignal.timeout(90_000),
+    })
+    if (r.ok) {
+      const { audio } = (await r.json()) as { audio: string }
+      await download(base, audio, `${MEDIA_DIR}/question_raw.wav`)
+      question = ask
+    }
+  } catch {
+    question = null
+  }
+  if (!question) {
+    const all = await json<{ id: string }[]>(base, '/api/skills?include_test=1').catch(() => [])
+    for (const l of all) {
+      const sk = await json<SkillRecord>(base, `/api/skills/${l.id}`).catch(() => null)
+      const qa = sk?.qa?.find((q) => q.question_audio && /\?\s*$/.test(q.question))
+      if (qa?.question_audio) {
+        await download(base, qa.question_audio, `${MEDIA_DIR}/question_raw.wav`)
+        question = qa.question
+        break
+      }
     }
   }
   if (question) {

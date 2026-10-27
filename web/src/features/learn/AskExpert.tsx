@@ -15,6 +15,24 @@ function lowerFirst(s: string) {
   return s ? s[0].toLowerCase() + s.slice(1) : s
 }
 
+// Starter questions in the lesson's language (`{n}` is the step number).
+const SUGGEST: Record<string, [string, string, string]> = {
+  es: ['¿Por qué se hace así el paso {n}?', '¿Cuál es el error más común en el paso {n}?', '¿Cómo sé que hice bien el paso {n}?'],
+  fr: ["Pourquoi l'étape {n} se fait-elle ainsi ?", "Quelle est l'erreur la plus courante à l'étape {n} ?", "Comment savoir si l'étape {n} est bien faite ?"],
+  de: ['Warum macht man Schritt {n} so?', 'Was ist der häufigste Fehler bei Schritt {n}?', 'Woran erkenne ich, dass Schritt {n} richtig ist?'],
+  pt: ['Por que o passo {n} é feito assim?', 'Qual é o erro mais comum no passo {n}?', 'Como sei que fiz o passo {n} certo?'],
+  hi: ['चरण {n} ऐसे क्यों किया जाता है?', 'चरण {n} में सबसे आम गलती क्या है?', 'मुझे कैसे पता चलेगा कि चरण {n} सही हुआ?'],
+  zh: ['为什么第{n}步要这样做？', '第{n}步最常见的错误是什么？', '我怎么知道第{n}步做对了？'],
+  ja: ['なぜステップ{n}はこのやり方なのですか？', 'ステップ{n}でよくある間違いは何ですか？', 'ステップ{n}が正しくできたかどうやって分かりますか？'],
+  ko: ['왜 {n}단계는 이렇게 하나요?', '{n}단계에서 가장 흔한 실수는 무엇인가요?', '{n}단계를 제대로 했는지 어떻게 알 수 있나요?'],
+}
+
+function suggestionsFor(lang: string, title: string, n: number): string[] {
+  const t = SUGGEST[lang]
+  if (t) return t.map((q) => q.replace('{n}', String(n)))
+  return [`Why ${lowerFirst(title)}?`, `What is the most common mistake in step ${n}?`, `How do I know step ${n} is done right?`]
+}
+
 function Answer({ turn, onReplay, onSource }: { turn: Turn; onReplay: () => void; onSource: (step: number) => void }) {
   const { lesson } = useLessonCtx()
   const sentences = useMemo(() => splitSentences(turn.answer), [turn.answer])
@@ -126,10 +144,7 @@ export function AskExpert({ className }: { className?: string }) {
     }
   }, [mic.state, stopMic])
 
-  const suggestions = useMemo(
-    () => [`Why ${lowerFirst(step.title)}?`, `What is the most common mistake in step ${step.index}?`, `How do I know step ${step.index} is done right?`],
-    [step.title, step.index],
-  )
+  const suggestions = useMemo(() => suggestionsFor(lesson.lang, step.title, step.index), [lesson.lang, step.title, step.index])
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault()

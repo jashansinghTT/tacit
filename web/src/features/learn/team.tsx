@@ -62,7 +62,7 @@ export function ProgressMatrix({ trainees, skills, rows }: { trainees: Trainee[]
   const at = (t: string, s: string) => rows.find((r) => r.trainee.id === t && r.skill_id === s)
   return (
     <div className="overflow-x-auto" data-testid="progress-matrix">
-      <table className="w-full border-separate border-spacing-0 text-left">
+      <table className="w-full border-separate border-spacing-0 bg-ink-800 text-left">
         <thead>
           <tr>
             <th scope="col" className="eyebrow sticky left-0 z-10 min-w-[190px] border-b border-line bg-ink-800 px-4 py-2.5 font-normal">

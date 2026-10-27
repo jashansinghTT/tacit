@@ -10,8 +10,9 @@ export default function TeamPage() {
   const progress = useTeamProgress()
   const skills = useCapturedSkills()
   const users = useUsers()
-  const rows = useMemo(() => progress.data ?? [], [progress.data])
   const all = useMemo(() => skills.data ?? [], [skills.data])
+  // Progress on skills that are not listed (hidden test skills, deleted ones) is not the team's.
+  const rows = useMemo(() => (progress.data ?? []).filter((r) => all.some((s) => s.id === r.skill_id)), [progress.data, all])
   const ready = useMemo(() => all.filter((s) => s.status === 'ready'), [all])
   const robotQ = useRobotReadiness(ready.map((s) => s.id))
   const robot = useMemo(() => new Map(ready.map((s, i) => [s.id, { data: robotQ[i]?.data, loading: Boolean(robotQ[i]?.isLoading) }])), [ready, robotQ])

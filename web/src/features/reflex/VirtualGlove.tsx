@@ -26,7 +26,7 @@ const FINGERS = [
 const FLEX = [1.3, 1.7, 1.15]
 const THUMB_FLEX = [0.55, 0.75, 0.95]
 
-const SKIN = new THREE.MeshStandardMaterial({ color: '#59626e', metalness: 0.25, roughness: 0.55 })
+const SKIN = new THREE.MeshStandardMaterial({ color: '#77818f', metalness: 0.2, roughness: 0.5 })
 const SHELL = new THREE.MeshStandardMaterial({ color: '#262c35', metalness: 0.85, roughness: 0.3 })
 
 function Finger({ index, curls }: { index: number; curls: MutableRefObject<number[]> }) {
@@ -109,8 +109,9 @@ export function VirtualGlove({ track, timeRef, side = 'right', className }: { tr
     <div className={className} data-testid="virtual-glove">
       <Canvas camera={{ position: [0.0, 0.08, 0.31], fov: 34, near: 0.01, far: 5 }} dpr={[1, 2]} gl={{ antialias: true }}>
         <color attach="background" args={['#090a0c']} />
-        <hemisphereLight args={['#dfe9f5', '#0b0d10', 0.55]} />
-        <directionalLight position={[0.4, 0.6, 0.7]} intensity={1.7} />
+        <hemisphereLight args={['#dfe9f5', '#0b0d10', 0.7]} />
+        <directionalLight position={[0.4, 0.6, 0.7]} intensity={2.1} />
+        <directionalLight position={[0.2, 0.1, 0.9]} intensity={0.6} />
         <directionalLight position={[-0.6, 0.25, -0.5]} intensity={1.1} color="#3cd7ff" />
         <pointLight position={[0.1, -0.08, 0.25]} intensity={0.12} color="#a78bfa" />
         <group position={[0, 0.0, 0]}>

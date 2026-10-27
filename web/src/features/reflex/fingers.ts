@@ -49,7 +49,8 @@ export function describeGrip(track: FingerTrack | undefined): string | null {
   const mean = [0, 1, 2, 3, 4].map((i) => rows.reduce((s, r) => s + r[i + 1], 0) / rows.length)
   const moving = span.map((s, i) => [s, i] as const).filter(([s]) => s > 0.25).map(([, i]) => FINGER_LABELS[i].toLowerCase())
   const closed = mean.map((m, i) => [m, i] as const).filter(([m]) => m > 0.6).map(([, i]) => FINGER_LABELS[i].toLowerCase())
-  if (moving.length) return `Most of the motion is in the ${join(moving)}.`
+  if (moving.length === 5) return 'All five fingers work through this step: the grip closes and opens again.'
+  if (moving.length) return `Most of the motion is in the ${join(moving)}${moving.length < 3 ? '; the other fingers hold still' : ''}.`
   if (closed.length) return `The ${join(closed)} stay${closed.length === 1 ? 's' : ''} closed through the step: a steady grip.`
   return 'The hand stays mostly open through this step.'
 }
