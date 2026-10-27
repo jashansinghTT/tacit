@@ -36,7 +36,7 @@ export function RoyaltyBar({
             <span className="truncate">{expertName}</span>
             <span className="telemetry text-fg-faint">{fmtPct(split.expert)}</span>
           </div>
-          <div className={cn('telemetry mt-0.5 font-medium text-ion', compact ? 'text-sm' : 'text-base')} data-testid="royalty-expert">
+          <div className={cn('telemetry mt-0.5 font-medium text-ion', compact ? 'text-sm' : 'text-base')} data-testid="royalty-bar-expert">
             {fmtMoney(r.expert, currency, 2)}
           </div>
         </div>
@@ -48,7 +48,7 @@ export function RoyaltyBar({
             </span>
             <Factory className="size-3 text-data-right" aria-hidden />
           </div>
-          <div className={cn('telemetry mt-0.5 font-medium text-data-right', compact ? 'text-sm' : 'text-base')} data-testid="royalty-plant">
+          <div className={cn('telemetry mt-0.5 font-medium text-data-right', compact ? 'text-sm' : 'text-base')} data-testid="royalty-bar-plant">
             {fmtMoney(r.plant, currency, 2)}
           </div>
         </div>
