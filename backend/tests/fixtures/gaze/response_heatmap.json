@@ -1,0 +1,99 @@
+{
+ "model": "gaze-lle-p150",
+ "image_size": [
+  500,
+  334
+ ],
+ "input_size": [
+  448,
+  448
+ ],
+ "num_heads": 3,
+ "heatmap_size": [
+  64,
+  64
+ ],
+ "heatmap_format": "npz",
+ "heatmap_note": "sigmoid probabilities in [0,1] over a 64x64 grid covering the whole ORIGINAL image; png = uint8(round(p*255)); gaze_target.x/y are the argmax mapped to original pixels (x = col/64*W)",
+ "predictions": [
+  {
+   "bbox": [
+    116.0,
+    28.0,
+    176.0,
+    104.0
+   ],
+   "bbox_normalized": [
+    0.232,
+    0.083832,
+    0.352,
+    0.311377
+   ],
+   "inout": 0.0240478515625,
+   "gaze_target": {
+    "x": 289.0625,
+    "y": 167.0,
+    "x_norm": 0.578125,
+    "y_norm": 0.5,
+    "heatmap_row": 32,
+    "heatmap_col": 37,
+    "score": 0.40234375
+   }
+  },
+  {
+   "bbox": [
+    269.0,
+    37.0,
+    301.0,
+    81.0
+   ],
+   "bbox_normalized": [
+    0.538,
+    0.110778,
+    0.602,
+    0.242515
+   ],
+   "inout": 0.7734375,
+   "gaze_target": {
+    "x": 281.25,
+    "y": 167.0,
+    "x_norm": 0.5625,
+    "y_norm": 0.5,
+    "heatmap_row": 32,
+    "heatmap_col": 36,
+    "score": 0.40625
+   }
+  },
+  {
+   "bbox": [
+    87.0,
+    57.0,
+    107.0,
+    76.0
+   ],
+   "bbox_normalized": [
+    0.174,
+    0.170659,
+    0.214,
+    0.227545
+   ],
+   "inout": 0.66796875,
+   "gaze_target": {
+    "x": 281.25,
+    "y": 167.0,
+    "x_norm": 0.5625,
+    "y_norm": 0.5,
+    "heatmap_row": 32,
+    "heatmap_col": 36,
+    "score": 0.2197265625
+   }
+  }
+ ],
+ "heatmap_npz": "<omitted: 22424 chars>",
+ "timing_ms": {
+  "preprocess": 4.12,
+  "inference": 6.42,
+  "encode": 2.25,
+  "total": 12.78
+ }
+}
