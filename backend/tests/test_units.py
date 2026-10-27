@@ -618,3 +618,44 @@ async def test_capture_drains_the_frame_in_flight_before_saving(monkeypatch):
     assert 0.4 not in ts and len(ts) >= 8               # the corrupt frame was skipped, the rest went on
     assert any(m["type"] == "error" and "corrupt" in m["message"] for m in ws.sent)
     assert s.loop_task.done()
+
+
+def test_cohost_members_share_one_decode_per_frame():
+    """models/cohost-vision: the decode cache returns PIL's own pixels, decodes a frame once however many
+    members (and threads) ask, and fails on bad bytes exactly as PIL does."""
+    import importlib.util
+    import io
+    import threading
+
+    from PIL import Image, UnidentifiedImageError
+    path = Path(__file__).resolve().parents[2] / "models" / "cohost-vision" / "adapters" / "cohost_vision" / "common.py"
+    spec = importlib.util.spec_from_file_location("cohost_common", path)
+    common = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(common)
+    buf = io.BytesIO()
+    Image.fromarray((np.arange(240 * 320 * 3) % 251).astype(np.uint8).reshape(240, 320, 3)).save(buf, "JPEG", quality=88)
+    data = buf.getvalue()
+    want = np.asarray(Image.open(io.BytesIO(data)).convert("RGB"))
+
+    # three members' server modules, each after ``from PIL import Image``
+    members = [type(f"Member{k}", (), {"Image": Image}) for k in range(3)]
+    Member = members[0]
+    for m in members:
+        common.share_decodes(m)
+    got = []
+
+    def decode(m):
+        im = m.Image.open(io.BytesIO(data))
+        im.load()
+        got.append(np.asarray(im.convert("RGB")))
+    threads = [threading.Thread(target=decode, args=(m,)) for m in members * 2]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(got) == 6 and all(np.array_equal(g, want) for g in got)
+    assert common.DECODES.misses == 1 and common.DECODES.hits == 5
+    with pytest.raises(UnidentifiedImageError):
+        Member.Image.open(io.BytesIO(b"not an image"))
+    assert Member.Image.BILINEAR == Image.BILINEAR          # everything else is PIL's own
+

@@ -13,7 +13,7 @@ import time
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, log, note, programs, without_lifespan
+from .common import Rounds, StepModel, log, note, programs, share_decodes, without_lifespan
 
 
 class GazeMember(AppMember):
@@ -45,6 +45,7 @@ class GazeMember(AppMember):
         self.buckets = [b for b in model.fused_cfg.trace_heads if b <= cfg["max_heads"]] or [1]
         self.model, self.cfg, self.srv = model, cfg, srv
         srv.STATE.update(cfg=cfg, device=mesh, weights=winfo)
+        share_decodes(srv)   # the same frame is decoded once for every member
         self.t_start = t0
         note(mesh, self.member.name, "load")
 
