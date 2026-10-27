@@ -118,6 +118,17 @@ async def samples_():
     return seed.samples()
 
 
+@app.get("/api/music/intro")
+async def music_intro():
+    """An 8 s instrumental lesson intro made once by MiniMax Music 3 on chip 1 (cached: music holds the
+    speech chip for ~50 s, so it is never generated while people are talking to the coach)."""
+    p = MEDIA / "music" / "lesson-intro.wav"
+    if not p.exists():
+        return err(404, "not_found", "no intro music yet")
+    return {"audio": media_url(p), "duration": 8.0, "model": "MiniMax Music 3", "chip": 1,
+            "credit": "Music generated with MiniMax-Music3"}
+
+
 @app.get("/api/samples/{sample_id}/verify")
 async def sample_verify(sample_id: str, refresh: bool = False):
     """VGGT verification of a sample clip (cached): the Check page compares a real recording with an AI-made one."""
