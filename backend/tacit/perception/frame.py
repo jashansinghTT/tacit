@@ -144,6 +144,12 @@ class LiveAnalyzer:
         prev, self._pending = self._pending, None
         return await prev if prev is not None else None
 
+    def cancel(self) -> None:
+        """Drop the frame in flight (the stream ended without a stop)."""
+        if self._pending is not None:
+            self._pending.cancel()
+            self._pending = None
+
 
 async def vision_health() -> dict[str, bool]:
     from ..models.base import health

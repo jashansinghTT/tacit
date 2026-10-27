@@ -534,3 +534,87 @@ def test_a_hand_not_seen_does_not_let_go_but_a_hand_seen_elsewhere_does():
     assert len(_runs(contact, times, hidden)) == 1
     elsewhere = [True] * len(times)                            # seen all along, away from the vase in the gap
     assert len(_runs(contact, times, elsewhere)) == 2
+
+
+def _fake_frame(t: float) -> dict:
+    return {"t": round(t, 3), "hands": [], "pose": None, "head": None, "gaze": None, "objects": [], "size": [640, 360],
+            "timing_ms": {}, "served_by": [], "unavailable": []}
+
+
+def _fake_analysis(monkeypatch, fail_begin=(), fail_finish=()):
+    """frame.begin / frame.finish stand-ins: random chip delays, so later frames could finish first."""
+    import asyncio
+    import random
+    from tacit.perception import frame
+    rng, began = random.Random(7), []
+
+    async def begin(rgb, t, runner, kinds=frame.KINDS, priority=0):
+        await asyncio.sleep(0.001)
+        if round(t, 3) in fail_begin:
+            raise RuntimeError(f"MediaPipe failed on {t}")
+        began.append(round(t, 3))
+        return {"t": t}
+
+    async def finish(started):
+        await asyncio.sleep(rng.uniform(0.0, 0.02))
+        if round(started["t"], 3) in fail_finish:
+            raise RuntimeError(f"chip call failed on {started['t']}")
+        return _fake_frame(started["t"])
+    monkeypatch.setattr(frame, "begin", begin)
+    monkeypatch.setattr(frame, "finish", finish)
+    return began
+
+
+async def test_live_analyzer_keeps_order_and_flushes_the_last_frame(monkeypatch):
+    from tacit.perception.frame import LiveAnalyzer
+    _fake_analysis(monkeypatch, fail_begin={0.5}, fail_finish={0.8})
+    la, out, errors = LiveAnalyzer(mp_runner=None), [], []
+    for k in range(10):
+        try:
+            f = await la.push(None, k / 10)
+        except RuntimeError as e:
+            errors.append(str(e))
+            continue
+        if f is not None:
+            out.append(f["t"])
+    last = await la.flush()
+    out.append(last["t"])
+    # every frame but the two that failed, in order, the last one only from the flush
+    assert out == [0.0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.9]
+    assert len(errors) == 2 and await la.flush() is None
+
+
+async def test_capture_drains_the_frame_in_flight_before_saving(monkeypatch):
+    import asyncio
+    from tacit.live import capture
+
+    class Runner:
+        def __init__(self, video=True):
+            pass
+
+        def close(self):
+            pass
+
+    class Ws:
+        def __init__(self):
+            self.sent = []
+
+        async def send_json(self, msg):
+            self.sent.append(msg)
+    monkeypatch.setattr(capture, "MediaPipeRunner", Runner)
+    monkeypatch.setattr(capture, "decode_jpeg", lambda data: (_ for _ in ()).throw(ValueError("corrupt"))
+                        if data == b"bad" else np.zeros((360, 640, 3), np.uint8))
+    _fake_analysis(monkeypatch)
+    ws = Ws()
+    s = capture.CaptureSession(ws, "sk_test")
+    s.loop_task = asyncio.create_task(s.analysis_loop())
+    for k in range(12):
+        s.latest = (k / 10, b"bad" if k == 4 else b"jpeg")
+        s.new_frame.set()
+        await asyncio.sleep(0.03)
+    await s.drain()
+    ts = [f["t"] for f in s.frames]
+    assert ts == sorted(ts) and ts[-1] == 1.1          # in order, and the frame in flight at stop made it
+    assert 0.4 not in ts and len(ts) >= 8               # the corrupt frame was skipped, the rest went on
+    assert any(m["type"] == "error" and "corrupt" in m["message"] for m in ws.sent)
+    assert s.loop_task.done()

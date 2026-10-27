@@ -15,7 +15,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from .. import jobs
 from ..models import speech, vision
 from ..models.base import ModelUnavailable, decode_image
-from ..perception.frame import analyze
+from ..perception.frame import LiveAnalyzer
 from ..perception.mediapipe_runner import MediaPipeRunner
 from ..perception.timeline import LiveSegmenter
 from ..pipeline import writer
@@ -34,6 +34,8 @@ class CaptureSession:
         self.ws = ws
         self.skill_id = skill_id
         self.runner = MediaPipeRunner(video=True)
+        # one frame deep: a frame's MediaPipe runs while the previous frame's calls are on chip 0
+        self.analyzer = LiveAnalyzer(self.runner, priority=vision.LIVE)
         self.seg = LiveSegmenter()
         self.frames: list[dict] = []
         self.jpegs: list[bytes] = []
@@ -42,6 +44,8 @@ class CaptureSession:
         self.questions: list[dict] = []
         self.last_q_t = -1e9
         self.closed = False
+        self.stopping = False
+        self.loop_task: asyncio.Task | None = None
         self.send_lock = asyncio.Lock()
         self.tasks: set[asyncio.Task] = set()
         self.size: tuple[int, int] | None = None
@@ -65,32 +69,53 @@ class CaptureSession:
 
     # analysis loop: always the newest frame, so a slow chip never builds a backlog --------------
     async def analysis_loop(self) -> None:
-        while not self.closed:
+        while not self.closed and not self.stopping:
             await self.new_frame.wait()
             self.new_frame.clear()
-            if self.latest is None:
+            if self.latest is None or self.stopping:
                 continue
             t, jpeg = self.latest
             try:
                 rgb = await asyncio.to_thread(decode_jpeg, jpeg)
                 self.size = (rgb.shape[1], rgb.shape[0])
-                f = await analyze(rgb, t, self.runner, priority=vision.LIVE)
-            except Exception as e:  # noqa: BLE001
+                f = await self.analyzer.push(rgb, t)   # the previous frame's analysis (None for the first)
+            except Exception as e:  # noqa: BLE001 - a bad frame is skipped; the next one goes on
                 log.exception("analyze")
                 await self.send({"type": "error", "message": f"analysis failed: {e}"})
                 continue
-            self.frames.append(f)
-            msg = {"type": "analysis", **{k: f[k] for k in ("t", "hands", "pose", "head", "gaze", "objects", "size", "timing_ms",
-                                                         "served_by", "unavailable")}}
-            for hd in msg["hands"]:
-                hd.pop("rotmats", None)
-            await self.send(msg)
-            for ev in self.seg.update(f):
-                await self.send(ev)
-                if ev["type"] == "event" and ev["kind"] == "grasp":
-                    self.maybe_prepare(ev)
-                elif ev["type"] == "step":
-                    self.maybe_ask(ev["step"])
+            if f is not None:
+                await self._handle(f)
+
+    async def drain(self) -> None:
+        """Stop analysing new frames and finish the one in flight, so the last frame reaches the tracks and the
+        step segmenter, in order, before the capture is saved."""
+        self.stopping = True
+        self.new_frame.set()
+        if self.loop_task is not None:
+            await asyncio.wait([self.loop_task])
+        try:
+            f = await self.analyzer.flush()
+        except Exception as e:  # noqa: BLE001
+            log.exception("analyze")
+            await self.send({"type": "error", "message": f"analysis failed: {e}"})
+            return
+        if f is not None:
+            await self._handle(f)
+
+    async def _handle(self, f: dict) -> None:
+        """One analysed frame: keep it, show it, and feed the step segmenter (and the coach)."""
+        self.frames.append(f)
+        msg = {"type": "analysis", **{k: f[k] for k in ("t", "hands", "pose", "head", "gaze", "objects", "size", "timing_ms",
+                                                     "served_by", "unavailable")}}
+        for hd in msg["hands"]:
+            hd.pop("rotmats", None)
+        await self.send(msg)
+        for ev in self.seg.update(f):
+            await self.send(ev)
+            if ev["type"] == "event" and ev["kind"] == "grasp":
+                self.maybe_prepare(ev)
+            elif ev["type"] == "step":
+                self.maybe_ask(ev["step"])
 
     # The LLM and TTS take ~8 s together, so the question is written while the step is still under way
     # (at the grasp) and spoken as soon as the step ends.
@@ -230,7 +255,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
     s = CaptureSession(ws, skill_id)
     s.jpeg_ts = []
     speech.GATE.session_opened()
-    loop = asyncio.create_task(s.analysis_loop())
+    loop = s.loop_task = asyncio.create_task(s.analysis_loop())
     try:
         while True:
             try:
@@ -253,6 +278,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
             elif kind in ("answer", "say"):
                 s.spawn(s.answer(msg))
             elif kind == "stop":
+                await s.drain()
                 # A coach question still being voiced must not hold the recording: wait briefly, then save.
                 if s.tasks:
                     await asyncio.wait(list(s.tasks), timeout=3.0)
@@ -265,6 +291,7 @@ async def run(ws: WebSocket, skill_id: str) -> None:
         speech.GATE.session_closed()
         s.new_frame.set()
         loop.cancel()
+        s.analyzer.cancel()
         if s.prepared:
             for k in ("text", "audio"):
                 s.prepared[k].cancel()
