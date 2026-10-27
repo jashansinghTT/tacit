@@ -168,7 +168,7 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
         if st["why_source"] != "expert" and st["index"] in pending and not any(q.get("step_index") == st["index"] for q in skill.get("qa", [])):
             skill.setdefault("qa", []).append({"step_index": st["index"], "step_id": st["id"], "t": st["t_end"],
                                                "question": pending[st["index"]], "answer": None, "pending": True})
-    title = struct.get("title") or skill.get("title")
+    title = skill["title"] if (load_skill(skill_id) or {}).get("title_locked") else (struct.get("title") or skill.get("title"))
     if skill.get("test") and not title.startswith("QA "):
         title = "QA " + title
     skill.update({"title": title, "summary": struct.get("summary", ""), "steps": out_steps,

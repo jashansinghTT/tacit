@@ -266,6 +266,8 @@ async def skills_patch(skill_id: str, body: dict):
     for k in ("title", "summary"):
         if k in body:
             sk[k] = body[k]
+    if body.get("title"):
+        sk["title_locked"] = True  # the writer will not rename it
     if str(body.get("title", "")).startswith("QA "):
         sk["test"] = True
     if "steps" in body:
