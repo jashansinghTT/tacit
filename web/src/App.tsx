@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { TopBar } from '@/components/layout/TopBar'
 import { Tour } from '@/components/layout/Tour'
 import { Toaster } from '@/components/ui'
@@ -31,9 +31,13 @@ function PageFallback() {
   )
 }
 
+/**
+ * Enter-only page transition keyed by route. (An exit animation with AnimatePresence could get
+ * stuck on a stale page when lazy routes suspended during quick successive navigation.)
+ */
 function Transition({ children }: { children: ReactNode }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
       {children}
     </motion.div>
   )
@@ -67,10 +71,9 @@ export default function App() {
         Skip to content
       </a>
       <TopBar />
-      <Suspense fallback={<PageFallback />}>
-        <AnimatePresence mode="wait" initial={false}>
-          <Transition key={key}>
-            <Routes location={location}>
+      <Transition key={key}>
+        <Suspense fallback={<PageFallback />}>
+          <Routes location={location}>
               <Route path="/" element={<Landing />} />
               <Route path="/studio" element={<Studio />} />
               <Route path="/skills" element={<Skills />} />
@@ -88,10 +91,9 @@ export default function App() {
               <Route path="/box" element={<BoxPage />} />
               <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Transition>
-        </AnimatePresence>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </Transition>
       <Tour />
       <Toaster />
     </div>

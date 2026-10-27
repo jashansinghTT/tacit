@@ -31,7 +31,7 @@ export function LatencyHud({ timing, served, stats, live }: { timing: Record<str
                     {r.label}
                     {hands}
                   </span>
-                  {s && s.backend !== 'tt' && s.backend !== 'cpu' ? <BackendBadge backend={s.backend} model={s.model} /> : <ChipTag chip={s?.chip ?? r.chip} />}
+                  {s && s.backend !== 'tt' ? <BackendBadge backend={s.backend} model={s.model} chip={s.chip} /> : <ChipTag chip={s?.chip ?? r.chip} />}
                 </span>
                 <span className={cn('telemetry shrink-0', ms ? 'text-fg' : 'text-fg-faint')}>{ms ? `${ms.toFixed(1)} ms` : '–'}</span>
               </div>

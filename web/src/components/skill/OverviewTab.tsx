@@ -126,7 +126,7 @@ export function OverviewTab({ skill, tracks, pb }: { skill: Skill; tracks: Track
               {skill.models_used.map((m) => (
                 <tr key={m.model}>
                   <td className="px-4 py-2 text-fg-muted">{m.model}</td>
-                  <td className="py-2">{m.backend === 'tt' ? <ChipTag chip={m.chip} /> : m.backend === 'cpu' && m.model === 'MediaPipe' ? <ChipTag chip={null} /> : <BackendBadge backend={m.backend} />}</td>
+                  <td className="py-2">{m.backend === 'tt' ? <ChipTag chip={m.chip} /> : <BackendBadge backend={m.backend} model={m.model} chip={m.chip} />}</td>
                   <td className="telemetry py-2 text-right text-fg-subtle">{fmtInt(m.calls)}</td>
                   <td className="telemetry px-4 py-2 text-right text-fg">{fmtMs(m.p50_ms)}</td>
                 </tr>

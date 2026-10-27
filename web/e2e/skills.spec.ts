@@ -47,3 +47,23 @@ test('an expert can answer a pending question by typing', async ({ page }) => {
   await card.getByTestId('save-answer').click()
   await expect(page.getByTestId('toast').first()).toContainText(/Answer saved|Could not/)
 })
+
+// Use case 5: a supervisor audits a worker's run against the skill.
+test('a supervisor audits a worker run against the skill', async ({ page }) => {
+  test.setTimeout(REAL ? 600_000 : 60_000)
+  if (REAL) {
+    const id = await writableSkillId(page)
+    test.skip(!id, 'no test skill to audit on this box')
+    await page.goto(`/skills/${id}?tab=audit`)
+  } else {
+    await openReadySkill(page)
+    await page.getByTestId('tab-audit').click()
+  }
+  await page.getByTestId('audit-worker').fill('QA e2e worker')
+  await page.getByTestId('audit-file').setInputFiles(new URL('../public/mock/samples/sort.mp4', import.meta.url).pathname)
+  await page.getByTestId('audit-start').click()
+  await expect(page.getByTestId('processing-panel')).toBeVisible()
+  await expect(page.getByTestId('audit-report')).toBeVisible({ timeout: REAL ? 540_000 : 30_000 })
+  await expect(page.getByTestId('audit-narrative')).not.toBeEmpty()
+  await expect(page.locator('[data-testid^="audit-step-"]').first()).toBeVisible()
+})
