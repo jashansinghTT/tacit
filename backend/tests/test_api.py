@@ -150,8 +150,9 @@ def test_tutor_streams_text_and_sentence_audio(api):
     with api.stream("POST", f"/api/tutor/{sid}/ask", json={"question": "How do I hold it?"}) as r:
         body = "".join(r.iter_text())
     events = [line.split(": ", 1)[1] for line in body.splitlines() if line.startswith("event: ")]
-    assert events[0] == "delta" and "audio" in events and events[-1] == "done"
-    done = json.loads(body.strip().splitlines()[-1].split("data: ", 1)[1])
+    assert events[0] == "delta" and "audio" in events and "done" in events and events[-1] == "end"
+    done_line = next(l for l in body.splitlines() if l.startswith("data: ") and '"audio_parts"' in l)
+    done = json.loads(done_line.split("data: ", 1)[1])
     assert done["text"].startswith("Maria says")
 
 

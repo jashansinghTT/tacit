@@ -152,7 +152,7 @@ Server: `{"type": "analysis", ...}` (hands only), `{"type": "feedback", "step_in
 ### `POST /api/tutor/{skill_id}/ask` `{"question": "...", "lang": "en"}` or multipart `audio`
 → `text/event-stream`: `event: transcript` `{"text"}` (if audio was sent), `event: delta` `{"text": ".."}` × n,
 `event: audio` `{"index": 0, "audio": "/media/tts/...wav", "duration": 2.1}` × n (one per sentence, in order; play them
-back to back as they arrive), `event: done` `{"text": "...", "audio_parts": 2, "sources": ["st2"], "question": "..."}`.
+back to back as they arrive), `event: done` `{"text": "...", "audio_parts": 2, "sources": ["st2"], "question": "..."}` as soon as the text is final (audio events for the remaining sentences may follow it), then `event: end` closes the stream.
 Multipart form fields: `audio` (wav/webm), `question`, `lang`, `history` (JSON list of `{role, content}`).
 
 ## Robot Lab

@@ -185,4 +185,19 @@ async def test_tts_gate_serves_interactive_before_batch():
     gate.release()
     await asyncio.gather(*tasks)
     assert order == ["coach", "batch-2", "batch-3"]
-    assert gate.waiting() == {"interactive": 0, "batch": 0, "busy": False}
+    assert gate.waiting() == {"listen": 0, "interactive": 0, "batch": 0, "busy": False}
+
+
+def test_sentence_split_and_wav_concat():
+    import io, wave
+    from tacit.models.speech import _concat_wavs, _sentences
+    assert _sentences("Step 1. Pick up the cup. Hold it by the body so it does not slip.") == \
+        ["Step 1. Pick up the cup.", "Hold it by the body so it does not slip."]
+    def wav(n):
+        b = io.BytesIO()
+        with wave.open(b, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b"\x01\x00" * n)
+        return b.getvalue()
+    out = _concat_wavs([wav(1600), wav(3200)])
+    with wave.open(io.BytesIO(out)) as w:
+        assert w.getnframes() == 1600 + 3200 + int(16000 * 0.12)

@@ -71,8 +71,8 @@ async def backfill_ready_skills() -> None:
     from .pipeline.process import narrate_rest, narration_lines
     from .storage import media_dir
     with session() as s:
-        ids = [r.id for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all()]
-    for sid in ids:
+        ids = [r.id for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if not r.test]
+    for sid in ids:  # previews first (CPU, fast), then narration (the speech chip, slow)
         sk = load_skill(sid)
         if not sk:
             continue
@@ -84,7 +84,9 @@ async def backfill_ready_skills() -> None:
                 sk = load_skill(sid)
                 sk["motion_thumb"] = media_url(mt)
                 save_skill(sk)
-        missing = [(k, t) for k, t in narration_lines(sk) if k not in (sk.get("narration") or {})]
+    for sid in ids:
+        sk = load_skill(sid)
+        missing = [(k, t) for k, t in narration_lines(sk) if k not in (sk.get("narration") or {})] if sk else []
         if missing:
             await narrate_rest(sid, missing)
 
@@ -613,6 +615,9 @@ async def tutor_ask(skill_id: str, request: Request):
             yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
             return
         speak(pending)
+        sources = [f"st{st['index']}" for st in sk.get("steps", []) if st.get("title") and st["title"].lower()[:12] in text.lower()]
+        # The text is final now; the remaining sentences' audio follows, then `end` closes the stream.
+        yield f"event: done\ndata: {json.dumps({'text': text.strip(), 'audio_parts': len(voices), 'sources': sources, 'question': question})}\n\n"
         for i in range(sent, len(voices)):
             try:
                 await voices[i]
@@ -620,8 +625,7 @@ async def tutor_ask(skill_id: str, request: Request):
                 pass
             for a in ready_audio():
                 yield f"event: audio\ndata: {json.dumps(a)}\n\n"
-        sources = [f"st{st['index']}" for st in sk.get("steps", []) if st.get("title") and st["title"].lower()[:12] in text.lower()]
-        yield f"event: done\ndata: {json.dumps({'text': text.strip(), 'audio_parts': len(voices), 'sources': sources, 'question': question})}\n\n"
+        yield "event: end\ndata: {}\n\n"
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
