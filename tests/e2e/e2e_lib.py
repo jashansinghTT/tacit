@@ -21,6 +21,8 @@ EVIDENCE = REPO / ".orchestration" / "evidence" / "qa"
 DATA = Path(os.environ.get("TACIT_DATA", Path.home() / "tacit" / "data"))
 MEDIA_DIR = Path(os.environ.get("TACIT_E2E_MEDIA", DATA / "e2e"))
 QA_PREFIX = "QA "
+# What this run made, removed at the end of the session (conftest.teardown_created).
+CREATED: dict[str, list[str]] = {"skills": [], "listings": []}
 
 
 class Recorder:

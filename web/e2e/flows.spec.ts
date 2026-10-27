@@ -107,7 +107,17 @@ async function api<T>(page: Page, url: string, init?: { method?: string; data?: 
   return (await r.json()) as T
 }
 
+/** What this run made; scripts/e2e/teardown.py removes it after the run. */
+function remember(kind: 'skills' | 'listings', id: string) {
+  fs.mkdirSync(RUN_DIR, { recursive: true })
+  const file = path.join(RUN_DIR, 'created.json')
+  const made = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { skills: [], listings: [] }
+  if (!made[kind].includes(id)) made[kind].push(id)
+  fs.writeFileSync(file, JSON.stringify(made, null, 2))
+}
+
 async function qaTitle(page: Page, skillId: string) {
+  remember('skills', skillId)
   const sk = await api<{ title: string }>(page, `/api/skills/${skillId}`)
   if (!sk.title.startsWith('QA ')) await api(page, `/api/skills/${skillId}`, { method: 'PATCH', data: { title: `QA ${sk.title}` } })
 }
@@ -471,6 +481,7 @@ test.describe('the rest', () => {
     await page.getByTestId('open-listing').click()
     await expect(page).toHaveURL(/\/exchange\/lst_/)
     const listingId = page.url().split('/exchange/')[1].split(/[?#]/)[0]
+    remember('listings', listingId)
     run.note(`listing ${listingId}`)
     // The buyer licenses it.
     await page.evaluate(() => localStorage.setItem('tacit.persona', 'u_atlas'))

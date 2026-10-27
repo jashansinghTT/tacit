@@ -78,6 +78,7 @@ set +e
 QA_REPO="$QA" npx playwright test -c e2e/qa.config.ts "$@" 2>&1 | tee "$RUN/playwright.log"
 status=${PIPESTATUS[0]}
 set -e
+python3 "$QA/scripts/e2e/teardown.py" "$RUN" "$status" || true
 python3 "$QA/scripts/e2e/report.py" || true
 log "playwright exit $status"
 exit "$status"

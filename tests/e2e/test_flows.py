@@ -249,6 +249,7 @@ def test_3_live_capture_coach_and_answer(api, rec, scratch):
     with rec.time("create live skill", limit_s=2):
         sid = api.post("/api/skills", json={"source": "live", "title": lib.QA_PREFIX + "live capture"},
                        headers={"X-Tacit-User": "u_maria"}).json()["skill_id"]
+    lib.CREATED["skills"].append(sid)
     log = lib.run(_capture(sid, frames, wav.read_bytes(), rec, max_s=float(os.environ.get("QA_CAPTURE_MAX_S", 150))))
     summary = {k: (v if not isinstance(v, list) else len(v)) for k, v in log.items()}
     rec.save("capture_log.json", log)
@@ -563,6 +564,7 @@ def test_6_exchange_list_license_pack_earnings(api, rec, ready_skill):
         r = api.post("/api/exchange/listings", json=body, headers={"X-Tacit-User": expert})
     assert r.status_code == 200, f"listing refused: {r.status_code} {r.text[:300]}"
     listing = r.json()
+    lib.CREATED["listings"].append(listing["id"])
     rec.save("listing.json", listing)
     assert listing["verified"] and listing["consent"]["raw_video"] is False
     assert listing["thumb"] and listing["thumb"] != sk.get("thumb"), "the listing shows a video frame to buyers, not the motion thumb"

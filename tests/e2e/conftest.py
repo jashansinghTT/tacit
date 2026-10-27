@@ -62,11 +62,37 @@ def pytest_runtest_makereport(item, call):
         }
 
 
+CREATED = lib.CREATED
+
+
+def teardown_created(exitstatus) -> list[str]:
+    """Remove what this run made. Listings (with their licenses and ledger entries) always go, so QA royalties never
+    reach the demo's earnings; skills go when every flow passed (kept for the owners to inspect otherwise)."""
+    if os.environ.get("QA_KEEP"):
+        return ["QA_KEEP set: nothing removed"]
+    done = []
+    with lib.client() as c:
+        for lid in CREATED["listings"]:
+            r = c.delete(f"/api/exchange/listings/{lid}")
+            done.append(f"listing {lid}: {r.status_code}")
+        if exitstatus == 0:
+            for sid in CREATED["skills"]:
+                r = c.delete(f"/api/skills/{sid}")
+                done.append(f"skill {sid}: {r.status_code}")
+        elif CREATED["skills"]:
+            done.append(f"kept skills for inspection: {', '.join(CREATED['skills'])}")
+    return done
+
+
 def pytest_sessionfinish(session, exitstatus):
+    try:
+        cleanup = teardown_created(exitstatus)
+    except Exception as e:  # noqa: BLE001
+        cleanup = [f"teardown failed: {e}"]
     out = {"run_id": RUN_ID, "kind": "api", "base": lib.BASE, "started": STARTED.isoformat(timespec="seconds"),
            "finished": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "git": subprocess.run(["git", "-C", str(lib.REPO), "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip(),
-           "tests": list(RESULTS.values())}
+           "tests": list(RESULTS.values()), "cleanup": cleanup}
     (RUN_DIR / "results.json").write_text(json.dumps(out, indent=2, ensure_ascii=False))
     report = lib.REPO / "scripts" / "e2e" / "report.py"
     if report.exists() and not os.environ.get("QA_NO_REPORT"):
@@ -104,6 +130,7 @@ def processed(api) -> SkillRun:
                      headers={"X-Tacit-User": "u_maria"})
     r.raise_for_status()
     sid = r.json()["skill_id"]
+    CREATED["skills"].append(sid)
     created_s = time.perf_counter() - t0
     api.patch(f"/api/skills/{sid}", json={"title": lib.QA_PREFIX + sample.get("title", "sample")}).raise_for_status()
     t1 = time.perf_counter()
