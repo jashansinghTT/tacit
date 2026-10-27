@@ -331,7 +331,7 @@ async def _practice(session_id: str, frames: list[Path], step_index: int, rec: l
 
 
 def _sse(api, path: str, rec: lib.Recorder, label: str, **kw) -> dict:
-    out: dict = {"delta": [], "audio": [], "done": None, "transcript": None, "error": None}
+    out: dict = {"delta": [], "audio": [], "done": None, "end": False, "transcript": None, "error": None}
     t0 = time.perf_counter()
     with api.stream("POST", path, timeout=120, **kw) as r:
         assert r.status_code == 200, f"{path} -> {r.status_code} {r.read()[:300]}"
@@ -355,8 +355,11 @@ def _sse(api, path: str, rec: lib.Recorder, label: str, **kw) -> dict:
                     rec.mark(f"{label}: question transcribed", now, limit_s=3)
                     out["transcript"] = data
                 elif event == "done":
-                    rec.mark(f"{label}: answer complete", now, limit_s=30)
+                    rec.mark(f"{label}: answer text complete", now, limit_s=30)
                     out["done"] = data
+                elif event == "end":
+                    rec.mark(f"{label}: last sentence spoken (stream end)", now, limit_s=45)
+                    out["end"] = True
                 elif event == "error":
                     out["error"] = data
     return out
@@ -380,6 +383,12 @@ def test_4_learn_narration_practice_tutor(api, rec, scratch, ready_skill):
         a = lib.fetch(api, lesson["steps"][0]["narration_audio"])
     assert a.content[:4] == b"RIFF" and len(a.content) > 8000, "narration is not a playable WAV"
     assert lib.fetch(api, lesson["intro_audio"]).content[:4] == b"RIFF"
+
+    # the lesson in the trainee's language (use case 6)
+    with rec.time("lesson in Spanish (first request translates)", limit_s=30):
+        es = api.get(f"/api/learn/lessons/{sid}", params={"lang": "es"}, timeout=180).json()
+    assert es["steps"] and es["steps"][0]["instruction"] != lesson["steps"][0]["instruction"], "the Spanish lesson is not translated"
+    rec.note(f"es step 1: {es['steps'][0]['instruction'][:80]}")
 
     # practice: the expert's own clip for step 1 should score well and get a concrete hint
     with rec.time("POST /api/learn/sessions", limit_s=1):
@@ -409,6 +418,7 @@ def test_4_learn_narration_practice_tutor(api, rec, scratch, ready_skill):
     assert not text["error"], f"tutor error: {text['error']}"
     assert text["delta"] and text["done"] and len(text["done"]["text"]) > 20, "tutor gave no answer"
     assert text["audio"], "the tutor's answer was not spoken"
+    assert text["end"], "the tutor stream did not send end"
     assert lib.fetch(api, text["audio"][0]["audio"]).content[:4] == b"RIFF"
 
     # tutor by voice
@@ -555,6 +565,9 @@ def test_6_exchange_list_license_pack_earnings(api, rec, ready_skill):
     listing = r.json()
     rec.save("listing.json", listing)
     assert listing["verified"] and listing["consent"]["raw_video"] is False
+    assert listing["thumb"] and listing["thumb"] != sk.get("thumb"), "the listing shows a video frame to buyers, not the motion thumb"
+    if sk.get("motion_thumb"):
+        assert listing["thumb"] == sk["motion_thumb"]
     with rec.time("browse verified listings", limit_s=1):
         found = api.get("/api/exchange/listings", params={"verified": "true", "q": "QA", "include_test": 1}).json()
     assert any(x["id"] == listing["id"] for x in found), "the new listing is not in the verified listings"

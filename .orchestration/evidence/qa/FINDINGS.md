@@ -18,21 +18,24 @@ it is fixed.
   `GET /api/jobs/{id}`.
 - Evidence: `~/tacit/data/tacit.db` table `jobrow` (`job_d78c0842`); dev run `dev-iter1` (test_2 lost its job).
 
-## QA-2 sim: the BC policy scores 0% on a two-object program (4 ops); 95% on a one-object program
+## QA-2 backend (+ sim): a policy trained on one program is evaluated on another (0/20)
 
-- Owner: sim (tacit-sim). State: open. Found 2026-10-27 19:45Z.
-- Seen: Robot Lab train (200 demos, 30 epochs) then evaluate (20 trials, seed 0) through the backend API.
-  - Program `[pick knife, place tray, pick cup, place tray]` (written by the LLM for an uploaded clip, skill
-    `sk_5a57754d`): scripted demos 75% success, final loss 0.025, **policy 0/20**; every trial
-    `timed out during pick knife` (990 steps), i.e. it never finishes the first pick.
-  - Program `[pick handbag, place microwave]` (live capture skill `sk_63c489a7`): scripted 90%, **policy 19/20**.
-- Expected: SPEC 9.5 wants >= 80% over 20 trials for the skills the pipeline makes. Programs with two or more
-  objects are the common case (both seeded samples list several objects).
-- Repro: `POST /api/robot/sk_5a57754d/train {"demos":200,"epochs":30}`, then `POST /api/robot/sk_5a57754d/evaluate
-  {"trials":20,"seed":0}`; or in `tacit_sim` with that program. Also worth checking: scripted demos at 75% means
-  a quarter of the training set are failures; are they filtered out before training?
-- Evidence: `runs/dev-iter2/test_5_robot_lab_train_evaluate_run/` (train_job.json, evaluate_job.json) from a dev
-  run (not committed; summary here).
+- Owner: backend (lead) for program consistency and the writer; sim added a guard. State: root cause found by
+  sim (2026-10-27 20:20Z); sim fix on work/sim 87fc566; backend part open. Found 2026-10-27 19:45Z.
+- Seen: Robot Lab train (200 demos, 30 epochs) then evaluate (20 trials) on `sk_5a57754d`: policy 0/20, every
+  trial `timed out during pick knife`. A one-object skill (`sk_63c489a7`) scored 19/20.
+- Root cause (sim, from `~/tacit/data/skills/sk_5a57754d`): training ran while the skill had no `robot.program`
+  yet, so `program_for()` supplied its fallback `[pick knife, place tray, pick cup, place tray]`
+  (robot/demos/meta.json); the writer then stored `[pick knife, pick cup]` and evaluation used that. Same
+  checkpoint: 90% on the training program, 0% on the current one. (QA's dev run trained before processing had
+  finished; the suite now refuses to run F4 to F6 on a skill that is not ready.)
+- Product issues that remain: (1) the backend lets train/evaluate/run use different programs; store the training
+  program with the policy and invalidate the policy when `robot.program` changes. (2) The writer emitted picks
+  with no places; if each pick should go somewhere, the write stage must emit the place ops. (3) Training on a
+  skill that is still processing should be refused or use the final program.
+- Sim side: `evaluate_policy` and `Runner(mode="policy")` now raise `ProgramMismatch` naming both programs instead
+  of scoring 0% silently; failed scripted demos were already excluded from training; `[knife -> tray, cup -> tray]`
+  trains to 20/20 on current sim code.
 
 ## QA-3 backend (+ speech): interactive TTS waits minutes behind batch narration, then times out
 
