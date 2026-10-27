@@ -5,9 +5,9 @@
 import { R } from '../main.js'
 import { clamp, inQuint, mix, outCubic, outExpo, prog, spring } from '../lib/ease.js'
 
-const TILE = 360, GAP = 48
+const TILE = 390, GAP = 36
 const LEFT = (1920 - (4 * TILE + 3 * GAP)) / 2
-const TOP = 360
+const TOP = 400
 
 export default function box(T) {
   const s = { id: 'box', z: 9 }
@@ -31,21 +31,21 @@ export default function box(T) {
       head.style.cssText += ';left:52px;top:52px;font-size:22px;color:#6e7580'
       const names = c.models.map((m, j) => {
         const n = R.el('div', 'abs', el, m.name)
-        n.style.cssText = `left:52px;top:${118 + j * 50}px;font-size:${c.models.length > 2 ? 33 : 40}px;font-weight:550;letter-spacing:-0.02em;color:#eceef1;white-space:nowrap`
+        n.style.cssText = `left:52px;top:${122 + j * 54}px;font-size:${c.models.length > 2 ? 37 : 44}px;font-weight:550;letter-spacing:-0.02em;color:#eceef1;white-space:nowrap`
         return n
       })
       return { el, die, head, names }
     })
     const ctr = R.el('div', 'abs', root)
-    ctr.style.cssText = `left:${LEFT}px;top:96px;display:flex;gap:90px;align-items:flex-end`
+    ctr.style.cssText = 'left:0;right:0;top:90px;display:flex;justify-content:center;gap:110px;align-items:flex-end'
     nums = [['0', 'models'], ['0', 'Tenstorrent chips'], ['1', 'box']].map(([v, l]) => {
       const g = R.el('div', '', ctr)
       g.style.cssText = 'display:flex;align-items:baseline;gap:22px'
       const n = R.el('div', 'huge', g, v)
-      n.style.cssText += ';font-size:190px;font-variant-numeric:tabular-nums'
+      n.style.cssText += ';font-size:230px;font-variant-numeric:tabular-nums'
       const lab = R.el('div', 'mono', g, l)
-      lab.style.cssText += ';font-size:28px;color:#a3a9b2'
-      return { g, n }
+      lab.style.cssText += ';font-size:30px;color:#a3a9b2'
+      return { g, n, lab }
     })
     outline = R.el('div', 'abs', root)
     outline.innerHTML = `<svg width="1920" height="1080" style="position:absolute;inset:0"><rect x="${LEFT - 36}" y="${TOP - 36}" width="${4 * TILE + 3 * GAP + 72}" height="${TILE + 72}" rx="44" fill="none" stroke="#3cd7ff" stroke-width="3" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg>`
@@ -61,7 +61,7 @@ export default function box(T) {
       const t0 = b23 + i * beat
       const k = spring(t, t0, { zeta: 0.55, omega: 18 })
       const on = t >= t0
-      if (on) { models += chips[i].models.length; lit++ }
+      if (t >= t0 + 0.06) { models += chips[i].models.length; lit++ } // the count steps as the tile lands
       const glow = on ? Math.exp(-(t - t0) * 3) : 0
       tile.el.style.boxShadow = on
         ? `inset 0 0 0 2px rgba(60,215,255,${0.55 + 0.45 * glow}), 0 0 ${60 + 80 * glow}px -10px rgba(60,215,255,${0.35 + 0.4 * glow})`
@@ -78,11 +78,16 @@ export default function box(T) {
     })
     nums[0].n.textContent = String(models)
     nums[1].n.textContent = String(lit)
+    nums[0].lab.textContent = models === 1 ? 'model' : 'models'
+    nums[1].lab.textContent = lit === 1 ? 'Tenstorrent chip' : 'Tenstorrent chips'
     nums[0].g.style.opacity = nums[1].g.style.opacity = String(prog(t, b23 - 0.05, 0.3))
-    const kb = prog(t, b24, 0.9, outCubic)
+    // The outline closes and "1 box" lands exactly on the breakdown (bar 24).
+    const kb = prog(t, b24 - 0.6, 0.6, outCubic)
     outline.querySelector('rect').setAttribute('stroke-dashoffset', String(1 - kb))
-    nums[2].g.style.opacity = String(prog(t, b24 + 0.3, 0.5, outExpo))
-    boxLabel.style.opacity = String(prog(t, b24 + 0.6, 0.6, outExpo))
+    const kn = spring(t, b24, { zeta: 0.55, omega: 16 })
+    nums[2].g.style.opacity = String(t >= b24 ? 1 : 0)
+    nums[2].g.style.transform = `scale(${mix(1.25, 1, Math.min(1, kn))})`
+    boxLabel.style.opacity = String(prog(t, b24 + 0.2, 0.6, outExpo))
     flash.style.opacity = String(t >= b23 ? 0.08 * Math.exp(-(t - b23) * 8) : 0)
     const out = prog(t, b25 - 0.3, 0.3, inQuint)
     s.layer.style.opacity = String(1 - out)

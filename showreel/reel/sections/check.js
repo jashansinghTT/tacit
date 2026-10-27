@@ -43,8 +43,8 @@ export default function check(T) {
     const u = prog(t, b13, T.bar(14) - b13 + 0.6, inOutCubic)
     const split = prog(t, T.bar(14), 0.9, inOutCubic)
     return {
-      yaw: mix(0, -0.55, u) + 0.32 * Math.sin((t - T.bar(14)) * 0.7) * split,
-      pitch: mix(0, 0.16, u),
+      yaw: mix(0, -0.7, u) + 0.32 * Math.sin((t - T.bar(14)) * 0.7) * split,
+      pitch: mix(0, 0.2, u),
       f: 1500, dist: 2.2, scale: mix(1.9, 1.45, split),
       cx: mix(960, 520, split), cy: mix(540, 560, split),
     }
@@ -139,17 +139,24 @@ export default function check(T) {
       }
       const p = P(x, y, z)
       if (!p) continue
-      let sx = p[0], sy = p[1], r = cl.col[i * 3], g = cl.col[i * 3 + 1], b = cl.col[i * 3 + 2], sz = size
+      // Depth cue: nearer points larger and brighter.
+      const dn = clamp((p[2] - view.dist + 0.35) / 0.7)
+      const shade = mix(1.28, 0.62, dn)
+      let sx = p[0], sy = p[1], sz = size * mix(1.3, 0.8, dn)
+      let r = cl.col[i * 3] * shade, g = cl.col[i * 3 + 1] * shade, b = cl.col[i * 3 + 2] * shade
       if (morph) {
         const e = morph(i)
         if (e < 1) {
           const lift = Math.sin(e * Math.PI) * 60 * (0.5 + delay[i])
           sx = mix(start[i * 2], sx, e)
           sy = mix(start[i * 2 + 1], sy, e) - lift
-          r = mix(startCol[i * 3], r, e); g = mix(startCol[i * 3 + 1], g, e); b = mix(startCol[i * 3 + 2], b, e)
-          sz = mix(5, size, e)
+          // Keep the picture's own colours through the flight; settle into the cloud's at the end.
+          const c = clamp((e - 0.7) / 0.3)
+          r = mix(startCol[i * 3] * 1.1, r, c); g = mix(startCol[i * 3 + 1] * 1.1, g, c); b = mix(startCol[i * 3 + 2] * 1.1, b, c)
+          sz = mix(5, sz, e)
         }
       }
+      r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b)
       if (glitch > 0.03) {
         const dx = 22 * glitch * D
         target.splatCh(sx * D + dx, sy * D, 0, r, sz)

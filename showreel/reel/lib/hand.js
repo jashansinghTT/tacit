@@ -145,3 +145,63 @@ export function drawHand(g, pts, { color = '#3cd7ff', width = 3, glow = 1, alpha
   }
   g.restore()
 }
+
+/**
+ * Follow two hands through [t0, t1] by continuity rather than by the tracker's left/right label
+ * (which can flip from frame to frame): each analysed frame's hands are matched to the track whose
+ * last wrist is nearest. Detections that collapse (bounding box under 45% of that track's median)
+ * are dropped. Returns { at(id, t) -> lm2d or null, alpha(id, t) } for ids 0 and 1.
+ */
+export function followHands(tracks, t0, t1) {
+  const frames = tracks.frames.filter((f) => f.t >= t0 - 0.2 && f.t <= t1 + 0.2)
+  const diag = (lm) => {
+    const xs = lm.map((p) => p[0]), ys = lm.map((p) => p[1])
+    return Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+  }
+  const last = [null, null]
+  const per = frames.map((f) => {
+    const out = [null, null]
+    const hs = f.hands.map((h) => h.lm2d)
+    if (hs.length === 2 && last[0] && last[1]) {
+      const d = (a, b) => Math.hypot(a[0][0] - b[0][0], a[0][1] - b[0][1])
+      const keep = d(hs[0], last[0]) + d(hs[1], last[1]) <= d(hs[0], last[1]) + d(hs[1], last[0])
+      out[0] = keep ? hs[0] : hs[1]
+      out[1] = keep ? hs[1] : hs[0]
+    } else {
+      for (const h of hs) {
+        const dist = (k) => (last[k] ? Math.hypot(h[0][0] - last[k][0][0], h[0][1] - last[k][0][1]) : 1e9)
+        let k = dist(0) <= dist(1) ? 0 : 1
+        if (out[k]) k = 1 - k
+        if (!last[0] && !last[1]) k = out[0] ? 1 : 0
+        out[k] = h
+      }
+    }
+    for (const k of [0, 1]) if (out[k]) last[k] = out[k]
+    return { t: f.t, h: out }
+  })
+  for (const k of [0, 1]) {
+    const ds = per.filter((p) => p.h[k]).map((p) => diag(p.h[k])).sort((a, b) => a - b)
+    const med = ds[ds.length >> 1] || 1
+    for (const p of per) if (p.h[k] && diag(p.h[k]) < 0.45 * med) p.h[k] = null
+  }
+  const around = (t) => {
+    let i = 0
+    while (i < per.length - 2 && per[i + 1].t <= t) i++
+    return [per[i], per[Math.min(i + 1, per.length - 1)]]
+  }
+  return {
+    at(k, t) {
+      const [a, b] = around(t)
+      if (!a.h[k] && !b.h[k]) return null
+      if (!a.h[k] || !b.h[k] || a === b) return a.h[k] || b.h[k]
+      const u = clamp((t - a.t) / (b.t - a.t))
+      return lerpPts(a.h[k], b.h[k], u)
+    },
+    /** Fade over a missing neighbour instead of popping. */
+    alpha(k, t) {
+      const [a, b] = around(t)
+      const u = b === a ? 0 : clamp((t - a.t) / (b.t - a.t))
+      return (a.h[k] ? 1 - u : 0) + (b.h[k] ? u : 0)
+    },
+  }
+}

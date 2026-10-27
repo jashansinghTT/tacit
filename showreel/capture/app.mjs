@@ -24,6 +24,11 @@ async function isolate(page, sel, { hideInside = [] } = {}) {
   await page.evaluate((sel) => window.dispatchEvent(new Event('resize')), sel)
 }
 
+/** Pause the virtual clock just ahead of the page's own time (it can run ahead of Node's). */
+async function pause(page, ms = 200) {
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + ms)
+}
+
 async function settle(page, ms) {
   await page.waitForTimeout(ms)
   await page.evaluate(() => document.fonts.ready)
@@ -43,11 +48,29 @@ const SHOTS = {
   async robot(page) {
     await page.goto(BASE + '/robot/sk_c28f1461', { waitUntil: 'networkidle' })
     await settle(page, 3000)
-    await page.evaluate(() => document.querySelector('[data-testid=mode-replay]').click())
+    // --mode replay (her wrist path) or policy (the skill-trained policy on a seeded scene).
+    const mode = opt('mode', 'replay')
+    await page.evaluate((m) => document.querySelector(`[data-testid=mode-${m}]`).click(), mode)
     await page.waitForTimeout(500)
-    await page.evaluate(() => document.querySelector('[data-testid=run-replay]').click())
+    await page.evaluate((m) => document.querySelector(`[data-testid=run-${m}]`).click(), mode)
     await page.locator('[data-testid=run-status][data-status=done]').waitFor({ timeout: 180000 })
     await settle(page, 1000)
+    const scrub = (t) => page.evaluate((t) => {
+      const el = document.querySelector('input[aria-label="Scrub the run"]')
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, String(t))
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+    }, t)
+    console.log('run length', await page.evaluate(() => document.querySelector('input[aria-label="Scrub the run"]').max))
+    if (opt('probe-times', null)) {
+      // Stills at given run times, to pick the window worth recording.
+      await pause(page)
+      for (const pt of opt('probe-times').split(',').map(Number)) {
+        await scrub(pt)
+        await page.clock.runFor(100)
+        await page.screenshot({ path: `${OUT}/at_${pt}.jpg`, quality: 80, type: 'jpeg', timeout: 180000 })
+      }
+      process.exit(0)
+    }
     const at = Number(opt('at', 5.5))
     await page.evaluate((t) => {
       const el = document.querySelector('input[aria-label="Scrub the run"]')
@@ -60,7 +83,7 @@ const SHOTS = {
       await page.evaluate((v) => document.querySelector(`[data-testid=seg-${v}]`).click(), opt('view'))
       await page.waitForTimeout(600)
     }
-    await page.clock.pauseAt(Date.now() + 200)
+    await pause(page)
     console.log('sim clock', await page.locator('[data-testid=sim-clock]').innerText())
     await isolate(page, '[data-testid=sim-viewer]', { hideInside: ['[data-testid=run-status]', '[data-testid^=seg-]', 'button'] })
     await page.waitForTimeout(800)
@@ -85,6 +108,16 @@ const STILLS = [
     act: async (page) => { await page.selectOption('[data-testid=lesson-lang]', 'es'); await page.waitForTimeout(9000) } },
   { name: 'lesson_3d', url: '/learn/sk_c28f1461', persona: 'u_sam', wait: 4000,
     act: async (page) => { await page.locator('[data-testid=seg-3d]').click(); await page.waitForTimeout(6000) } },
+  { name: 'lesson_3d_close', url: '/learn/sk_c28f1461', persona: 'u_sam', wait: 4000, viewport: true,
+    act: async (page) => {
+      // The lesson's own 3D viewer, dollied in (wheel) so the twin fills the frame.
+      await page.locator('[data-testid=seg-3d]').click()
+      await page.waitForTimeout(4000)
+      const box = await page.evaluate(() => { const r = document.querySelector('[data-testid=watch-stage]').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } })
+      await page.mouse.move(box.x + box.width * 0.42, box.y + box.height * 0.55)
+      for (let i = 0; i < Number(opt('zoom', 5)); i++) { await page.mouse.wheel(0, -160); await page.waitForTimeout(250) }
+      await page.waitForTimeout(3000)
+    } },
   { name: 'earnings', url: '/earnings', persona: 'u_maria', wait: 4000 },
   { name: 'exchange', url: '/exchange', persona: 'u_atlas', wait: 4000 },
   { name: 'box', url: '/box', persona: 'u_maria', wait: 5000 },
@@ -131,7 +164,7 @@ const { page } = await capturePage(browser, { persona: opt('persona', 'u_maria')
 mkdirSync(OUT, { recursive: true })
 await page.clock.install()
 const { frames, paused, step } = await SHOTS[shot](page)
-if (!paused) await page.clock.pauseAt(Date.now() + 500)
+if (!paused) await pause(page, 500)
 if (PROBE) {
   await page.screenshot({ path: `${OUT}/probe.png` })
   for (let i = 0; i < 3; i++) {

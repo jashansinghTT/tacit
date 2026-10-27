@@ -65,9 +65,9 @@ export default function title(T) {
         const w2 = Math.max(0, wave - d)
         g.globalAlpha = a * (1 - w2) ** 1.5
         g.strokeStyle = '#3cd7ff'
-        g.lineWidth = mix(6, 1, w2)
+        g.lineWidth = mix(10, 1.5, w2)
         g.beginPath()
-        g.arc(tx, ty, mix(20, 1150, w2), 0, Math.PI * 2)
+        g.arc(tx, ty, mix(20, 1500, w2), 0, Math.PI * 2)
         g.stroke()
       }
       g.restore()
@@ -88,7 +88,9 @@ export default function title(T) {
 
     // Slow push while it holds, then a fast push-out into the cut on the next bar.
     const out = prog(t, b10 - 0.32, 0.32, inQuint)
-    const scale = mix(1, 1.035, prog(t, b9, b10 - b9, (x) => x)) * mix(1, 1.6, inCubic(out))
+    // Camera kick on the drop (a damped overshoot from 6% in), then a slow push.
+    const kick = 1 + 0.06 * (1 - spring(t, b9, { zeta: 0.42, omega: 16 }))
+    const scale = kick * mix(1, 1.035, prog(t, b9, b10 - b9, (x) => x)) * mix(1, 1.6, inCubic(out))
     group.style.transform = `scale(${scale})`
     group.style.opacity = String(1 - out)
     group.style.filter = out > 0.001 ? `blur(${out * 6}px)` : 'none'

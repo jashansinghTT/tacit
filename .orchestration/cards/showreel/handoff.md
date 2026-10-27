@@ -1,0 +1,48 @@
+# Handoff: showreel (first cut)
+
+## What is done
+
+- **First cut**: `~/tacit/data/showreel/first-cut.mp4`, 74.3 s, 1920x1080, 30 fps, H.264 High (yuv420p,
+  BT.709, CRF 14 under a 40 Mbit/s cap) with AAC 320 kb/s. Rendered at 3840x2160 and downsampled.
+  Not a final render: the user reviews this cut first.
+- **Preview clips** (the review gates), encoded from the cut's own frames: `preview-1-title.mp4` (0–25 s),
+  `preview-2-watch-to-check.mp4` (30.0–35.6 s), `preview-3-teach-to-do.mp4` (41.6–47.4 s),
+  `preview-4-outro.mp4` (60.4–74.3 s). Copies of all five in `~/tacit/.orchestration/evidence/showreel/`
+  (mp4 is gitignored); contact sheets and a README in `.orchestration/evidence/showreel/` in git.
+- **Section README**: `~/tacit/data/showreel/README.md` describes every section (time, words, technique,
+  picture) and every file.
+- **Storyboard** `showreel/STORYBOARD.md` (plan plus as-built), **claims ledger** `showreel/CLAIMS.md`
+  (every word on screen with its source file or measurement, and what each picture is and is not).
+- **Soundtrack on TT hardware**: MiniMax Music 3 on chip 1, two takes inside the lead's window (seed 11,
+  74 s, 433 s of chip time; seed 23, 56 s). Seed 11 is used, mastered with a stop on its last downbeat and
+  a synthesized room tail. Credit and machine-generated disclosure are on the end card.
+
+## How to rebuild
+
+See `showreel/README.md`. In short: `cd showreel && uv sync && ./make.sh cut && ./make.sh previews-from-cut`
+(about 12 minutes on this box when it is quiet). Captures (`capture/app.mjs`) and plates
+(`tools/plates.sh`) are already in `~/tacit/data/showreel/`; rerun them only if the app changes.
+
+## Decisions worth knowing
+
+- The reel draws the product's real outputs itself (tracks, gaze, boxes, VGGT clouds, trial results,
+  /api/box) so the iconic flashes are smooth at 30 fps; app UI comes from Playwright captures at 2x on a
+  virtual clock. 3D app scenes are software-rendered (no GPU access for this user), so the robot replay is
+  a 1x capture.
+- "In her own words" was dropped from Teach: both showcase skills' why notes are still inferred from the
+  video. GR00T is labelled the baseline (it does not finish this task in the sim; the trained policy
+  does, 20/20). Latencies are the co-hosted p50s (16/10/12 ms), not the standalone 15/10/13.
+- App pages were captured from QA's merged build (:5790) because Learn, Robot Lab and Exchange were not
+  in main yet. Recapture from main after the merge if the pages change.
+
+## For the user's review (choices I left open)
+
+- The opening is long: the title lands at 22.4 s on the drop. Trimming two intro bars of the music would
+  bring it to about 17.6 s (cut about 69.5 s).
+- Take 23 (143 BPM, louder from the start) is the alternative soundtrack; a third take can be generated
+  in a chip-1 window from the lead.
+
+## Known limits
+
+- Software-rendered 3D (robot, hero) is softer than the 2D material.
+- The listing page is not used (its API was returning 500 during capture; fixed since).

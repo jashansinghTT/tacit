@@ -11,9 +11,10 @@ import { line, rise } from '../lib/type.js'
 import { clamp, inCubic, inOutCubic, inOutQuint, inQuint, mix, noise1, outCubic, outExpo, prog, rng } from '../lib/ease.js'
 import { FREEZE } from './coldopen.js'
 
-export const MARK_K = 15 // px per logo unit in the title lockup (a 360 px mark)
+export const MARK_K = 20 // px per logo unit in the title lockup (a 480 px mark)
 export const SILENCE_K = 25 // the chain alone, larger, in the silence before the drop
 export const SILENCE_GROW = 1.07 // it creeps in through the silence; the title starts from here
+export const SNAP = 21.3 // the riser's peak in take 11 (RMS -15 dB), then near-silence to the drop
 const INDEX = [5, 6, 7, 8]
 const INDEX_BONES = [5, 6, 7]
 const FINGER_OF = (c) => (c <= 4 ? 0 : c <= 8 ? 1 : c <= 12 ? 2 : c <= 16 ? 3 : 4)
@@ -43,9 +44,12 @@ export default function hands(T) {
     foot.set(FREEZE)
     foot.camera(720, 575, 2.25)
     const flash = Math.exp(-Math.max(0, t - b3) * 6) * (t >= b3 ? 0.22 : 0)
+    // The freeze dims and defocuses into a plate behind the 3D hand (depth), then leaves on the riser.
     const dim = 1 - prog(t, b3 + 0.2, b4 + 0.6 - b3, inOutCubic)
-    foot.grade({ brightness: 0.5 * dim + flash, saturate: 0.55 * dim, contrast: 1.3 })
-    foot.box.style.opacity = dim > 0.001 ? '1' : '0'
+    const plateK = 1 - prog(t, b7 + 0.4, 1.2, inCubic)
+    foot.grade({ brightness: (0.5 * dim + 0.16 * (1 - dim)) * plateK + flash, saturate: 0.55 * dim + 0.3 * (1 - dim), contrast: 1.18 })
+    foot.box.style.filter += ` blur(${(1 - dim) * 26}px)`
+    foot.box.style.opacity = plateK > 0.001 ? '1' : '0'
 
     // 2D: both hands where they were at the freeze, mapped through the same camera.
     const L2 = handAt(tracks, 'left', FREEZE).lm2d.map(([x, y]) => foot.toStage(x, y))
@@ -80,10 +84,12 @@ export default function hands(T) {
     const boneAlpha = (i) => (keep(i) ? 1 : 1 - prog(t, b8 - 0.75 + fadeAt[i] * 0.45, 0.35, inCubic))
     const jointAlpha = (j) => (INDEX.includes(j) ? 1 : 1 - prog(t, b8 - 0.7 + fadeAt[j % 21] * 0.45, 0.3, inCubic))
     const burn = prog(t, b7, b8 - b7, inCubic)
-    const toMark = prog(t, b8, 1.15, inOutQuint)
+    // Into the mark: accelerating into the swell's peak, landing on it.
+    const toMark = prog(t, b8 + 0.1, SNAP - (b8 + 0.1), inCubic)
+    const burst = t >= SNAP ? Math.exp(-(t - SNAP) * 5) : 0
     const width = mix(3.4, 4.2, lift)
 
-    if (t < b8 + 1.2) {
+    if (t < SNAP + 0.05) {
       drawHand(g, P, { draw: drawOn, boneAlpha, jointAlpha, depthScale, alpha: 1 - toMark, width: width * (1 + 0.35 * burn), jointR: mix(5.5, 8, lift) * (1 + 0.3 * burn), glow: 1.25 + 1.6 * burn })
     }
     if (R2) {
@@ -93,11 +99,11 @@ export default function hands(T) {
 
     // The index chain becomes the mark, centred, and holds through the silence before the drop.
     if (t >= b8) {
-      const grow = mix(1, SILENCE_GROW, prog(t, b8 + 1.15, b9 - b8 - 1.15, (x) => x))
+      const grow = mix(1, SILENCE_GROW, prog(t, SNAP, b9 - SNAP, (x) => x)) * (1 + 0.06 * burst)
       const target = chainAt(960, 540, SILENCE_K * grow)
       const breathe = 1 + 0.03 * Math.sin((t - b8) * 3.2)
       const pts = INDEX.map((j, i) => [mix(P[j][0], target[i][0], toMark), mix(P[j][1], target[i][1], toMark)])
-      drawMark(g, 960, 540, SILENCE_K * grow, { pts, box: 0, ring: 0, alpha: toMark, glow: breathe * mix(2.2, 1.2, toMark), width: mix(0.5, 1, toMark) })
+      drawMark(g, 960, 540, SILENCE_K * grow, { pts, box: 0, ring: burst * 1.4, alpha: Math.min(1, toMark * 1.3), glow: breathe * mix(2.2, 1.2, toMark) + 3 * burst, width: mix(0.5, 1, toMark) })
     }
 
     // Type.

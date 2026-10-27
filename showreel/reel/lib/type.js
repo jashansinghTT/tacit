@@ -28,6 +28,6 @@ export function line(parent, parts, { size = 200, cls = 'huge', style = '' } = {
 }
 
 /** Rise a word out of its mask: p 0 = hidden below, 1 = in place. */
-export function rise(word, p, { from = 1.08 } = {}) {
+export function rise(word, p, { from = 1.4 } = {}) {
   word.inner.style.transform = `translateY(${(1 - p) * from * 100}%)`
 }

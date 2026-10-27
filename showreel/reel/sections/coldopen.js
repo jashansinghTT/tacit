@@ -28,8 +28,8 @@ export default function coldOpen(T) {
     const ft = FREEZE * (1 - Math.pow(1 - u, 1.6)) / 1
     foot.set(ft)
     foot.camera(mix(735, 720, u), mix(555, 575, u), mix(1.95, 2.25, inOutSine(u)))
-    const fadeIn = prog(t, 0, b0 + 0.4, (x) => x * x)
-    foot.grade({ brightness: 0.5 * fadeIn, saturate: 0.55, contrast: 1.3 })
+    const fadeIn = prog(t, 0.38, b0 + 0.3 - 0.38, (x) => x * x)
+    foot.grade({ brightness: 0.6 * fadeIn, saturate: 0.6, contrast: 1.18 })
 
     // The line breathes: a slow push across the whole section.
     typeLine.style.transform = `scale(${mix(1, 1.06, inOutSine(u))})`

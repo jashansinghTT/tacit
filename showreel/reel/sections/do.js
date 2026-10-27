@@ -1,8 +1,8 @@
-// 7. Do. Out of the twin's hand into the Robot Lab: the Franka follows her wrist path with her
-// hands as a ghost (a recorded "replay the human" run). Then the policy trained in simulation from
-// 200 varied demos: 20 trials on scenes it never saw, flipping in on the beat, all 20 succeed.
-// GR00T N1.7 on chip 3 closes the section as the foundation-model baseline.
-// Technique: zoom-through match cut, then a mosaic of tiles flipping on the beat.
+// 7. Do. Out of the twin's hand into the Robot Lab: her ghost hands and the Franka on her wrist path
+// (a "replay the human" run), then the skill-trained policy doing the task on a seeded scene: reach,
+// grasp, carry, place (a recorded policy run, sped up). Then the evaluation: 20 trials on scenes it
+// never saw, flipping in on the beat, all 20 succeed. All of it in simulation (MuJoCo).
+// Technique: zoom-out match cut, then a mosaic of tiles flipping on the beat.
 import { R } from '../main.js'
 import { sequence } from '../lib/seq.js'
 import { line, rise } from '../lib/type.js'
@@ -13,24 +13,22 @@ export const GHOST = [1114, 883]
 
 export default function act(T) {
   const s = { id: 'do', z: 7 }
-  let robot, plate, gcam, gplate, word, grid, cells, count, countSub, chip, eval_
+  let robot, policy, plate, pplate, word, grid, cells, count, countSub, eval_
   const b18 = T.bar(18), b19 = T.bar(19), b20 = T.bar(20), b21 = T.bar(21)
   const beat = T.beat
-  const tGrid = b19 + 2 * beat
-  const tGr00t = b20 + 2 * beat
-  s.blur = [[b18, b18 + 0.3, 6], [b21 - 0.3, b21, 6]]
+  const tPolicy = b18 + 2 * beat // the policy run takes over
+  const tGrid = b18 + 9 * beat
+  const SPEED = 2.2 // policy run playback speed
+  s.blur = [[b18, b18 + 0.3, 6], [tPolicy, tGrid, 3], [b21 - 0.3, b21, 6]]
   s.load = async () => { eval_ = await R.json('/data/assets/robot_vase.json') }
   s.build = (root) => {
     plate = R.el('div', 'abs', root)
     plate.style.cssText = 'inset:0'
     robot = sequence(plate, { dir: '/data/captures/robot/frames', count: 80, fps: 30 })
-    // The Robot Lab's GR00T-cam viewpoint: the over-the-shoulder camera position GR00T is fed.
-    gplate = R.el('div', 'abs', root)
-    gplate.style.cssText = 'inset:0;overflow:hidden'
-    gcam = R.el('img', 'plate', gplate)
-    gcam.src = '/data/captures/stills/gr00tcam.png'
-    gcam.style.cssText = 'left:0;top:0;width:1920px;height:1080px;transform-origin:860px 640px'
-    R.wait(gcam.decode())
+    // The skill-trained policy's run (seeded scene): pick, carry, place.
+    pplate = R.el('div', 'abs', root)
+    pplate.style.cssText = 'inset:0'
+    policy = sequence(pplate, { dir: '/data/captures/policy/frames', count: 300, fps: 30 })
     const wbox = R.el('div', 'abs', root)
     wbox.style.cssText = 'left:104px;bottom:70px'
     word = line(wbox, ['Do.'], { size: 290, style: 'text-shadow:0 10px 60px rgba(0,0,0,0.6)' })
@@ -49,10 +47,8 @@ export default function act(T) {
     cbox.style.cssText = 'left:150px;top:690px;display:flex;align-items:baseline;gap:34px'
     count = R.el('div', 'huge', cbox, `${n}<span style="color:#6e7580">/${tot}</span>`)
     count.style.cssText += ';font-size:230px;font-variant-numeric:tabular-nums'
-    countSub = R.el('div', 'mono', cbox, 'scenes it never saw')
+    countSub = R.el('div', 'mono', cbox, 'unseen scenes · simulation')
     countSub.style.cssText += ';font-size:30px;color:#a3a9b2'
-    chip = R.el('div', 'chip abs', root, '<span class="dot"></span>GR00T N1.7<span class="v">chip 3</span><span style="color:#a3a9b2">baseline</span>')
-    chip.style.cssText += ';left:104px;bottom:96px;font-size:40px;padding:20px 32px 20px 24px;gap:18px'
   }
   s.render = (t) => {
     // Robot plate: zooms out from her ghost hands (matching the push into the twin's hand), then
@@ -65,17 +61,22 @@ export default function act(T) {
     // and an empty control frame) out of the picture.
     const k = mix(5, 1.32, z) - 0.06 * drift
     robot.camera(mix(GHOST[0], 900, z), mix(GHOST[1], 600, z), k)
+    // The policy run, cut in on the beat, sped up so the whole pick and place fits.
+    const pOn = t >= tPolicy
+    pplate.style.display = pOn ? 'block' : 'none'
+    if (pOn) {
+      policy.set(0.1 + (t - tPolicy) * SPEED)
+      policy.camera(900, 600, mix(1.36, 1.3, prog(t, tPolicy, b21 - tPolicy)))
+    }
     const gridOn = prog(t, tGrid - 0.1, 0.5, outCubic)
-    const back = prog(t, tGr00t, 0.5, outCubic)
-    plate.style.filter = `brightness(${mix(1, 0.22, gridOn * (1 - back) + back * 0.55)}) blur(${(gridOn * (1 - back)) * 6}px)`
+    pplate.style.filter = `brightness(${mix(1, 0.24, gridOn)}) blur(${gridOn * 6}px)`
     plate.style.opacity = String(Math.min(1, (t - b18) / 0.08 + 0.001))
-
     rise(word.words[0], prog(t, b18 + beat, 0.65, outExpo))
     const wout = prog(t, tGrid - 0.35, 0.35, inQuint)
     word.el.style.opacity = String(1 - wout)
 
     // Tiles flip in as a fast cascade on the beat, then the count lands.
-    const out = prog(t, tGr00t - 0.3, 0.3, inQuint)
+    const out = prog(t, b21 - 0.3, 0.3, inQuint)
     cells.forEach((c, i) => {
       const t0 = tGrid + (i % 10) * 0.045 + Math.floor(i / 10) * 0.12
       const k2 = spring(t, t0, { zeta: 0.55, omega: 16 })
@@ -88,17 +89,6 @@ export default function act(T) {
     const ks = prog(t, tGrid + 0.95, 0.6, outExpo)
     countSub.style.opacity = String(ks * (1 - out))
 
-    // GR00T, named as the baseline, over its own camera view (a hard cut on the beat).
-    const gOn = t >= tGr00t
-    gplate.style.display = gOn ? 'block' : 'none'
-    if (gOn) {
-      gcam.style.transform = `scale(${mix(1.16, 1.26, prog(t, tGr00t, b21 - tGr00t))})`
-      gplate.style.filter = `brightness(${0.8 + 0.6 * Math.exp(-(t - tGr00t) * 7)})`
-    }
-    const kg = spring(t, tGr00t + 0.1, { zeta: 0.6, omega: 15 })
-    const gout = prog(t, b21 - 0.3, 0.3, inQuint)
-    chip.style.opacity = String(Math.min(1, Math.max(0, kg)) * (1 - gout))
-    chip.style.transform = `translateX(${(1 - Math.min(1, kg)) * -30}px)`
     // Whip out to the right into Earn.
     const whip = prog(t, b21 - 0.3, 0.3, inQuint)
     s.layer.style.transform = `translateX(${-whip * 1400}px)`

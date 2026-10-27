@@ -13,10 +13,10 @@ export const HERO_FRAMES = 220
 export default function tagline(T) {
   const s = { id: 'tagline', z: 10 }
   let hero, plate, l1, l2, shade, flash, typeBox
-  const b25 = T.bar(25), b26 = T.bar(26), b27 = T.bar(27), b28 = T.bar(28)
+  const b25 = T.bar(25), b27 = T.bar(27), b28 = T.bar(28)
   // The recap: [section, time] per half-beat of bar 27.
   const RECAP = [['hands', 19.45], ['watch', 28.3], ['check', 33.6], ['check', 37.4],
-    ['teach', 42.4], ['do', 48.9], ['earn', 54.4], ['box', 59.6]]
+    ['teach', 41.05], ['do', 50.4], ['earn', 54.6], ['box', 59.6]]
   s.borrow = (t) => {
     if (t < b27 || t >= b28) return []
     const k = Math.min(RECAP.length - 1, Math.floor((t - b27) / (T.beat / 2)))
@@ -41,13 +41,13 @@ export default function tagline(T) {
     hero.set(Math.max(0, t - b25))
     const push = prog(t, b25, b28 + 1.2 - b25, inOutSine)
     hero.camera(960, 560, mix(1.0, 1.09, push))
-    const focus = prog(t, b26, 0.9, inOutCubic)
+    const focus = prog(t, b25 + 2 * beat, 0.9, inOutCubic)
     plate.style.filter = `blur(${mix(9, 0, focus)}px) brightness(${mix(0.55, 1, focus)})`
     const words = [...l1.words, ...l2.words]
     const at = [0, 1, 1.5, 2.5, 3, 3.5].map((k) => b25 + k * beat)
     words.forEach((w, i) => rise(w, prog(t, at[i], 0.65, outExpo)))
     // After the focus pull the type softens slightly, so the scene leads.
-    const soft = prog(t, b26 + 0.4, 1.0, inOutCubic)
+    const soft = prog(t, b25 + 2 * beat + 0.4, 1.0, inOutCubic)
     for (const l of [l1, l2]) l.el.style.opacity = String(mix(1, 0.92, soft))
     // The recap bar: the scene and type step aside for the borrowed shots (lower layers); a flash
     // marks each cut.

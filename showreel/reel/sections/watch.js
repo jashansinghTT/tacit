@@ -4,7 +4,7 @@
 // push-in, latency chips springing in on the beats.
 import { R } from '../main.js'
 import { footage } from '../lib/footage.js'
-import { BONES, drawHand, gazeAt, handAt, objectsAt } from '../lib/hand.js'
+import { BONES, drawHand, followHands, gazeAt, objectsAt } from '../lib/hand.js'
 import { line, rise } from '../lib/type.js'
 import { clamp, inOutCubic, inOutSine, inQuint, mix, outExpo, prog, spring } from '../lib/ease.js'
 
@@ -23,20 +23,25 @@ const CHIPS = [
 
 export default function watch(T) {
   const s = { id: 'watch', z: 4, post: 0.1 }
-  let tracks, foot, fx, word, chips, beamEl, shade, chipX = []
-  s.load = async () => { tracks = await R.json('/data/assets/tracks_vase.json') }
+  let tracks, follow, foot, fx, word, chips, beamEl, shade, chipX = []
+  s.load = async () => {
+    tracks = await R.json('/data/assets/tracks_vase.json')
+    follow = followHands(tracks, WATCH_FT0, watchFt(T, T.bar(13)))
+  }
   s.build = (root) => {
     foot = footage(root, { dir: '/data/plates/vase', fps: 30, count: 1335 })
     fx = R.canvas(root)
     beamEl = R.el('div', 'abs', root)
     beamEl.style.cssText = 'left:0;right:0;height:2px;background:#bff4ff;box-shadow:0 0 18px 4px rgba(60,215,255,0.85),0 0 90px 30px rgba(60,215,255,0.25)'
     shade = R.el('div', 'abs', root)
-    shade.style.cssText = 'left:0;right:0;bottom:0;height:520px;background:linear-gradient(0deg, rgba(4,5,6,0.62), rgba(4,5,6,0))'
+    shade.style.cssText = 'left:0;right:0;bottom:0;height:560px;background:linear-gradient(0deg, rgba(4,5,6,0.8), rgba(4,5,6,0.35) 55%, rgba(4,5,6,0))'
     const wbox = R.el('div', 'abs', root)
     wbox.style.cssText = 'left:104px;bottom:70px'
     word = line(wbox, ['Watch.'], { size: 290, style: 'text-shadow:0 10px 60px rgba(0,0,0,0.5)' })
     chips = CHIPS.map((c) => {
       const el = R.el('div', 'chip abs', root, `<span class="dot"></span>${c.model}<span class="v">${c.v}</span>`)
+      el.style.fontSize = '32px'
+      el.style.padding = '16px 28px 16px 22px'
       el.style.transformOrigin = '0% 50%'
       return el
     })
@@ -142,14 +147,16 @@ export default function watch(T) {
       }
     }
 
-    // Hands: both skeletons, joints lit as the beam passes them.
+    // Hands: both skeletons, followed by continuity so each keeps its colour; joints lit as the
+    // beam passes them.
     const hands = {}
-    for (const [side, color] of [['left', '#3cd7ff'], ['right', '#a78bfa']]) {
-      const h = handAt(tracks, side, ft)
-      if (!h) continue
-      const P = h.lm2d.map(([x, y]) => foot.toStage(x, y))
-      hands[side] = P
-      drawHand(g, P, { color, width: 2.9 * z * (1 + 0.5 * pulse(0)), jointR: 4.4 * z, glow: 1.35 + 2 * pulse(0), draw: (i) => behind(P[BONES[i][1]][1]) })
+    for (const [k, color] of [[0, '#3cd7ff'], [1, '#a78bfa']]) {
+      const lm = follow.at(k, ft)
+      const a = follow.alpha(k, ft)
+      if (!lm || a <= 0.02) continue
+      const P = lm.map(([x, y]) => foot.toStage(x, y))
+      hands[k ? 'right' : 'left'] = P
+      drawHand(g, P, { color, alpha: a, width: 2.9 * z * (1 + 0.5 * pulse(0)), jointR: 4.4 * z, glow: 1.35 + 2 * pulse(0), draw: (i) => behind(P[BONES[i][1]][1]) })
     }
     g.restore()
 
