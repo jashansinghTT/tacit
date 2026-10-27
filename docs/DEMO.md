@@ -61,7 +61,8 @@ chip 0, about 1 to 3 s).
   minute).
 - **Evaluate**: 20 randomised trials fill the grid (the one-object sample program scores 19 to 20 of 20).
 - **Run GR00T N1.7** on **chip 3**: NVIDIA's foundation policy drives the simulated arm from two
-  rendered cameras at about 63 ms per decision. Say it plainly: GR00T is the baseline; the
+  rendered cameras at about 70 ms per decision, 58 ms of it on the chip (quiet box; it rises when the
+  box is busy). Say it plainly: GR00T is the baseline; the
   skill-trained policy is what does the task.
 
 ## 6. Earn (45 s): Skill Exchange
