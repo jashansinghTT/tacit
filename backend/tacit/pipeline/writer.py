@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
 from ..models import llm
+
+log = logging.getLogger("tacit.writer")
 
 WRITER_SYSTEM = """You are Tacit's skill writer. A machine watched an expert do a hands-on task: it tracked their hands, \
 where they looked and which objects moved. You turn that timeline into work instructions a new hire can follow.
@@ -68,37 +71,68 @@ place into the container). Ask pending questions only for steps whose why is inf
                                max_tokens=1800)
 
 
-async def write_documents(structure: dict) -> tuple[dict, dict]:
-    """The SOP (plain Markdown) and the quiz with safety notes (small JSON), written in parallel.
-
-    Markdown inside a JSON string is long and easy to break, so the two are separate calls."""
-    skill = json.dumps({k: structure.get(k) for k in ("title", "summary", "steps")}, ensure_ascii=False)
-    sop_user = f"""Skill (JSON):
-{skill}
-
-Write a standard work instruction in Markdown: '# <title>', a one-line purpose, a 'Before you start' list, numbered
-steps (bold title, then the instruction, then a 'Why:' line), and a short 'Check your work' list. Reply with the
-Markdown only."""
-    quiz_user = f"""Skill (JSON):
+QUIZ_USER = """Skill (JSON):
 {skill}
 
 Return JSON with exactly these keys:
 {{"quiz": [{{"q": "...", "choices": ["...", "...", "..."], "answer": <index of the right choice>, "explain": "one sentence"}}],
   "safety": ["at most 3 short safety or quality notes that follow from the steps"]}}
 Write exactly 3 quiz questions that test the why, not trivia."""
+
+
+def _skill_json(structure: dict) -> str:
+    return json.dumps({k: structure.get(k) for k in ("title", "summary", "steps")}, ensure_ascii=False)
+
+
+def valid_quiz(items) -> list[dict]:
+    """Questions a lesson can show: text, at least two choices and an answer index among them."""
+    out = []
+    for it in items if isinstance(items, list) else []:
+        if not isinstance(it, dict) or not isinstance(it.get("q"), str) or not isinstance(it.get("choices"), list):
+            continue
+        choices = [str(c) for c in it["choices"]]
+        a = it.get("answer")
+        if len(choices) >= 2 and isinstance(a, int) and not isinstance(a, bool) and 0 <= a < len(choices):
+            out.append({"q": it["q"], "choices": choices, "answer": a, "explain": str(it.get("explain") or "")})
+    return out
+
+
+async def write_quiz(structure: dict, attempts: int = 3) -> tuple[dict, dict | None]:
+    """Quiz and safety notes, retried with a larger budget: a lesson without a quiz cannot be completed."""
+    msgs = [{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": QUIZ_USER.format(skill=_skill_json(structure))}]
+    out, sb = {"quiz": [], "safety": []}, None
+    for i in range(attempts):
+        try:
+            qz, sb = await llm.chat_json(msgs, max_tokens=1200 + 600 * i)
+        except ValueError as e:
+            log.warning("quiz attempt %d: %s", i + 1, e)
+            continue
+        if not out["safety"] and isinstance(qz.get("safety"), list):
+            out["safety"] = [str(x) for x in qz["safety"] if x]
+        out["quiz"] = valid_quiz(qz.get("quiz"))
+        if out["quiz"]:
+            break
+    return out, sb
+
+
+async def write_documents(structure: dict) -> tuple[dict, dict]:
+    """The SOP (plain Markdown) and the quiz with safety notes (small JSON), written in parallel.
+
+    Markdown inside a JSON string is long and easy to break, so the two are separate calls."""
+    sop_user = f"""Skill (JSON):
+{_skill_json(structure)}
+
+Write a standard work instruction in Markdown: '# <title>', a one-line purpose, a 'Before you start' list, numbered
+steps (bold title, then the instruction, then a 'Why:' line), and a short 'Check your work' list. Reply with the
+Markdown only."""
     sop_sys = WRITER_SYSTEM.replace("Reply with JSON only, no prose before or after.", "Reply with Markdown only.")
-    (sop, sb1), (qz, sb2) = await asyncio.gather(
+    (sop, sb1), (qz, _) = await asyncio.gather(
         llm.chat([{"role": "system", "content": sop_sys}, {"role": "user", "content": sop_user}], max_tokens=1600),
-        llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": quiz_user}], max_tokens=1000))
-    if not qz.get("quiz"):  # one retry: a lesson without a quiz cannot be completed
-        qz2, _ = await llm.chat_json([{"role": "system", "content": WRITER_SYSTEM}, {"role": "user", "content": quiz_user}],
-                                     max_tokens=1000)
-        qz["quiz"] = qz2.get("quiz") or []
-        qz.setdefault("safety", qz2.get("safety", []))
+        write_quiz(structure))
     sop = sop.strip()
     if sop.startswith("```"):
         sop = sop.strip("`").split("\n", 1)[-1]
-    return {"sop_markdown": sop, "quiz": qz.get("quiz", []), "safety": qz.get("safety", [])}, sb1
+    return {"sop_markdown": sop, "quiz": qz["quiz"], "safety": qz["safety"]}, sb1
 
 
 COACH_SYSTEM = """You are the coach inside Tacit. An expert is recording a hands-on task so new hires and robots can learn it. \

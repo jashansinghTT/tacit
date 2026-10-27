@@ -141,16 +141,17 @@ async def _process_skill(job: jobs.Job, skill_id: str) -> dict:
 
     # write ---------------------------------------------------------------------------------
     job.start_stage("write", models=["gpt-oss-20b@2"])
+    struct, docs = None, {"sop_markdown": "", "quiz": [], "safety": []}
     try:
         struct, sb1 = await writer.write_structure(skill, steps, objects_seen)
         extra_served.append(sb1)
         job.stage_progress(0.5, "steps, why notes and robot program written")
         docs, sb2 = await writer.write_documents(struct)
         extra_served.append(sb2)
-    except (ModelUnavailable, ValueError) as e:
+    except (ModelUnavailable, ValueError) as e:  # keep the steps if they were written; drafts otherwise
         log.warning("writer fallback: %s", e)
-        struct, docs = _fallback_structure(steps), {"sop_markdown": "", "quiz": [], "safety": []}
-        job.stage_progress(1.0, f"LLM unavailable, used drafts ({e})")
+        job.stage_progress(1.0, f"LLM unavailable ({e})" + ("; used drafts" if struct is None else ""))
+    struct = struct or _fallback_structure(steps)
     out_steps = []
     groups = merge_groups(struct.get("steps", []), steps)
     old_to_new: dict[int, int] = {}
@@ -187,12 +188,12 @@ async def _process_skill(job: jobs.Job, skill_id: str) -> dict:
     skill.update({"title": title, "summary": struct.get("summary", ""), "steps": out_steps,
                   "sop_markdown": docs.get("sop_markdown", ""), "quiz": docs.get("quiz", [])[:5], "safety": docs.get("safety", [])[:4]})
     robot = skill.setdefault("robot", {})
-    robot["program"] = struct.get("robot_program") or []
+    robot["program"] = robot_lab.normalize_program(struct.get("robot_program") or [])
     pol = robot.get("policy") or {}
     if pol.get("status") == "trained" and pol.get("program") and pol["program"] != robot_lab.normalize_program(robot["program"]):
         pol["status"] = "stale"  # the skill changed; the policy learned the old program
     save_skill(skill)
-    job.finish_stage("write", detail=f"\"{skill['title']}\"")
+    job.finish_stage("write", detail=f"\"{skill['title']}\"" + ("" if skill["quiz"] else "; quiz to follow in the background"))
 
     # verify --------------------------------------------------------------------------------
     job.start_stage("verify", models=["VGGT-1B@0"])
@@ -251,6 +252,8 @@ async def _process_skill(job: jobs.Job, skill_id: str) -> dict:
     skill["status"] = "ready"
     save_skill(skill)
     job.finish_stage("ready", detail=f"{len(out_steps)} steps, verification {skill['verification']['status']}")
+    if not skill["quiz"]:
+        _background(fill_quiz(skill_id))
     return {"skill_id": skill_id, "steps": len(out_steps), "verification": skill["verification"]["status"]}
 
 
@@ -276,7 +279,18 @@ def merge_groups(written: list[dict], observed: list[dict]) -> list[tuple[dict, 
             prev[1].append(by_obs[i])
         for _, g in groups:
             g.sort(key=lambda s: s["index"])
-        return sorted(groups, key=lambda wg: wg[1][0]["t_start"])
+        # Each observed interaction stays its own step: perception already found them, and a lesson,
+        # an audit and the trainee's practice need one step per action. A written step that covers
+        # several becomes one step each, numbered.
+        split = []
+        for w, g in groups:
+            if len(g) == 1:
+                split.append((w, g))
+                continue
+            for k, obs in enumerate(g, 1):
+                title = (w.get("title") or obs.get("draft") or "Step")
+                split.append(({**w, "title": f"{title} ({k} of {len(g)})"}, [obs]))
+        return sorted(split, key=lambda wg: wg[1][0]["t_start"])
     by_index = {w.get("index"): w for w in written}
     return [(by_index.get(s["index"], {}), [s]) for s in observed]
 
@@ -315,6 +329,31 @@ async def narrate_rest(skill_id: str, lines: list[tuple[str, str]]) -> None:
             return
         sk.setdefault("narration", {})[key] = {"audio": media_url(path), "duration": round(dur, 2), "text": text}
         save_skill(sk)
+
+
+async def fill_quiz(skill_id: str, tries: int = 3, wait: float = 60.0) -> None:
+    """A ready skill needs its quiz for the certificate; when writing gave none, keep asking."""
+    for k in range(tries):
+        sk = load_skill(skill_id)
+        if not sk or sk.get("quiz"):
+            return
+        try:
+            qz, _ = await writer.write_quiz({"title": sk.get("title"), "summary": sk.get("summary"),
+                                             "steps": [{k: st.get(k) for k in ("index", "title", "instruction", "why")}
+                                                       for st in sk.get("steps", [])]})
+        except ModelUnavailable as e:
+            qz = {"quiz": []}
+            log.warning("quiz for %s: %s", skill_id, e)
+        if qz["quiz"]:
+            sk = load_skill(skill_id)
+            if sk:
+                sk["quiz"] = qz["quiz"][:5]
+                sk["safety"] = sk.get("safety") or qz.get("safety", [])[:4]
+                save_skill(sk)
+            return
+        if k + 1 < tries:
+            await asyncio.sleep(wait)
+    log.warning("no quiz for %s after %d tries", skill_id, tries)
 
 
 def objects_summary(frames: list[dict]) -> list[str]:
