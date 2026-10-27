@@ -123,6 +123,8 @@ def main() -> None:
     ap.add_argument("--demos", type=int, default=200)
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--skip-gr00t", action="store_true")
+    ap.add_argument("--extra-program", default=str(SIM / "examples" / "kit3.json"),
+                    help="a second program to train and evaluate (empty to skip)")
     args = ap.parse_args()
 
     program = json.loads(Path(args.program).read_text())
@@ -155,6 +157,18 @@ def main() -> None:
                                         for i, r in enumerate(scripted) if not r["success"]]}
     print("  gate", gate["success_rate"], "extra", extra["success_rate"], "scripted",
           summary["scripted"]["success_rate"], flush=True)
+
+    if args.extra_program:
+        prog2 = json.loads(Path(args.extra_program).read_text())
+        print("extra program ...", flush=True)
+        ds2 = generate_demos(prog2, n=args.demos, seed=0, out_dir=work / "extra" / "demos")
+        tr2 = train_policy(ds2.path, work / "extra" / "policy.pt", epochs=args.epochs)
+        ev2 = evaluate_policy(prog2, tr2["policy_path"], trials=20, seed=0)
+        summary["extra_program"] = {"file": Path(args.extra_program).name, "program": prog2,
+                                    "demos": ds2.to_dict(), "train_seconds": tr2["seconds"],
+                                    "success_rate": ev2["success_rate"],
+                                    "failures": [t for t in ev2["trials"] if not t["success"]]}
+        print("  extra", ev2["success_rate"], flush=True)
 
     print("videos ...", flush=True)
     summary["videos"] = {
@@ -223,6 +237,13 @@ def write_results(out: Path, s: dict) -> None:
         lines.append(f"| {t['seed']} | {'yes' if t['success'] else 'no'} | {t['steps']} | {t['reason'] or ''} |")
     if e["failures"]:
         lines += ["", "Extra-trial failures: " + "; ".join(f"seed {f['seed']}: {f['reason']}" for f in e["failures"])]
+    if "extra_program" in s:
+        x = s["extra_program"]
+        lines += ["", f"Second program, `{x['file']}` (three parts, two sharing a bin), trained the same way "
+                  f"({x['demos']['n']} demos, {x['train_seconds']} s of training): **{pct(x['success_rate'])}** "
+                  "over 20 trials (seeds 0-19)."
+                  + ("" if not x["failures"] else " Failures: " + "; ".join(f"seed {f['seed']}: {f['reason']}" for f in x["failures"])),
+                  "", "```json", json.dumps(x["program"]), "```"]
     lines += [
         "",
         "## Training",

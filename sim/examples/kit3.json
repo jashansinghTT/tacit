@@ -1,0 +1,26 @@
+[
+ {
+  "op": "pick",
+  "object": "scissors"
+ },
+ {
+  "op": "place",
+  "target": "kit tray"
+ },
+ {
+  "op": "pick",
+  "object": "bottle"
+ },
+ {
+  "op": "place",
+  "target": "kit tray"
+ },
+ {
+  "op": "pick",
+  "object": "cup"
+ },
+ {
+  "op": "place",
+  "target": "left bin"
+ }
+]

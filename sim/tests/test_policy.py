@@ -43,3 +43,20 @@ def test_policy_episode_runs(sort2, tiny_policy):
     r = run_episode(sort2, "policy", 0, policy_path=tiny_policy["train"]["policy_path"], max_seconds=3)
     assert set(r) >= {"success", "steps", "reason"}
     assert r["steps"] == 90
+
+
+def test_policy_refuses_a_different_program(sort2, tiny_policy):
+    import pytest
+
+    from tacit_sim import ProgramMismatch, Runner, evaluate_policy, policy_info
+
+    path = tiny_policy["train"]["policy_path"]
+    assert policy_info(path)["program"] == sort2
+    other = [{"op": "pick", "object": "bracket"}, {"op": "pick", "object": "bolt"}]
+    with pytest.raises(ProgramMismatch, match="train the policy again"):
+        evaluate_policy(other, path, trials=1)
+    with pytest.raises(ProgramMismatch):
+        Runner(other, "policy", policy_path=path)
+    # Same tasks written differently is fine.
+    Runner([{"op": "PICK", "object": "Bracket"}, {"op": "place", "target": "left bin"},
+            {"op": "pick", "object": "bolt"}, {"op": "place", "target": "Right Bin"}], "policy", policy_path=path)

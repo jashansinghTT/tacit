@@ -45,6 +45,9 @@ class Runner:
             raise ValueError(f"mode must be one of {MODES}, got {mode!r}")
         if mode == "policy" and not policy_path:
             raise ValueError("policy mode needs policy_path (train a policy first)")
+        if mode == "policy":
+            from .policy import check_program
+            check_program(policy_path, program)
         if mode == "replay" and human_path is None:
             raise ValueError("replay mode needs human_path (the expert's wrist path)")
         self.program = program
@@ -308,8 +311,12 @@ def evaluate_policy(program, policy_path, trials: int = 20, seed: int = 0, on_tr
     """Run the policy on `trials` randomised scenes (seeds seed .. seed + trials - 1).
 
     `on_trial(i, trials, result)` is called after each trial. Returns
-    {success_rate, trials: [{seed, success, steps, reason}]}.
+    {success_rate, trials: [{seed, success, steps, reason}]}. Raises ProgramMismatch if the
+    policy was trained on a different program.
     """
+    from .policy import check_program
+
+    check_program(policy_path, program)
     t0 = time.time()
     out = []
     for i in range(trials):
