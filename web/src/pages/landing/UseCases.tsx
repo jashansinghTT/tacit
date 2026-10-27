@@ -187,7 +187,7 @@ export function UseCases() {
               </div>
               <p className="flex gap-2 text-[13px] text-fg-muted">
                 <Quote className="size-4 shrink-0 text-ion" />
-                <span>Twenty-two years of small tricks, captured in an afternoon at her own bench.</span>
+                <span>Twenty-two years of small tricks, captured in an afternoon at the bench where they were learned.</span>
               </p>
             </div>
           </Tile>
