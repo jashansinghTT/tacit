@@ -64,10 +64,14 @@ test('the lab draws the scene, the explainer and the five modes', async ({ page 
   await page.getByTestId('seg-overview').click()
 })
 
-test('an unknown skill offers the skills on this box', async ({ page }) => {
-  await page.goto('/robot/sk_does_not_exist')
-  await expect(page.getByText('This skill is not on this box')).toBeVisible()
-}, )
+test('a link to a skill that is not on this box opens a ready one', async ({ page, consoleErrors }) => {
+  await page.goto('/robot/sk_not_on_this_box?mode=evaluate')
+  await expect(page.getByTestId('toast')).toContainText('not on this box')
+  await expect(page).toHaveURL(/\/robot\/(?!sk_not_on_this_box)[\w-]+\?mode=evaluate/)
+  await expect(page.getByTestId('panel-evaluate')).toBeVisible()
+  // The browser logs the backend's 404 for the unknown id; that answer is the point of the test.
+  for (let i = consoleErrors.length - 1; i >= 0; i--) if (/status of 404/.test(consoleErrors[i])) consoleErrors.splice(i, 1)
+})
 
 test('replay the human: the arm follows the expert, her hands alongside', async ({ page }) => {
   test.setTimeout(240_000)

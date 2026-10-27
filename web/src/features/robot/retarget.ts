@@ -14,6 +14,8 @@ const WORKSPACE_X: [number, number] = [0.32, 0.62]
 const WORKSPACE_Y: [number, number] = [-0.26, 0.26]
 const Z_LIFT = 0.04
 const Z_CLIP: [number, number] = [0.03, 0.4]
+/** Ghost hands are drawn at this fraction of real size (next to a 20 cm gripper). */
+const HAND_DISPLAY_SCALE = 0.85
 
 const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const norm = (a: number[]) => Math.hypot(a[0], a[1], a[2])
@@ -182,7 +184,20 @@ export function buildGhost(twin: Twin, matrix?: Affine | null): GhostTrack | nul
   if (!fit) return null
   const M = matrix && matrix.length === 3 ? matrix : fit.matrix
   const cam = twinCamera(twin)
-  const map = (h: Vec3[] | null | undefined) => (h && h.length === 21 ? h.map((p) => applyAffine(M, twinToCamera(p, cam))) : null)
+  const scale = M === fit.matrix ? fit.scale : Math.hypot(M[0][0], M[0][1], M[0][2])
+  // The retarget shrinks the whole motion (often to ~0.3x) so a hand would be a few centimetres
+  // across. The wrist stays on the mapped path; the fingers keep about a real hand's size.
+  const grow = Math.min(4, Math.max(1, HAND_DISPLAY_SCALE / Math.max(scale, 1e-3)))
+  const map = (h: Vec3[] | null | undefined) => {
+    if (!h || h.length !== 21) return null
+    const pts = h.map((p) => applyAffine(M, twinToCamera(p, cam)))
+    const w = pts[0]
+    const out = pts.map((p, i) => (i === 0 ? p : ([w[0] + (p[0] - w[0]) * grow, w[1] + (p[1] - w[1]) * grow, w[2] + (p[2] - w[2]) * grow] as Vec3)))
+    // keep the drawn hand on top of the table rather than through it
+    const lift = Math.max(0, 0.006 - Math.min(...out.map((p) => p[2])))
+    if (lift) for (const p of out) p[2] += lift
+    return out
+  }
   const times: number[] = []
   const left: (Vec3[] | null)[] = []
   const right: (Vec3[] | null)[] = []
@@ -193,12 +208,11 @@ export function buildGhost(twin: Twin, matrix?: Affine | null): GhostTrack | nul
     const r = map(f.hands?.right)
     left.push(l)
     right.push(r)
-    const w = (fit.side === 'left' ? l : r)?.[0]
-    if (w && f.t >= fit.t0) wrist.push(w)
+    const raw = f.hands?.[fit.side]?.[0]
+    if (raw && f.t >= fit.t0) wrist.push(applyAffine(M, twinToCamera(raw, cam)))
   }
   // The robot follows the 5-frame smoothed wrist with its height clamped to a safe band.
   const path = smooth(wrist).map((p) => [p[0], p[1], Math.min(Z_CLIP[1], Math.max(Z_CLIP[0], p[2]))] as Vec3)
-  const scale = M === fit.matrix ? fit.scale : Math.hypot(M[0][0], M[0][1], M[0][2])
   return { t0: fit.t0, scale, side: fit.side, fps: twin.fps || 10, times, left, right, wrist: path }
 }
 

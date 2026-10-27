@@ -89,7 +89,7 @@ function RunOutcome({ modes }: { modes: RunMode[] }) {
       <div className="telemetry mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-fg-subtle">
         {d.seconds != null && <span>{d.seconds.toFixed(1)} s sim</span>}
         {d.steps != null && <span>{d.steps} steps</span>}
-        {d.tasks_done != null && <span>{d.tasks_done} task{d.tasks_done === 1 ? '' : 's'} done</span>}
+        {d.tasks_done != null && ui.mode !== 'replay' && <span>{d.tasks_done} task{d.tasks_done === 1 ? '' : 's'} done</span>}
         {d.regrasps ? <span>{d.regrasps} regrasp{d.regrasps === 1 ? '' : 's'}</span> : null}
         {d.tracking_error_m != null && <span>tracking error {(d.tracking_error_m * 100).toFixed(1)} cm</span>}
         {d.gr00t?.p50_ms != null && <span>GR00T p50 {fmtMs(d.gr00t.p50_ms)} · {d.gr00t.calls} calls</span>}

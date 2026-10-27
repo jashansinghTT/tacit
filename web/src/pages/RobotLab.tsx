@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, Bot, Camera, CheckCircle2, Eye, History, Route, Tags, TriangleAlert, XCircle } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import type { RunMode } from '@/lib/api'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSkill, useSkills, useTwin } from '@/lib/api/queries'
-import { robotKeys, useRobotStatus, useSimScene, type RobotStatus, type SimScene } from '@/lib/api/robot'
+import { robotKeys, useRobotStatus, useRobotStatuses, useSimScene, type RobotStatus, type SimScene } from '@/lib/api/robot'
 import { cn } from '@/lib/cn'
 import { fmtAgo } from '@/lib/format'
 import { Page, PageHeader } from '@/components/layout/Page'
@@ -145,27 +145,41 @@ function ProgramPanel({ status, scene }: { status: RobotStatus | undefined; scen
   )
 }
 
+/**
+ * A link to a skill that is not on this box (the landing and the tour link to the sample's id)
+ * lands on the best ready skill instead, a trained one first, and says so. With no ready skill,
+ * it explains how skills get here.
+ */
 function UnknownSkill({ id }: { id: string }) {
   const skills = useSkills({ status: 'ready' })
+  const navigate = useNavigate()
+  const ids = (skills.data ?? []).map((s) => s.id)
+  const statuses = useRobotStatuses(ids)
+  const settled = skills.isSuccess && statuses.every((q) => !q.isLoading)
+  useEffect(() => {
+    if (!settled || !skills.data?.length) return
+    const trained = skills.data.find((_, i) => statuses[i]?.data?.policy.status === 'trained')
+    const pick = trained ?? skills.data[0]
+    toast.info(`${id} is not on this box`, `Opened “${pick.title}” instead.`)
+    navigate(`/robot/${pick.id}${location.search}`, { replace: true })
+    // statuses is a new array every render; `settled` is the signal
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settled, skills.data, id, navigate])
+  if (!settled || skills.data?.length)
+    return (
+      <Page testId="page-robotlab">
+        <Skeleton className="mb-6 h-20 w-2/3" />
+        <Skeleton className="h-[520px]" />
+      </Page>
+    )
   return (
     <Page testId="page-robotlab">
       <PageHeader crumbs={[{ label: 'Robot Lab', to: '/robot' }, { label: id }]} title="Robot Lab" />
       <Panel>
-        <EmptyState icon={<Bot className="size-5" />} title="This skill is not on this box" action={<ButtonLink to="/robot" variant="primary" size="sm">All skills in the Robot Lab</ButtonLink>}>
-          There is no skill with the id <span className="telemetry text-fg-muted">{id}</span>. Pick one that has been captured here:
+        <EmptyState icon={<Bot className="size-5" />} title="This skill is not on this box" action={<ButtonLink to="/studio" variant="primary" size="sm">Capture a skill</ButtonLink>}>
+          There is no skill with the id <span className="telemetry text-fg-muted">{id}</span>, and no processed skill yet. Capture one in the Studio; once it is
+          processed it has a robot program and opens here.
         </EmptyState>
-        {skills.data && skills.data.length > 0 && (
-          <ul className="mx-auto mb-6 grid max-w-2xl gap-2 sm:grid-cols-2">
-            {skills.data.slice(0, 6).map((s) => (
-              <li key={s.id}>
-                <Link to={`/robot/${s.id}`} className="flex items-center justify-between rounded-md px-3 py-2 text-[13px] text-fg-muted shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-white/[0.03] hover:text-fg">
-                  {s.title}
-                  <ArrowUpRight className="size-3.5" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
       </Panel>
     </Page>
   )
