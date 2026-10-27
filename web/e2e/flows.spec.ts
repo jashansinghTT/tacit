@@ -402,6 +402,7 @@ async function learnFlow(page: Page, run: Run) {
   await run.time('tutor voice: question transcribed', 5, async () => {
     await expect(answers).toHaveCount(n0 + 2, { timeout: 60_000 })
     await expect(page.getByTestId('tutor-question').last()).not.toBeEmpty({ timeout: 60_000 })
+    await expect(page.getByTestId('tutor-question').last()).not.toContainText(/transcribing|listening/i, { timeout: 90_000 })
   })
   const asked = (await page.getByTestId('tutor-question').last().innerText()).trim()
   run.note(`voice question heard as: ${asked}`)
@@ -423,6 +424,7 @@ async function learnFlow(page: Page, run: Run) {
 // ------------------------------------------------------------------------------------ F5, F6, F7
 test.describe('the rest', () => {
   test('F5 robot lab: train, evaluate at least 80% over 20 trials, GR00T run streams frames', async ({ page }, info) => {
+    test.setTimeout(40 * 60_000)
     const run = new Run(page, info)
     await persona(page, 'u_priya')
     const skillId = await sharedSkill(page)
@@ -441,14 +443,16 @@ test.describe('the rest', () => {
     await run.shot('trained')
     await page.getByTestId('mode-evaluate').click()
     await page.getByTestId('run-evaluate').click()
+    // The score reads "17/20" (or a percentage).
+    const score = /(\d+)\s*\/\s*(\d+)|(\d+)\s*%/
     await run.time('evaluate 20 trials (UI)', 180, async () => {
-      await expect(page.getByTestId('trial-cell')).toHaveCount(20, { timeout: 30 * 60_000 })
-      await expect(page.getByTestId('eval-score')).toContainText(/\d+\s*%/, { timeout: 30 * 60_000 })
+      await expect(page.getByTestId('trial-cell')).toHaveCount(20, { timeout: 10 * 60_000 })
+      await expect(page.getByTestId('eval-score')).toContainText(score, { timeout: 10 * 60_000 })
     })
-    await expect.poll(async () => (await page.getByTestId('eval-score').innerText()).trim(), { timeout: 30 * 60_000 }).toMatch(/\d+\s*%/)
     await page.waitForTimeout(2000)
-    const pct = Number((await page.getByTestId('eval-score').innerText()).match(/(\d+)\s*%/)?.[1] ?? 0)
-    run.note(`evaluation shows ${pct}%`)
+    const m = (await page.getByTestId('eval-score').innerText()).match(score)
+    const pct = m?.[3] ? Number(m[3]) : m ? (100 * Number(m[1])) / Number(m[2]) : 0
+    run.note(`evaluation shows ${(await page.getByTestId('eval-score').innerText()).trim()} (${pct.toFixed(0)}%)`)
     await run.shot('evaluated')
     expect(pct, 'policy success rate shown').toBeGreaterThanOrEqual(80)
     await page.getByTestId('mode-gr00t').click()
