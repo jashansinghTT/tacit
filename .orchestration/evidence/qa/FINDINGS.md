@@ -83,3 +83,27 @@ it is fixed.
   `nice`), with 4 torch threads and `OMP_WAIT_POLICY=PASSIVE`; report progress back over a pipe as now.
 - Note: the load came from development work (several workers testing at once), so it overstates a single demo;
   but a capture or processing job running beside a training is a normal demo moment.
+
+## QA-6 backend: QA licenses land in the demo's earnings and library
+
+- Owner: backend (lead). State: fixed (2026-10-27 20:40Z): `DELETE /api/exchange/listings/{id}` for test skills
+  (cascades to licenses and ledger), `DELETE /api/skills/{id}` cascades to listings. Both suites now tear down
+  what they make; deleting the two leftover QA listings took Maria's earnings from $2,095.80 back to $1,746.50.
+
+## QA-7 stack (speech cohost): S2 Pro slows 3 to 4x when the host CPU is busy
+
+- Owner: lead (stack, chip 1 cohost). State: open. Found 2026-10-27 20:47Z.
+- Seen: S2 Pro's real-time factor (`seconds / audio_s` in `s2pro INFO tts done` lines), median per 10 minutes:
+  19:20Z 2.4, 19:30Z 3.1, 19:40Z 3.9, 19:50Z 4.7, 20:00Z 3.7, 20:10Z 5.8, 20:30Z 5.0, **20:40Z 8.5** (max 18.0),
+  while the host load average rose to 40 to 50 on 16 cores. At 20:45Z a 6.6 s narration line took 63.7 s and a
+  1.8 s line 14 s (the same 1.8 s line took 5.2 s at 19:50Z). The speech cohost process runs at ~270% CPU: its
+  per-frame host loop is CPU-bound, so every other CPU user (MediaPipe perception, policy training, Mesa software
+  EGL for the sim, headless browsers) stretches every spoken line.
+- Impact: at RTF 8, the coach's question (about 3 s of speech) is voiced 25 s after its text; narration of a
+  6-step lesson takes minutes; a 20 s tutor answer takes almost 3 minutes to speak.
+- Suggestions: give the model containers CPU priority over the backend's CPU work (`docker update --cpu-shares`
+  or a higher systemd `CPUWeight=` for tacit-models, `nice` for training and sim rendering in the backend), or pin
+  the speech cohost to dedicated cores (`--cpuset-cpus`).
+- Caveat: much of the load today is development (several workers' tests at once, including QA's own headless
+  Chromium rendering 3D pages in software). In the demo the browser runs on a laptop, but MediaPipe, training and
+  sim rendering still share the host with the models.
