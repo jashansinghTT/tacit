@@ -1,6 +1,7 @@
 import { request, requestBinary, streamEvents } from './client'
 import { TacitSocket } from './socket'
 import type * as T from './types'
+import { normalizeBox, normalizeSkill, normalizeSummary } from './normalize'
 
 export * from './types'
 export { ApiError, MOCK, mediaUrl, setApiUser, getApiUser } from './client'
@@ -17,13 +18,13 @@ function qs(params: Record<string, string | number | boolean | undefined | null>
 
 export const api = {
   health: () => request<T.Health>('/api/health'),
-  box: () => request<T.BoxStatus>('/api/box'),
+  box: () => request<T.BoxStatus>('/api/box').then(normalizeBox),
   users: () => request<T.User[]>('/api/users'),
   samples: () => request<T.Sample[]>('/api/samples'),
 
   skills: (filter: { status?: string; expert_id?: string } = {}) =>
-    request<T.SkillSummary[]>(`/api/skills${qs(filter)}`),
-  skill: (id: string) => request<T.Skill>(`/api/skills/${id}`),
+    request<T.SkillSummary[]>(`/api/skills${qs(filter)}`).then((l) => l.map(normalizeSummary)),
+  skill: (id: string) => request<T.Skill>(`/api/skills/${id}`).then(normalizeSkill),
   createSkill: (body: { source: 'sample'; sample_id: string } | { source: 'live'; title?: string }) =>
     request<{ skill_id: string; status: T.SkillStatus }>('/api/skills', { method: 'POST', body }),
   uploadSkill: (file: File, title?: string) => {
@@ -33,7 +34,19 @@ export const api = {
     return request<{ skill_id: string; status: T.SkillStatus }>('/api/skills', { method: 'POST', form })
   },
   patchSkill: (id: string, body: Partial<Pick<T.Skill, 'title' | 'summary' | 'steps' | 'qa'>>) =>
-    request<T.Skill>(`/api/skills/${id}`, { method: 'PATCH', body }),
+    request<T.Skill>(`/api/skills/${id}`, { method: 'PATCH', body }).then(normalizeSkill),
+  /** The expert answers a pending why-question after capture, by voice or text. */
+  answer: (id: string, input: { audio?: Blob; text?: string; step_index?: number; question?: string }) => {
+    const form = new FormData()
+    if (input.audio) form.append('file', input.audio, 'answer.wav')
+    if (input.text) form.append('text', input.text)
+    if (input.step_index !== undefined) form.append('step_index', String(input.step_index))
+    if (input.question) form.append('question', input.question)
+    return request<{ text: string; skill: T.Skill }>(`/api/skills/${id}/answer`, { method: 'POST', form }).then((r) => ({
+      text: r.text,
+      skill: normalizeSkill(r.skill),
+    }))
+  },
   deleteSkill: (id: string) => request<{ ok: boolean }>(`/api/skills/${id}`, { method: 'DELETE' }),
   tracks: (id: string) => request<T.Tracks>(`/api/skills/${id}/tracks`),
   twin: (id: string) => request<T.Twin>(`/api/skills/${id}/twin`),

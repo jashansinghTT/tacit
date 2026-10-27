@@ -176,6 +176,21 @@ const routes: [string, RegExp, Handler][] = [
     }
     return s
   }],
+  ['POST', /^\/api\/skills\/([\w-]+)\/answer$/, ({ m, form }) => {
+    const s = skillOr404(m[1])
+    const typed = form?.get('text')
+    const text = typeof typed === 'string' && typed ? typed : 'I roll them between my fingers. Two feels different from three.'
+    const idx = Number(form?.get('step_index') ?? NaN)
+    const question = form?.get('question')
+    const q = s.qa.find((x) => (typeof question === 'string' && x.question === question) || s.steps.find((st) => st.index === idx)?.id === x.step_id)
+    if (q) q.answer = text
+    const step = s.steps.find((st) => st.index === idx || st.id === q?.step_id)
+    if (step) {
+      step.why = text
+      step.why_source = 'expert'
+    }
+    return { text, skill: s }
+  }],
   ['DELETE', /^\/api\/skills\/([\w-]+)$/, ({ m }) => {
     skillOr404(m[1])
     db.skills.delete(m[1])
