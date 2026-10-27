@@ -44,6 +44,12 @@ function RunStatusChip() {
         {ui.seed !== null && <span className="telemetry opacity-70">seed {ui.seed}</span>}
       </Badge>
     )
+  if (ui.status === 'stopped')
+    return (
+      <Badge tone="neutral" className="bg-ink-950/70 backdrop-blur" data-testid="run-status" data-status="stopped">
+        {label} · stopped
+      </Badge>
+    )
   if (ui.status === 'error')
     return (
       <Badge tone="fault" icon={<TriangleAlert className="size-3" />} className="bg-ink-950/70 backdrop-blur" data-testid="run-status" data-status="error">

@@ -114,6 +114,7 @@ export function CameraFeed({ name, label, className }: { name: string; label: st
   const img = useRef<HTMLImageElement>(null)
   const empty = useRef<HTMLDivElement>(null)
   const stamp = useRef<HTMLSpanElement>(null)
+  const fig = useRef<HTMLElement>(null)
   useEffect(() => {
     const show = (src: string | undefined) => {
       if (!img.current || !empty.current) return
@@ -138,10 +139,11 @@ export function CameraFeed({ name, label, className }: { name: string; label: st
         show(src)
         if (stamp.current) stamp.current.textContent = `frame ${frames}`
       }
+      if (fig.current) fig.current.dataset.frames = String(frames)
     })
   }, [name])
   return (
-    <figure className={cn('relative aspect-video overflow-hidden rounded-md bg-ink-950 shadow-[inset_0_0_0_1px_var(--color-line)]', className)} data-testid={`camera-${name}`}>
+    <figure ref={fig} className={cn('relative aspect-video overflow-hidden rounded-md bg-ink-950 shadow-[inset_0_0_0_1px_var(--color-line)]', className)} data-testid={`camera-${name}`} data-frames="0">
       <img ref={img} alt={`${label} camera`} className="absolute inset-0 size-full object-cover opacity-0 transition-opacity" />
       <div ref={empty} className="absolute inset-0 grid place-items-center dot-bg text-[11px] text-fg-faint transition-opacity">
         no frames yet
@@ -165,7 +167,7 @@ export function PlaybackBar({ pose }: { pose: MutableRefObject<Pose> }) {
   const range = useRef<HTMLInputElement>(null)
   const fill = useRef<HTMLDivElement>(null)
   const scrubbing = useRef(false)
-  const recorded = status === 'done' || (status === 'error' && runBuffer.states.length > 0)
+  const recorded = status === 'done' || status === 'stopped' || (status === 'error' && runBuffer.states.length > 0)
   const live = status === 'streaming' || status === 'starting'
   useRaf(() => {
     const end = runBuffer.latestT

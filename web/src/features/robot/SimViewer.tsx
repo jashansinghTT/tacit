@@ -83,7 +83,8 @@ function CameraRig({ view, nonce, scene }: { view: ViewPreset; nonce: number; sc
   const first = useRef(true)
   useEffect(() => {
     const g = presetPose(view, scene)
-    if (first.current && controls) {
+    const snap = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if ((first.current || snap) && controls) {
       first.current = false
       camera.position.copy(g.pos)
       controls.target.copy(g.target)

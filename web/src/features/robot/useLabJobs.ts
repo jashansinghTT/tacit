@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import type { EvalTrial, Job } from '@/lib/api'
+import { api, ApiError, type EvalTrial, type Job } from '@/lib/api'
 import { qk, useJob } from '@/lib/api/queries'
 import { robotApi, robotKeys, type EvalJobResult, type TrainJobResult } from '@/lib/api/robot'
 import { toast } from '@/components/ui'
@@ -83,14 +83,12 @@ function useLabJob<R>(skillId: string, kind: Kind, onDone?: (job: Job<R>) => voi
   useEffect(() => {
     if (!jobId) return
     let stop = false
-    fetch(`/api/jobs/${jobId}`)
-      .then((r) => {
-        if (!stop && r.status === 404) {
-          writeJobId(skillId, kind, null)
-          setJobId(null)
-        }
-      })
-      .catch(() => undefined)
+    api.job(jobId).catch((err: unknown) => {
+      if (!stop && err instanceof ApiError && err.status === 404) {
+        writeJobId(skillId, kind, null)
+        setJobId(null)
+      }
+    })
     return () => {
       stop = true
     }

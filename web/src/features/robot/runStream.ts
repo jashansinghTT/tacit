@@ -56,7 +56,7 @@ function slerp(a: Quat, b: Quat, u: number, out: Quat) {
   return out
 }
 
-export type RunStatus = 'idle' | 'starting' | 'streaming' | 'done' | 'error'
+export type RunStatus = 'idle' | 'starting' | 'streaming' | 'stopped' | 'done' | 'error'
 
 export interface Gr00tStats {
   calls: number
@@ -182,7 +182,7 @@ class RunBuffer {
     const latest = this.latestT
     if (this.offset === null) this.offset = now - latest
     let t = now - this.offset - LIVE_DELAY
-    if (ui.status === 'done' || ui.status === 'error') t = Math.min(t + LIVE_DELAY, latest)
+    if (ui.status === 'done' || ui.status === 'error' || ui.status === 'stopped') t = Math.min(t + LIVE_DELAY, latest)
     if (t > latest) {
       this.offset += t - latest
       t = latest
@@ -306,7 +306,7 @@ export async function startRun(skillId: string, mode: RunMode, seed: number): Pr
   sock.onState((s) => {
     if (socket !== sock) return
     const st = useRunUi.getState().status
-    if ((s === 'closed' || s === 'error') && st !== 'done' && st !== 'error') {
+    if ((s === 'closed' || s === 'error') && st !== 'done' && st !== 'error' && st !== 'stopped') {
       useRunUi.setState({
         status: 'error',
         error: s === 'error' ? 'The run stream failed. Is the backend on :8710 running?' : 'The run stream closed before the run finished.',
@@ -323,7 +323,7 @@ export function stopRun() {
     s.close()
   }
   const st = useRunUi.getState().status
-  if (st === 'starting' || st === 'streaming') useRunUi.setState({ status: 'idle' })
+  if (st === 'starting' || st === 'streaming') useRunUi.setState({ status: runBuffer.states.length ? 'stopped' : 'idle', duration: runBuffer.latestT })
 }
 
 /** Clears the viewer back to the scene at rest. */

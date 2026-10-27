@@ -82,7 +82,7 @@ export function ExplainerStrip({
     },
     {
       key: 'program',
-      label: 'Robot program',
+      label: 'Program',
       icon: Waypoints,
       value: program.length || '–',
       unit: 'actions',
@@ -91,7 +91,7 @@ export function ExplainerStrip({
     },
     {
       key: 'variations',
-      label: 'Simulated variations',
+      label: 'Sim variations',
       icon: Shuffle,
       value: training && train.demosDone != null && train.scriptedSuccess == null ? `${train.demosDone}` : (demos ?? 200),
       unit: training && train.demosDone != null && train.scriptedSuccess == null ? `/ ${train.demosTotal}` : 'demos',

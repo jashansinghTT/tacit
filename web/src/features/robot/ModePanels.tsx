@@ -57,6 +57,12 @@ function RunOutcome({ modes }: { modes: RunMode[] }) {
         {ui.error}
       </div>
     )
+  if (ui.status === 'stopped')
+    return (
+      <div className="rounded-md bg-white/[0.03] px-3 py-2 text-[12.5px] text-fg-muted shadow-[inset_0_0_0_1px_var(--color-line)]" data-testid="run-stopped">
+        Stopped. Scrub the timeline under the view to look back over it.
+      </div>
+    )
   if (ui.status !== 'done' || !ui.done)
     return (
       <div className="flex items-center gap-2 rounded-md bg-ion-soft px-3 py-2 text-[12.5px] text-ion" data-testid="run-live">

@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
 
 /**
@@ -8,7 +8,16 @@ import { cn } from '@/lib/cn'
 export function LossChart({ curve, epochs, live, className }: { curve: [number, number][]; epochs?: number | null; live?: boolean; className?: string }) {
   const id = useId().replace(/:/g, '')
   const [hover, setHover] = useState<number | null>(null)
-  const W = 400
+  // Draw at the container's real width so labels keep their size at any panel width.
+  const box = useRef<HTMLDivElement>(null)
+  const [W, setW] = useState(400)
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setW(Math.max(240, Math.round(e.contentRect.width))))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const H = 168
   const pad = { l: 40, r: 12, t: 12, b: 22 }
   const geo = useMemo(() => {
@@ -30,14 +39,16 @@ export function LossChart({ curve, epochs, live, className }: { curve: [number, 
     const xTicks = [1]
     for (let e = step; e <= maxE; e += step) if (e !== 1) xTicks.push(e)
     return { pts, line, area, sx, sy, yTicks, xTicks, maxE }
-  }, [curve, epochs, pad.b, pad.l, pad.r, pad.t])
+  }, [curve, epochs, W, pad.b, pad.l, pad.r, pad.t])
   const last = geo.pts[geo.pts.length - 1]
   const h = hover !== null ? geo.pts[hover] : null
   return (
-    <div className={cn('relative', className)} data-testid="loss-chart">
+    <div ref={box} className={cn('relative', className)} data-testid="loss-chart">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="block h-auto w-full"
+        width={W}
+        height={H}
+        className="block max-w-full"
         role="img"
         aria-label={last ? `Training loss, epoch ${last[0]}: ${last[1].toFixed(4)}` : 'Training loss (no epochs yet)'}
         onPointerLeave={() => setHover(null)}
