@@ -107,6 +107,10 @@ def wait_job(api: httpx.Client, job_id: str, timeout_s: float, on_change=None) -
             last_snap, last_move = snap, time.monotonic()
         if job["status"] in ("done", "failed"):
             return job
+        stall = float(os.environ.get("QA_STALL_S", 300))
+        if time.monotonic() - last_move > stall:
+            raise RuntimeError(f"job {job_id} stalled: '{job['status']}' at stage {job.get('stage')} "
+                               f"({(job.get('stages') or [{}])[-1].get('detail')}) with no progress for {stall:.0f} s")
         if restarted_at and time.monotonic() - last_move > 60:
             raise RuntimeError(f"job {job_id} was lost when the backend restarted (still '{job['status']}' at stage "
                                f"{job.get('stage')}, no progress for 60 s)")

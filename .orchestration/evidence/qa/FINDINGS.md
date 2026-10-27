@@ -57,3 +57,29 @@ it is fixed.
   a restart; a timeout for interactive calls that leaves the text on screen (the UI already shows captions).
 - Evidence: `docker logs tt-model-cohost-speech-blackhole-p150` around 19:49 to 19:52Z (`s2pro INFO tts done`
   lines with `seconds`, `audio_s`, `frames_per_s`); `/api/box` S2 Pro p50 50.3 s at 19:40Z.
+
+## QA-4 backend: a restart during training leaves the policy "training" forever
+
+- Owner: backend (lead). State: open. Found 2026-10-27 20:30Z.
+- Seen: restarts at 20:15:18Z and 20:28:27Z failed the train jobs correctly ("interrupted by a backend restart":
+  `job_7039138c` on `sk_5a57754d`, `job_ae282123` on the seeded `sk_3b7c613d` "Cup and Bottle Placement"), but
+  `robot.policy` stays `{"status": "training"}` on both skills (`GET /api/robot/sk_3b7c613d`). Nothing will train
+  them, and the Robot Lab shows the demo skill as training.
+- Expected: `recover_interrupted_jobs()` also resets interrupted train jobs' policies (back to the previous
+  policy, or `untrained`/`failed` with the reason), and evaluate jobs leave the policy usable.
+- Repro: `POST /api/robot/{id}/train`, restart the backend mid-train, `GET /api/robot/{id}`.
+
+## QA-5 backend + sim: policy training crawls (about 150x slower) when the box is busy
+
+- Owner: backend (lead) for where training runs; sim for `train_policy` threading. State: open. Found 20:30Z.
+- Seen: with load average 46 to 53 on 16 cores (backend 575% CPU in perception, other workers' Chromium and a sim
+  batch run), a 200-demo / 30-epoch training on `sk_5a57754d` advanced one epoch per ~5 minutes (epoch 4 to 5
+  from 20:22 to 20:27Z); the same training took 59 s for all 30 epochs at 19:35Z. At that rate the Robot Lab's
+  "Train" takes about 2.5 hours.
+- Likely cause: `train_policy` runs in a thread inside the uvicorn process (`asyncio.to_thread`) and sets
+  `torch.set_num_threads(8)` process-wide; its Python loop competes for the GIL with the backend's perception
+  threads, and 8 OpenMP threads oversubscribe a saturated CPU.
+- Suggestions: run demos/train/evaluate in a separate process (a `ProcessPoolExecutor` or a subprocess, with
+  `nice`), with 4 torch threads and `OMP_WAIT_POLICY=PASSIVE`; report progress back over a pipe as now.
+- Note: the load came from development work (several workers testing at once), so it overstates a single demo;
+  but a capture or processing job running beside a training is a normal demo moment.
