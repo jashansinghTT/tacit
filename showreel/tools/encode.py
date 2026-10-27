@@ -78,7 +78,10 @@ def main():
     if a.fade_out:
         afilt.append(f"afade=t=out:st={dur - a.fade_out:.3f}:d={a.fade_out}")
     cmd += ["-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p",
-            "-c:v", "libx264", "-preset", "slow", "-crf", str(a.crf), "-profile:v", "high",
+            # CRF with a VBV cap: the point-cloud dissolve is pure fine detail and would otherwise
+            # peak far beyond what players stream smoothly (134 Mbit/s for one second, uncapped).
+            "-c:v", "libx264", "-preset", "slow", "-crf", str(a.crf), "-profile:v", "high", "-level", "4.2",
+            "-maxrate", "40M", "-bufsize", "80M",
             "-x264-params", "aq-mode=3:aq-strength=0.9:deblock=-1,-1",
             "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709", "-movflags", "+faststart"]
     if a.audio:
