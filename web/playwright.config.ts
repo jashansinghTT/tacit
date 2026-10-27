@@ -37,8 +37,8 @@ export default defineConfig({
     permissions: ['camera', 'microphone'],
   },
   projects: [
-    // learn, exchange and robot have their own configs (e2e/*.config.ts) and run against the real stack
-    { name: 'smoke', testIgnore: /(screenshots|learn|exchange|robot)\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // learn and exchange have their own configs (e2e/*.config.ts) and run against the real stack
+    { name: 'smoke', testIgnore: /(screenshots|learn|exchange)\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
     { name: 'screenshots', testMatch: /screenshots\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: real
