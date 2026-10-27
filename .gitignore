@@ -27,3 +27,5 @@ web/playwright-report/
 *.task
 *.tflite
 !web/public/**/*.mp4
+# qa dev runs (timestamped runs are evidence and are committed)
+.orchestration/evidence/qa/runs/dev-*/
