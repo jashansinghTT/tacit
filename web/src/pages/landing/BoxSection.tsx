@@ -12,6 +12,15 @@ const GROUP_LABEL: Record<string, string> = {
   gr00t: 'Robot policy',
 }
 
+function groupLabel(group: string) {
+  const g = group.toLowerCase()
+  if (g.includes('vision')) return GROUP_LABEL['tacit-vision']
+  if (g.includes('speech')) return GROUP_LABEL['cohost-speech']
+  if (g.startsWith('gpt-oss') || g.includes('llm')) return GROUP_LABEL['gpt-oss-20b']
+  if (g.includes('gr00t') || g.includes('groot')) return GROUP_LABEL.gr00t
+  return GROUP_LABEL[group] ?? group
+}
+
 export function BoxSection() {
   const box = useBox()
   const data = box.data
@@ -65,7 +74,7 @@ export function BoxSection() {
                         <div className="telemetry text-[11px] text-fg-subtle">
                           CHIP {chip.id} · {chip.board}
                         </div>
-                        <div className="text-sm font-medium text-fg">{GROUP_LABEL[chip.group] ?? chip.group}</div>
+                        <div className="text-sm font-medium text-fg">{groupLabel(chip.group)}</div>
                       </div>
                     </div>
                     <StatusDot tone={chip.status === 'ok' ? 'ok' : chip.status === 'degraded' ? 'warn' : 'fault'} pulse={chip.status === 'ok'} />

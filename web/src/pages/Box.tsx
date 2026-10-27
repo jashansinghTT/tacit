@@ -8,6 +8,16 @@ import { fmtAgo, fmtInt, fmtMs } from '@/lib/format'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { BackendBadge, Badge, ErrorState, Meter, Panel, Skeleton, Sparkline, Stat, StatusDot, Ticker, type Tone } from '@/components/ui'
 
+/** Group names drift (gpt-oss-20b-fast, vision-cohost, …): match on what they start with. */
+function groupInfo(group: string) {
+  const g = group.toLowerCase()
+  if (g.includes('vision')) return GROUP['tacit-vision']
+  if (g.includes('speech')) return GROUP['cohost-speech']
+  if (g.startsWith('gpt-oss') || g.includes('llm')) return GROUP['gpt-oss-20b']
+  if (g.includes('gr00t') || g.includes('groot')) return GROUP.gr00t
+  return GROUP[group]
+}
+
 const GROUP: Record<string, { label: string; kind: string }> = {
   'tacit-vision': { label: 'Vision cohost', kind: 'HaMeR · Gaze-LLE · RF-DETR · VGGT' },
   'cohost-speech': { label: 'Speech cohost', kind: 'Whisper · S2 Pro · Music 3' },
@@ -79,14 +89,14 @@ function ChipMap({ box, selected, onSelect }: { box: BoxStatus; selected: number
                       active ? 'shadow-[0_0_0_1.5px_var(--color-ion),0_0_40px_-6px_rgb(60_215_255/0.6)]' : 'shadow-[0_0_0_1px_var(--color-line-strong),0_10px_20px_-6px_rgb(0_0_0/0.8)]',
                     )}
                     aria-pressed={active}
-                    aria-label={`Chip ${c.id}, ${GROUP[c.group]?.label ?? c.group}`}
+                    aria-label={`Chip ${c.id}, ${groupInfo(c.group)?.label ?? c.group}`}
                   >
                     <div className="pointer-events-none absolute inset-2 rounded-md opacity-60" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgb(255 255 255 / 0.03) 0 2px, transparent 2px 7px)' }} />
                     <div className="relative flex items-center justify-between">
                       <span className="telemetry text-[10px] text-fg-subtle">CHIP {c.id}</span>
                       <StatusDot tone={tone} pulse={tone === 'ok'} />
                     </div>
-                    <div className="relative mt-1 text-[13px] font-medium text-fg">{GROUP[c.group]?.label ?? c.group}</div>
+                    <div className="relative mt-1 text-[13px] font-medium text-fg">{groupInfo(c.group)?.label ?? c.group}</div>
                     <div className="relative mt-3 space-y-1">
                       {c.models.map((m) => (
                         <div key={m.name} className={cn('flex items-center justify-between gap-2 rounded-[4px] px-2 py-1 text-[11px]', m.healthy ? 'bg-ion/[0.08] text-ion' : 'bg-fault-soft text-fault')}>
@@ -117,7 +127,7 @@ function ChipPanel({ c, hist, highlight, queue }: { c: BoxChip; hist: Map<string
       eyebrow={`chip ${c.id} · ${c.board}`}
       title={
         <span className="flex items-center gap-2">
-          {GROUP[c.group]?.label ?? c.group}
+          {groupInfo(c.group)?.label ?? c.group}
           <Badge tone={tone} dot>
             {c.status}
           </Badge>
