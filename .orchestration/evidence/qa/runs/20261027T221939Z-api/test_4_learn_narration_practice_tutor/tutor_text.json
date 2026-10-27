@@ -1,0 +1,91 @@
+{
+  "delta": [
+    "Maria",
+    " says",
+    " the",
+    " first",
+    " stem",
+    " sets",
+    " the",
+    " foundation",
+    " of",
+    " the",
+    " arrangement",
+    ".",
+    " You",
+    " should",
+    " hold",
+    " it",
+    " steady",
+    ",",
+    " keep",
+    " it",
+    " aligned",
+    " with",
+    " the",
+    " vase",
+    "’s",
+    " center",
+    ",",
+    " and",
+    " avoid",
+    " letting",
+    " it",
+    " touch",
+    " the",
+    " rim",
+    ".",
+    " Also",
+    " watch",
+    " the",
+    " vase",
+    "’s",
+    " balance",
+    " so",
+    " it",
+    " won",
+    "’t",
+    " tip",
+    ".",
+    " If",
+    " you",
+    "’re",
+    " unsure",
+    ",",
+    " ask",
+    " a",
+    " supervisor",
+    "."
+  ],
+  "audio": [
+    {
+      "index": 0,
+      "audio": "/media/tts/02f85fd92d1a3b4ee0ce.wav",
+      "duration": 3.95
+    },
+    {
+      "index": 1,
+      "audio": "/media/tts/09c93575876a5b15eeeb.wav",
+      "duration": 5.85
+    },
+    {
+      "index": 2,
+      "audio": "/media/tts/d05bb26d2096440988b7.wav",
+      "duration": 2.65
+    },
+    {
+      "index": 3,
+      "audio": "/media/tts/ea48c955a9d6e9d9760c.wav",
+      "duration": 2.88
+    }
+  ],
+  "done": {
+    "text": "Maria says the first stem sets the foundation of the arrangement. You should hold it steady, keep it aligned with the vase’s center, and avoid letting it touch the rim. Also watch the vase’s balance so it won’t tip. If you’re unsure, ask a supervisor.",
+    "audio_parts": 4,
+    "sources": [],
+    "question": "Why does the first step matter, and what should I watch out for?"
+  },
+  "end": true,
+  "transcript": null,
+  "error": null
+}

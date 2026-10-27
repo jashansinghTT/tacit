@@ -1,0 +1,1 @@
+Screenshots of this run were dropped to keep the repo small; failure screenshots are in artifacts/ and ../../findings/.

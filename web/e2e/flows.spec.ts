@@ -55,7 +55,7 @@ class Run {
   async shot(name: string) {
     const dir = path.join(RUN_DIR, 'screens', this.info.title.split(' ')[0])
     fs.mkdirSync(dir, { recursive: true })
-    await this.page.screenshot({ path: path.join(dir, `${name}.png`) })
+    await this.page.screenshot({ path: path.join(dir, `${name}.jpg`), type: 'jpeg', quality: 80 })
   }
   async finish() {
     await this.info.attach('timings', { body: JSON.stringify(this.timings), contentType: 'application/json' })
