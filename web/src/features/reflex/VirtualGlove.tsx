@@ -32,27 +32,44 @@ const SHELL = new THREE.MeshStandardMaterial({ color: '#3a414b', metalness: 0.25
 const CAP = new THREE.MeshStandardMaterial({ color: '#1d2228', metalness: 0.3, roughness: 0.55 })
 
 const START = new THREE.Vector3(0.16, 0.2, 0.62)
-const END = new THREE.Vector3(0.02, 0.09, 0.47)
 const TARGET = new THREE.Vector3(0.004, 0.05, 0)
+// The camera looks along this direction; its distance follows the grip (open hand far, fist near).
+const VIEW_DIR = new THREE.Vector3(0.02, 0.04, 0.47).normalize()
+const FAR = 0.47
+const NEAR = 0.35
 
-/** Eases the camera in from a wide shot when the glove first appears. */
-function CameraIntro() {
+/**
+ * Eases the camera in from a wide shot, then keeps the hand framed: closer for a fist, further
+ * for an open hand. Once the trainee orbits the view, it stays where they put it.
+ */
+function CameraRig({ curls }: { curls: MutableRefObject<number[]> }) {
   const camera = useThree((s) => s.camera)
-  const controls = useThree((s) => s.controls) as unknown as { target: THREE.Vector3; update: () => void } | null
+  const controls = useThree((s) => s.controls) as unknown as (THREE.EventDispatcher<{ start: object }> & { target: THREE.Vector3; update: () => void }) | null
   const reduce = useReducedMotion()
-  const t = useRef(reduce ? 1 : 0)
+  const intro = useRef(reduce ? 1 : 0)
+  const touched = useRef(false)
+  const tmp = useMemo(() => ({ target: new THREE.Vector3(), want: new THREE.Vector3() }), [])
   useEffect(() => {
-    camera.position.copy(reduce ? END : START)
-  }, [camera, reduce])
+    if (!controls) return
+    const onStart = () => void (touched.current = true)
+    controls.addEventListener('start', onStart)
+    return () => controls.removeEventListener('start', onStart)
+  }, [controls])
   useFrame((_, dt) => {
-    if (t.current >= 1) return
-    t.current = Math.min(1, t.current + dt / 1.6)
-    const k = 1 - Math.pow(1 - t.current, 3)
-    camera.position.lerpVectors(START, END, k)
+    if (touched.current) return
+    const c = curls.current.reduce((a, b) => a + b, 0) / 5
+    tmp.target.set(TARGET.x, TARGET.y - 0.018 * c, TARGET.z)
+    tmp.want.copy(VIEW_DIR).multiplyScalar(FAR - (FAR - NEAR) * c).add(tmp.target)
+    if (intro.current < 1) {
+      intro.current = Math.min(1, intro.current + dt / 1.6)
+      camera.position.lerpVectors(START, tmp.want, 1 - Math.pow(1 - intro.current, 3))
+    } else {
+      camera.position.lerp(tmp.want, 1 - Math.exp(-dt * (reduce ? 50 : 2)))
+    }
     if (controls) {
-      controls.target.copy(TARGET)
+      controls.target.lerp(tmp.target, 0.2)
       controls.update()
-    } else camera.lookAt(TARGET)
+    } else camera.lookAt(tmp.target)
   })
   return null
 }
@@ -104,10 +121,9 @@ function Finger({ index, curls }: { index: number; curls: MutableRefObject<numbe
   )
 }
 
-function Hand({ track, timeRef, side }: { track: FingerTrack | undefined; timeRef: MutableRefObject<number>; side: 'left' | 'right' }) {
+function Hand({ track, timeRef, side, curls }: { track: FingerTrack | undefined; timeRef: MutableRefObject<number>; side: 'left' | 'right'; curls: MutableRefObject<number[]> }) {
   const group = useRef<THREE.Group>(null)
   const target = useRef([0, 0, 0, 0, 0])
-  const curls = useRef([0.15, 0.15, 0.15, 0.15, 0.15])
   const reduce = useReducedMotion()
   const strip = useMemo(() => new THREE.MeshStandardMaterial({ color: '#0b0d10', emissive: new THREE.Color('#3cd7ff'), emissiveIntensity: 1.3, toneMapped: false }), [])
   useFrame(({ clock }, dt) => {
@@ -140,6 +156,7 @@ function Hand({ track, timeRef, side }: { track: FingerTrack | undefined; timeRe
 }
 
 export function VirtualGlove({ track, timeRef, side = 'right', className }: { track: FingerTrack | undefined; timeRef: MutableRefObject<number>; side?: 'left' | 'right'; className?: string }) {
+  const curls = useRef([0.15, 0.15, 0.15, 0.15, 0.15])
   return (
     <div className={className} data-testid="virtual-glove">
       <Canvas camera={{ position: START.toArray(), fov: 34, near: 0.01, far: 5 }} dpr={[1, 2]} gl={{ antialias: true }}>
@@ -148,10 +165,10 @@ export function VirtualGlove({ track, timeRef, side = 'right', className }: { tr
         <directionalLight position={[0.4, 0.7, 0.7]} intensity={2.0} />
         <directionalLight position={[0.1, 0.15, 0.9]} intensity={0.55} />
         <directionalLight position={[-0.6, 0.3, -0.5]} intensity={1.0} color="#3cd7ff" />
-        <Hand track={track} timeRef={timeRef} side={side} />
+        <Hand track={track} timeRef={timeRef} side={side} curls={curls} />
         <ContactShadows position={[0, -0.072, 0]} opacity={0.55} scale={0.45} blur={2.6} far={0.25} resolution={512} color="#000000" />
         <OrbitControls target={TARGET.toArray()} enablePan={false} minDistance={0.2} maxDistance={0.8} enableDamping makeDefault />
-        <CameraIntro />
+        <CameraRig curls={curls} />
       </Canvas>
     </div>
   )
