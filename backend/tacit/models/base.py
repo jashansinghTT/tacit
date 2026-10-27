@@ -42,6 +42,8 @@ class Stats:
     last_error: str | None = None
     healthy: bool | None = None
     checked_at: float = 0.0
+    busy: bool = False            # answering a long request, so its health check timed out
+    ok_at: float = 0.0            # last time its health check answered
 
     def p50(self) -> float | None:
         return round(statistics.median(self.latencies), 1) if self.latencies else None
@@ -138,14 +140,23 @@ async def post_json(key: str, path: str, payload: dict, timeout: float = 30.0, r
     raise ModelUnavailable(ep, str(last))
 
 
+BUSY_GRACE_S = 120.0   # a model that answered this recently and now only times out is busy, not down
+
+
 async def health(key: str, timeout: float = 2.0) -> bool:
+    """Up when its health check answers, or when it only timed out (a co-host serves one request at a time)
+    and answered within BUSY_GRACE_S. Refused connections and errors are down at once."""
     ep = endpoints()[key]
     st = stats(key)
     try:
         r = await client().get(ep.url + ep.health, timeout=timeout)
-        ok = r.status_code < 400
+        ok, st.busy = r.status_code < 400, False
+    except httpx.TimeoutException:
+        ok = st.busy = time.time() - st.ok_at < BUSY_GRACE_S
     except httpx.HTTPError:
-        ok = False
+        ok = st.busy = False
+    if ok and not st.busy:
+        st.ok_at = time.time()
     st.healthy, st.checked_at = ok, time.time()
     return ok
 

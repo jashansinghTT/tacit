@@ -711,3 +711,21 @@ async def test_both_hands_of_a_frame_go_in_one_request_when_hamer_serves_it(monk
         else:
             assert both.call_count == 0 and one.call_count == 3
             assert out[1][0] == vision._hand(fx, 0.5)
+
+
+async def test_a_busy_model_is_up_and_a_refused_one_is_down():
+    import httpx
+    import respx
+    from tacit.config import endpoints
+    from tacit.models import base
+    key = "hamer"
+    url = endpoints()[key].url + endpoints()[key].health
+    with respx.mock(assert_all_called=False) as mock:
+        route = mock.get(url)
+        route.side_effect = [httpx.Response(200), httpx.ReadTimeout("busy"), httpx.ConnectError("refused"),
+                             httpx.ReadTimeout("busy")]
+        assert await base.health(key) is True
+        assert await base.health(key) is True and base.stats(key).busy      # answered just now: busy, not down
+        assert await base.health(key) is False                             # refused: down at once
+        base.stats(key).ok_at -= base.BUSY_GRACE_S + 1
+        assert await base.health(key) is False                             # only timeouts for too long: down
