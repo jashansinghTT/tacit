@@ -53,7 +53,7 @@ function Finger({ index, curls }: { index: number; curls: MutableRefObject<numbe
     })
     led.emissiveIntensity = 0.35 + 1.5 * c
   })
-  const segment = (k: number, ref: React.RefObject<THREE.Group | null>, child?: ReactNode) => (
+  const segment = (k: number, ref: React.RefObject<THREE.Group>, child?: ReactNode) => (
     <group ref={ref}>
       {/* actuator ring around the joint */}
       <mesh geometry={geo.ring} material={led} rotation={[Math.PI / 2, 0, 0]} />
