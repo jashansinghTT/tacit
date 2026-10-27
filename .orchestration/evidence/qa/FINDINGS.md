@@ -188,3 +188,14 @@ it is fixed.
 - Expected: the observed steps survive writing (SPEC 9.2 asks for >= 3 steps on the sample).
 - Suggestion: when the writer returns fewer steps than observed, re-split by the observed groups (keep the
   title with "(n of 5)") or retry; validate robot-program objects against detected labels.
+
+## QA-14 backend (Box): GR00T always shows 0 calls and no latency
+
+- Owner: backend (lead). State: open (low). Found 2026-10-27 21:33Z.
+- Seen: right after API run #1's F5 GR00T run (34 GR00T queries, p50 113 ms from the run's `gr00t` messages),
+  `/api/box` reports `GR00T N1.7 calls 0, p50 None`. The sim's GR00T loop calls :21030 directly, so the backend's
+  per-model stats never see it; the Box page (the "nine models on one box" proof) shows chip 3 idle.
+- Expected: GR00T calls and p50 on the Box, like the other eight models.
+- Suggestion: record each `gr00t` message's `ms` from the run stream into the box stats for GR00T.
+- Related numbers from the same moment: Whisper p50 0.75 s (so the 7 to 13 s transcripts are queueing behind
+  S2 Pro, not Whisper), S2 Pro p50 18.9 s over 44 calls.
