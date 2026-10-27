@@ -12,6 +12,8 @@ one branch-backed worktree per worker; the lead is the only integrator).
 - Board: `.orchestration/board.json`. Cards: `.orchestration/cards/<card>/{task,status,handoff}.md`.
 - Evidence: `.orchestration/evidence/<card>/`.
 - Heartbeat: `.orchestration/heartbeat` (ISO time, rewritten by the active lead at least every 30 min).
+- Deploy freeze: if `.orchestration/FREEZE` exists and the time in it is still ahead, do not restart the
+  backend or models and do not rebuild `web/dist` (QA is running release checks); merge only.
 - Stop switch: if `.orchestration/STOP` exists, every session finishes its current step, writes its
   status and stops starting new work.
 - The user's original request is summarised in `docs/SPEC.md`; the user is away for several days
