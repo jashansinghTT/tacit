@@ -1,52 +1,64 @@
 # Tacit status
 
-Updated: 2026-10-27 22:30 UTC by the lead (session tt-model-manager-4d)
+Updated: 2026-10-27 23:25 UTC by the lead (session tt-model-manager-4d)
 
-**Open it:** http://127.0.0.1:8710 on this box (from a laptop: forward port 8710). Demo script: docs/DEMO.md.
-**State:** release verified. QA's two consecutive release rounds on build 27010cd are green in both
-suites (API 7/7 and browser 7/7 against the real deployment, rounds 3 and 4, 22:14 and 22:19 UTC). Last
-step: the final deploy with the polish pass and small backend fixes (faster tutor voice, busy models shown
-as busy), then one final QA round on it.
+**Open it:** http://127.0.0.1:8710 on this box (from a laptop: `ssh -L 8710:localhost:8710 <box>`).
+Demo script: [docs/DEMO.md](docs/DEMO.md) (about 6 minutes). Why it matters: [docs/MOAT.md](docs/MOAT.md).
 
-## Works end to end on the real stack
-- Nine models, four Blackhole chips, all healthy (chip 0 vision co-host: HaMeR, Gaze-LLE, RF-DETR, VGGT,
-  bit-identical to standalone; chip 1 Whisper + S2 Pro + Music 3; chip 2 gpt-oss-20b; chip 3 GR00T N1.7).
-- Watch: video → skill (steps, the why, SOP, quiz, safety, robot program), lesson voiced by S2 Pro, 9 languages.
-- Check: real footage 0.90 / 0.97 verified, AI-made 0.23 suspect (VGGT geometry).
-- Teach: live capture with the coach asking why out loud after each step; Whisper transcribes the answer.
-- Do: trainee practice with live feedback, tutor Q&A by voice, quality audit of a worker's run vs the expert.
-- Robot: policy trained from 200 sim variations, 20/20 on the sample programs; GR00T N1.7 drives the sim.
-- Earn: Skill Exchange sell → license → motion-only pack → royalty ledger; Reflex glove export.
-- QA release rounds 3 and 4: API 7/7 + browser 7/7, twice in a row (evidence: ~/tacit-wt/qa/.orchestration/evidence/qa/RESULTS.md).
-- Tests: backend 51/51, sim 37/37 (+2 live GR00T), web mock suites 23/23 on main.
+**State: released.** Every card is merged and the final build is live (backend deployed 22:32 UTC; web
+rebuilt 23:20 UTC with footage credits). QA's end-to-end suites passed three rounds in a row in both the API
+suite and the browser suite against the real deployment, 7/7 flows each (SPEC section 9), the last round on
+the final build. Services run under systemd; the watchdog keeps them up. The showreel first cut is the last
+open item (rendering; for your review, no final render without you).
 
-## Fixed today from QA (all with regression tests)
-QA-1..8 (restart recovery, program mismatch, speech priority, teardown, Studio re-runs, CPU priority);
-QA-11 quiz could come out empty → validated, retried, filled in the background;
-QA-12 listing page 500 for trained skills; QA-13 the writer could fold five repetitions into one step →
-every observed step survives; QA-14 GR00T calls now show on the Box; quiz answers no longer always first.
+## What works end to end (real hardware, nine models on four Blackhole chips)
+- **Watch:** record live with a webcam or use a sample. Hands in 3D (HaMeR), gaze (Gaze-LLE) and parts
+  (RF-DETR) are analysed at the camera's 10 fps on chip 0. The coach (gpt-oss-20b, chip 2) asks why after
+  each step, out loud (S2 Pro, chip 1), and Whisper (chip 1) puts the answer on the step. The video becomes
+  a skill: steps, the why, SOP, quiz, safety notes and a robot program.
+- **Check:** VGGT (chip 0) rebuilds the scene in 3D. Real footage verifies (0.90 and 0.97); an AI-made clip
+  is flagged suspect (0.23).
+- **Teach:** lessons with a 3D twin of the expert, narration, 9 languages, practice with a live match score
+  and hints, a voice tutor that answers from the expert's own explanations, a quiz and a certificate. Also a
+  quality audit of a worker's run against the expert, and Reflex glove export plus a virtual glove.
+- **Do:** Robot Lab trains a policy from 200 sim variations, 20/20 on the sample programs. Replay follows
+  the expert's hands, and GR00T N1.7 (chip 3) drives the sim arm at 71 ms per decision (58 ms on the chip).
+- **Earn:** Skill Exchange: consented listing → motion-only preview → license → pack (no video) → royalty
+  ledger.
+- **Box:** live view of all nine models, the chip each runs on, latency, device memory; busy shows as busy.
 
-## Team (headless Claude sessions, tmux `tacit-team`)
-| card | owner | state |
-|---|---|---|
-| backend, deploy, integration | lead | running |
-| liveperf: 5.8 → 10 fps live analysis (camera-capped), outputs identical | tacit-vision | merged |
-| perception quality (vase P 1.00 R 0.83, jars P 0.80 R 0.80) | tacit-vision | merged |
-| sim + policy + GR00T | tacit-sim | merged |
-| web: landing, Studio, Skills, Audit, Box, Learn, Exchange, Robot Lab | tacit-web* | merged |
-| polish: whole-app consistency, tour, performance, a11y | tacit-web | running |
-| QA: release runs | tacit-qa | gate met on 27010cd; final round after the last deploy |
-| showreel (first cut only) | tacit-showreel | running |
+## Evidence
+- QA: [.orchestration/evidence/qa/RESULTS.md](.orchestration/evidence/qa/RESULTS.md) (every run, with timings),
+  FINDINGS.md (15 findings: 13 fixed and verified, 2 mitigated).
+- Live speed: .orchestration/evidence/liveperf/ (5.8 → 10 fps, outputs identical).
+- Sim and GR00T: .orchestration/evidence/sim/results.md. UI before/after: .orchestration/evidence/polish/.
+- Tests: backend 55/55, sim 37/37 (+2 live GR00T), web mock suites 25/25, typecheck and lint clean.
+
+## Known limits
+- **Tutor voice:** S2 Pro speaks at 2 to 4× real time (slower when the box is busy). Text shows in about
+  1 s. A new answer's voice starts 8 to 18 s later; questions asked before replay from cache in about 1 s
+  (the demo's suggested questions are pre-voiced). Mitigations in place: interactive voice before batch,
+  narration holds while someone talks, short first clause.
+- Sim views render in software (this user has no GPU render access).
+- Sample videos are Pexels/Pixabay stock footage, credited where they play; personas are fictional.
+
+## How to run it
+- `~/tacit/deploy/stack.sh status|up|down|restart-backend`; systemd user units `tacit-backend`,
+  `tacit-models`, `tacit-watchdog.timer` (every 5 min: restarts what is down, writes the block below).
+- Chips: 0 vision co-host (HaMeR :21000, Gaze-LLE :21001, RF-DETR :21002, VGGT :21003), 1 speech co-host
+  (Whisper :21010, S2 Pro :21011, Music 3 :21012), 2 gpt-oss-20b :21020, 3 GR00T N1.7 :21030.
+- E2E: `uv run --project tests/e2e pytest tests/e2e` (API) and
+  `QA_WEB_URL=http://127.0.0.1:8710 scripts/e2e/ui.sh --no-merge --no-build` (browser).
 
 ## Needs you
+- **Showreel first cut** for review: .orchestration/evidence/showreel/ (revised cut rendering now).
 - Reflex: running its code here was blocked by the auto-mode safety check (external code). To drive a
   glove, start Reflex yourself (`MOCK=1 ./application/dev.sh`); Tacit finds it at :8000 (or REFLEX_URL).
 - MotionSites is on the free plan (3 prompts used): https://motionsites.ai/unlimited
-- The showreel is a first cut for your review; no final render without you.
 - Optional: add user `jashan` to the `render` group for GPU rendering in the sim (system change, not done).
 
 <!-- runtime:start -->
-### Runtime (watchdog, 2026-10-27T22:23:55+00:00)
+### Runtime (watchdog, 2026-10-27T23:19:57+00:00)
 
 | service | state | check |
 |---|---|---|
