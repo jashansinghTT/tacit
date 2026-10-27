@@ -41,13 +41,21 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
                   priority: int = vision.BATCH) -> dict:
     """Analyse one RGB frame at time `t` (seconds). Shapes match API.md's Tracks frame plus timing and served_by."""
     t0 = time.perf_counter()
-    det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
-    t_mp = (time.perf_counter() - t0) * 1000
     b64, scale = encode_jpeg(rgb)
-
+    t_enc = (time.perf_counter() - t0) * 1000
     jobs: dict[str, asyncio.Future] = {}
+    # RF-DETR needs no hand or head box: it runs on the chip while MediaPipe runs on the CPU
     if "rfdetr" in kinds:
         jobs["rfdetr"] = asyncio.ensure_future(vision.rfdetr(b64, scale, priority=priority))
+    t1 = time.perf_counter()
+    try:
+        det = await asyncio.to_thread(mp_runner.detect, rgb, int(t * 1000))
+    except BaseException:
+        for j in jobs.values():
+            j.cancel()
+        raise
+    t_mp = (time.perf_counter() - t1) * 1000
+
     if "gaze" in kinds and det["head"]:
         jobs["gaze"] = asyncio.ensure_future(vision.gaze(b64, scale, [det["head"]["bbox"]], priority=priority))
     if "hamer" in kinds:
@@ -55,7 +63,7 @@ async def analyze(rgb: np.ndarray, t: float, mp_runner: MediaPipeRunner, kinds: 
             jobs[f"hamer:{hd['side']}"] = asyncio.ensure_future(vision.hamer(b64, scale, hd["bbox"], hd["side"] == "right", priority=priority))
     results = dict(zip(jobs, await asyncio.gather(*jobs.values(), return_exceptions=True)))
 
-    served, timing, errors = [], {"mediapipe": round(t_mp, 1)}, []
+    served, timing, errors = [], {"mediapipe": round(t_mp, 1), "encode": round(t_enc, 1)}, []
     objects: list[dict] = []
     if "rfdetr" in results:
         r = results["rfdetr"]
