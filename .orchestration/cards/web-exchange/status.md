@@ -1,7 +1,9 @@
 # Status: web-exchange
 
-State: running
-Updated: 2026-10-27T20:00:00+00:00
+State: review
+Updated: 2026-10-27T20:25:00+00:00
+
+Merge gate met; see handoff.md.
 
 ## Works (on the real backend, 8710, real model data)
 - **Exchange** `/exchange`: stats strip, provenance strip, search, industry, robot and verified-only
@@ -43,9 +45,14 @@ check/consent/split/published, grid, listing, checkout, receipt, library, earnin
   backend 8714, mocked models, `evidence/web-exchange/devbackend.py`), 5716 (dev → 8710) and
   5717 (preview → 8710).
 
+## Since the last update
+- Screenshot sweep of every page and state at 768/1024/1440/1920 (evidence folder); fixes from
+  it: users' avatars on cards and ledger, glyph kept clear of badges, sparse-grid card only fills a
+  gap, empty Exchange hides zero stats and filters, duplicate keys when a skill lists a model twice.
+- Final runs on the final code: license path green on 8710, full path green on the dev backend.
+
 ## Next
-Full-page screenshots of every state at 1280/1440/1920 and tablet width, a last design pass,
-handoff.
+Waiting for the lead's merge. After the merge and a web rebuild, the spec runs on 8710 directly.
 
 ## Blockers
 None.
