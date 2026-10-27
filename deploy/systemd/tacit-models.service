@@ -1,0 +1,14 @@
+[Unit]
+Description=Tacit model groups on the Tenstorrent chips (start what is not answering)
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=%h/tacit/deploy/stack.sh up-models
+TimeoutStartSec=900
+StandardOutput=append:%h/tacit/logs/stack.log
+StandardError=append:%h/tacit/logs/stack.log
+
+[Install]
+WantedBy=default.target

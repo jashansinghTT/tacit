@@ -6,7 +6,7 @@
 host: 127.0.0.1
 tt_model: ~/tacit/.tools/ttm/bin/tt-model
 
-vision_layout: standalone   # standalone | cohost
+vision_layout: cohost   # cohost (four vision models share chip 0) | standalone (bring-up only)
 
 groups:
   vision-cohost:
@@ -24,13 +24,13 @@ groups:
   hamer:
     layout: standalone
     package: changh95/hamer-p150
-    chips: [0]
+    chips: []        # bring-up only: chip 0, one standalone package at a time
     port: 21000
     health: /health
   gaze:
     layout: standalone
     package: changh95/gaze-lle-p150
-    chips: [3]
+    chips: []        # bring-up only: chip 0, one standalone package at a time
     port: 21001
     health: /health
   rfdetr:
