@@ -1,45 +1,41 @@
 # Status: vision
 
 State: running
-Updated: 2026-10-27T19:03:33+00:00
+Updated: 2026-10-27T19:14:12+00:00
 
 ## Now
-Step 4/5: first (cold) boot of the cohost group on chip 0, started 19:02:25Z. Image
-tt-model/cohost-vision:8b3e885e476b, staged manifest ~/tacit/build/cohost-vision/.
+Step 5: measuring cold and warm boot through deploy/vision-up.sh (kernel cache emptied), then
+README numbers and handoff.
 
 ## Works
-- Step 3/4/7 code committed (6853be8, 5904dbc): adapters models/cohost-vision/adapters/cohost_vision/,
-  Dockerfile, build.sh, render_manifest.py, tt-model.yaml (kind cohost), deploy/vision-up.sh, vision-down.sh.
-  Image builds in seconds from the four local images (no network).
-- Step 1 done. Fixtures for all four members committed on work/vision (a612436, 6e75d2d):
-  `backend/tests/fixtures/{hamer,gaze,rfdetr,vggt}/` + README. Standalone on chip 0, warm, 20 requests,
-  client wall p50 / model p50: HaMeR 15.2 / 13.1 ms, Gaze-LLE (3 heads) 9.6 / 6.3 ms,
-  RF-DETR 13.2 / 8.7 ms, VGGT (2 views) 1112 / 895 ms. Each answers bit-identically on repeat.
-- Step 2 done. All four images: /opt/tt-metal tree + /opt/tt-venv (Python 3.12.14, ttnn
-  0.75.0rc10.dev657+g8b98410e730 = tt-metal main 8b98410e730, torch 2.11.0+cpu, numpy 1.26.4).
-  Every tt_metal source file is identical across the four (only build-generated headers differ, in
-  #include order) -> one tree runs all four. Code: hamer/, gaze_lle/, rf_detr/ under /opt/tt-metal;
-  VGGT under /opt/tt-metal/models/{demos,server} + /opt/tt-metal/vggt. None has tt_kernel.
-  All open the chip with worker dispatch (same as the cohost host). Device-open settings:
-  HaMeR mesh 1x1 trace 200 MiB; Gaze trace 64 MiB; RF-DETR l1_small 32 KiB, trace 90 MB;
-  VGGT l1_small 64 KiB, trace 1536 MiB.
+- Fixtures for all four members committed (a612436, 6e75d2d); lead cherry-picked them into main.
+- The cohost group SERVES on chip 0: hamer :21000, gaze :21001, rfdetr :21002, vggt :21003,
+  status :21004. First served 19:10Z. Start: deploy/vision-up.sh; stop: deploy/vision-down.sh.
+- Outputs: all four members bit-identical to their standalone packages on the fixture requests
+  (max abs diff 0 on every field; VGGT dense arrays too). Also bit-identical under load: all four
+  at once (10 each: 40/40), and HaMeR+Gaze+RF-DETR 300 each with VGGT running 10 times (910/910).
+- Latency, one at a time (wall p50 / model p50, standalone in brackets): HaMeR 15.6/13.3 (15.2/13.1),
+  Gaze 9.9/6.4 (9.6/6.3), RF-DETR 12.3/8.2 (13.2/8.7), VGGT 2 views 1078/886 (1112/895) ms.
+  Three live members saturating the chip: ~32 ms p50 each (~30 frames/s); a request that lands
+  during a VGGT forward waits up to ~0.95 s.
+- Status port: DRAM per member (HaMeR 1.18, Gaze 0.14, RF-DETR 0.07, VGGT 3.43 GiB; total
+  4.82 GiB/chip), L1 held after every phase 0 KiB/core, compiles_after_capture {}.
 
 ## Decisions
-- Build from the published images' code, not the newer HF code/ snapshots in .tools/ref
-  (those were updated after the images were built: new api.py/kernels). Same code as the
-  standalone fixtures, so outputs can be compared one to one.
-- tt-model's cohost launcher refuses to build images (install_lines raises: "kind cohost images
-  are built FROM an existing package image plus the co-host runtime, not by tt-model package").
-  The speech package was built from a hand-written Dockerfile. So: models/cohost-vision/build.sh
-  runs docker build, then renders the staged manifest with tt-model's own ContainerManifest.to_wire
-  into ~/tacit/build/cohost-vision/. Same serve path as any package.
-- Boot: round 1 = compile only (eager, no trace captured anywhere), round 2 = capture with no
-  eager warm runs, so nothing compiles or allocates persistent state after another member's
-  trace exists.
+- Build from the published images' code, not the newer HF code/ snapshots (same code as the
+  standalone fixtures -> one-to-one comparison).
+- tt-model refuses to build kind-cohost images; build.sh builds the image (FROM the VGGT image,
+  other members' code copied from their images, no network) and renders the manifest with
+  tt-model's own ContainerManifest.to_wire into ~/tacit/build/cohost-vision/.
+- Boot round 1 = eager compile only, round 2 = capture only (no eager runs once any trace exists).
+- L1 fit (step 6): first boot failed: VGGT's camera layer norm needs CBs up to byte 1,545,088 of
+  core (0,0); RF-DETR's 24 layer-scale rows and HaMeR's ones row were resident in L1 (46 KiB/core).
+  Mixed DRAM/L1 placement does not compile for the fused matmul-addcmul kernel, so the adapters
+  copy those rows into L1 right before each use (freed after). Bit-identical outputs, +0.3 ms HaMeR.
+- l1_small_size 64 KiB (VGGT's own): at 96 KiB VGGT's dense outputs moved by a few fp16 ulps.
 
 ## Next
-- Validate on hardware: outputs vs standalone, latency, all four at once, status port, boot times.
-- README with measured numbers, handoff.
+- Cold/warm boot numbers, README table, handoff.md, State: review.
 
 ## Blockers
 - None.
