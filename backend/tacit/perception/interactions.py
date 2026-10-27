@@ -222,3 +222,22 @@ def best_contact(p, present: list[tuple[ObjectTrack, list]], scale: float):
         if d <= CONTACT and (best is None or d < best[1]):
             best = (tr, d, mouth)
     return best
+
+
+def pick_contact(p, present: list[tuple[ObjectTrack, list]], scale: float, engaged) -> tuple | None:
+    """The object a hand at ``p`` works with, as (track, via_opening, engaged), or None.
+
+    When it touches several, one off its resting place (``engaged(track, box)``: moved, or held up) wins: in
+    clutter, the object being handled is the one that moves. Otherwise the smallest wins: a hand inside a big
+    background box (a plant behind the bench) is about the small thing it holds."""
+    cands = []
+    for tr, box in present:
+        d, mouth = contact_distance(p, box, tr.label, scale)
+        if d <= CONTACT:
+            eng = engaged(tr, box)
+            rank = d if eng else (box[2] - box[0]) * (box[3] - box[1])
+            cands.append((not eng, rank, tr.id, tr, mouth, eng))
+    if not cands:
+        return None
+    _, _, _, tr, mouth, eng = min(cands, key=lambda c: c[:3])
+    return tr, mouth, eng

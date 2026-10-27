@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .interactions import (CONTACT, CONTAINERS, IGNORE, ObjectTracker, best_contact, body_center, body_scale, box_dist,
-                           center, contact_distance, faces_camera, fix_sides, hand_point)
+from .interactions import (CONTACT, CONTAINERS, HAND_TO_SCALE, IGNORE, ObjectTracker, body_center, body_scale, box_dist,
+                           center, faces_camera, fix_sides, hand_point, pick_contact)
 TIPS = (8, 12, 16, 20)
 
 
@@ -344,10 +344,9 @@ def _support_y(tracks: list, n_frames: int) -> float | None:
 def contact_episodes(frames: list[dict], scale: float | None = None) -> tuple[list[Episode], dict]:
     """Every hand-object interaction in ``frames`` (sides already fixed), and the context they were found in.
 
-    Per frame, each hand works with the object it touches (or whose opening it is over). When it touches
-    several, an object off its resting place (moved, or held up above the work surface) wins: in a
-    cluttered scene the object being handled is the one that moves. Otherwise the smallest wins: a hand
-    inside a big background box (a plant behind the bench) is about the small thing it holds.
+    Per frame, each hand works with the object ``pick_contact`` chooses; an object counts as off its resting
+    place when it moved by more than half its size, or (when it was not in view all along) is held up above
+    the work surface.
     """
     scale = scale or body_scale(frames)
     tracker = ObjectTracker(scale)
@@ -379,16 +378,9 @@ def contact_episodes(frames: list[dict], scale: float | None = None) -> tuple[li
             p = points[side][i]
             if np.isnan(p[0]) or walk[i]:
                 continue
-            cands = []
-            for tr, box in present[i]:
-                d, mouth = contact_distance(p, box, tr.label, scale)
-                if d <= CONTACT:
-                    eng = engaged(tr, box)
-                    rank = d if eng else (box[2] - box[0]) * (box[3] - box[1])
-                    cands.append((not eng, rank, tr.id, mouth, eng))
-            if cands:
-                _, _, tid, mouth, eng = min(cands)
-                contacts[side][i] = (tid, mouth, eng)
+            c = pick_contact(p, present[i], scale, engaged)
+            if c is not None:
+                contacts[side][i] = (c[0].id, c[1], c[2])
     by_id = {tr.id: tr for tr in tracker.tracks}
     episodes = []
     for side in ("left", "right"):
@@ -401,7 +393,7 @@ def contact_episodes(frames: list[dict], scale: float | None = None) -> tuple[li
             ep.resting = _resting(ep, points[side], times, scale)
             episodes.append(ep)
     return sorted(episodes, key=lambda e: e.t0), {"scale": scale, "tracks": tracker.tracks, "points": points,
-                                                   "times": times, "walking": walk}
+                                                   "times": times, "walking": walk, "support": support}
 
 
 def _resting(ep: Episode, pts: np.ndarray, times: list[float], scale: float) -> bool:
@@ -435,17 +427,23 @@ def _side_word(x: float, body_x: float | None, facing: bool, frame_w: float) -> 
     return "your right" if image_left == facing else "your left"
 
 
-def _names(tracks: list, frames: list[dict], facing: bool) -> dict[int, str]:
-    """A name per object: its label, plus which side of the expert it is on when two share a label."""
+def _names(tracks: list, frames: list[dict], facing: bool, scale: float, at: dict | None = None) -> dict[int, str]:
+    """A name per object: its label, plus where it is from the expert (standing as in frame ``at``) when two
+    objects share a label: "cup in front of you", "cup on your right"."""
     counts = Counter(tr.label for tr in tracks if len(tr.boxes) >= 3)
+    here = body_center(at) if at is not None else None
     bx = [c[0] for f in frames for c in [body_center(f)] if c is not None]
-    body_x = float(np.median(bx)) if bx else None
+    body_x = float(here[0]) if here is not None else float(np.median(bx)) if bx else None
     w = (frames[0].get("size") or [1280, 720])[0] if frames else 1280
     out = {}
     for tr in tracks:
         name = tr.label
         if counts[tr.label] > 1:
-            name = f"{tr.label} on {_side_word(center(tr.rest_box())[0], body_x, facing, w)}"
+            x = float(center(tr.rest_box())[0])
+            if body_x is not None and abs(x - body_x) < 0.5 * scale:
+                name = f"{tr.label} in front of you"
+            else:
+                name = f"{tr.label} on {_side_word(x, body_x, facing, w)}"
         out[tr.id] = name
     return out
 
@@ -479,18 +477,24 @@ def _describe(kind: str, hand: str | None, obj: str | None, target: str | None) 
     return f"Handle the {obj} with {who}"
 
 
-def _born_in_hand(g: list[Episode], pts: dict, times: list[float], scale: float) -> float | None:
-    """When the group's main object was first seen, if it was first seen in a hand (it had just been picked up)."""
+def _picked_up(g: list[Episode], times: list[float], support: float | None, scale: float) -> float | None:
+    """When the group's main object was first seen, if it was first seen off the work surface and touched within a
+    second: it can only have got there in a hand, so it had just been picked up (detections drop while it moves)."""
+    if support is None:
+        return None
     weight = Counter()
     for x in g:
         weight[x.track.id] += len(x.held) + 1
     tr = next(x.track for x in g if x.track.id == weight.most_common(1)[0][0])
     i = min(tr.boxes)
-    hands = [pts[s][i] for s in pts if not np.isnan(pts[s][i][0])]
-    return times[i] if any(box_dist(p, tr.boxes[i]) / scale <= CONTACT for p in hands) else None
+    touched = min(x.t0 for x in g if x.track.id == tr.id)
+    if (support - tr.boxes[i][3]) / scale >= LIFTED and touched - times[i] <= 1.0:
+        return times[i]
+    return None
 
 
-def _group(active: list[Episode], pts: dict, times: list[float], scale: float) -> list[list[Episode]]:
+def _group(active: list[Episode], pts: dict, times: list[float], support: float | None,
+           scale: float) -> list[list[Episode]]:
     """Episodes that make one action: the two hands at once, the same object again soon, or one hand moving
     between neighbouring objects; then touches right before or after handling an object join that action."""
     def same_site(a: Episode, b: Episode) -> bool:
@@ -533,11 +537,11 @@ def _group(active: list[Episode], pts: dict, times: list[float], scale: float) -
                         break
             if merged:
                 break
-    # an object first seen already in a hand was picked up just before: the reach for it is the same step
+    # an object first seen already off the work surface was picked up just before: the reach for it is the same step
     k = 1
     while k < len(groups):
         a, b = groups[k - 1], groups[k]
-        born = _born_in_hand(b, pts, times, scale)
+        born = _picked_up(b, times, support, scale)
         if span(b)[0] - span(a)[1] <= ABSORB and born is not None and born >= span(a)[0]:
             a.extend(b)
             del groups[k]
@@ -569,13 +573,22 @@ def interaction_steps(frames: list[dict], max_steps: int = 12) -> list[dict]:
     if not active:
         return []
     times = ctx["times"]
-    facing = faces_camera(frames)
-    names = _names(ctx["tracks"], frames, facing)
+    ctx["facing"] = facing = faces_camera(frames)
     steps = []
-    for g in _group(active, ctx["points"], times, scale):
+    for g in _group(active, ctx["points"], times, ctx["support"], scale):
         for i0, i1, phase in _split_set_down(g, times):
             part = [e for e in g if e.i1 >= i0 and e.i0 <= i1]
-            steps.append(_step(part, i0, i1, phase, frames, ctx, names, scale))
+            steps.append(_step(part, i0, i1, phase, frames, ctx, scale))
+    # steps follow each other: one that starts inside the previous one starts where that one ends
+    steps.sort(key=lambda s: s["i_start"])
+    kept: list[dict] = []
+    for s in steps:
+        if kept and s["i_start"] <= kept[-1]["i_end"]:
+            s["i_start"] = kept[-1]["i_end"] + 1
+            if s["i_start"] > s["i_end"] or times[s["i_end"]] - times[s["i_start"]] < MIN_EPISODE:
+                continue
+        kept.append(s)
+    steps = kept
     # the same action on the same object, again: number the repeats
     k = 0
     while k < len(steps):
@@ -586,29 +599,55 @@ def interaction_steps(frames: list[dict], max_steps: int = 12) -> list[dict]:
             s["repeat"], s["repeats"] = r, j - k + 1
         k = j + 1
     for s in steps:
+        s["approach"] = _approach(s, ctx["points"], times, scale, facing)
         s["draft"] = _describe(s["kind"], s["hand"], s["object"], s.get("target"))
         if s["repeats"] > 1:
             s["draft"] += f" (time {s['repeat']} of {s['repeats']})"
     return steps[:max_steps]
 
 
-def _step(part: list[Episode], i0: int, i1: int, phase: str | None, frames: list[dict], ctx: dict, names: dict,
+def _approach(step: dict, pts: dict, times: list[float], scale: float, facing: bool) -> str | None:
+    """How the working hand came to the step, in the expert's own frame ("up and to your right")."""
+    sides = ["right", "left"] if step["hand"] in ("both", None) else [step["hand"]]
+    i0 = step["i_start"]
+    for side in sides:
+        p0 = pts[side][i0]
+        before = [i for i in range(i0 - 1, -1, -1) if 0.5 <= times[i0] - times[i] <= 1.5 and not np.isnan(pts[side][i][0])]
+        if np.isnan(p0[0]) or not before:
+            continue
+        d = (p0 - pts[side][before[0]]) / scale
+        words = []
+        if abs(d[1]) >= 0.3:
+            words.append("up" if d[1] < 0 else "down")
+        if abs(d[0]) >= 0.3:
+            words.append("to your " + ("left" if (d[0] > 0) == facing else "right"))
+        if words:
+            return "reaches " + " and ".join(words)
+    return None
+
+
+def _step(part: list[Episode], i0: int, i1: int, phase: str | None, frames: list[dict], ctx: dict,
           scale: float) -> dict:
     """One step from the episodes that cover frames [i0, i1]: who, with what, and which kind of action."""
     times = ctx["times"]
+    names = _names(ctx["tracks"], frames, ctx["facing"], scale, frames[i0])
     dur = max(times[i1] - times[i0], 1e-3)
 
     def inside(e: Episode) -> float:
         return max(0.0, min(e.t1, times[i1]) - max(e.t0, times[i0]))
-    per_side = Counter()
-    for e in part:
-        per_side[e.side] += inside(e)
-    both = all(sum(inside(x) for x in part if x.side == s) >= 0.4 * dur for s in ("left", "right"))
-    hand = "both" if both else per_side.most_common(1)[0][0]
+    dt = float(np.median(np.diff(times))) if len(times) > 1 else 0.1
     per_obj = Counter()
     for e in part:   # the object handled (moved, held up) is the step's object, then the one touched longest
-        per_obj[e.track.id] += inside(e) + 4 * sum(1 for i in e.held if i0 <= i <= i1) / 10
+        per_obj[e.track.id] += inside(e) + 4 * dt * sum(1 for i in e.held if i0 <= i <= i1)
     main = next(e.track for e in part if e.track.id == per_obj.most_common(1)[0][0])
+    # the hand is the one that works with that object; both hands only when they share it about equally
+    on_main = Counter()
+    for e in part:
+        if e.track.id == main.id:
+            on_main[e.side] += inside(e)
+    (first, t_first), *rest = on_main.most_common() or [("right", 0.0)]
+    t_second = rest[0][1] if rest else 0.0
+    hand = "both" if t_second >= 0.7 * t_first and t_second >= 0.3 * dur else first
     mouth = sum(e.mouth for e in part if e.track.id == main.id) / max(1, sum(e.n for e in part if e.track.id == main.id))
     mv = _object_motion(main, i0, i1, scale)
     if phase == "place":
@@ -655,45 +694,170 @@ def segment_steps(frames: list[dict], max_steps: int = 12) -> list[dict]:
         gaze = _dominant(frames, a, b, lambda f: [f["gaze"]["target"]] if f.get("gaze") else [])
         out.append({"index": k + 1, "t_start": frames[a]["t"], "t_end": frames[b]["t"], "hand": s["hand"],
                     "objects": s["objects"], "gaze_target": gaze, "key_i": key_i, "draft": s["draft"],
-                    "object": s["object"], "to": s.get("target"), "from": None, "action": s["kind"],
+                    "object": s["object"], "to": s.get("target") or (s["object"] if s["kind"] == "insert" else None),
+                    "from": None, "action": s["kind"], "approach": s.get("approach"),
                     "repeat": s["repeat"], "repeats": s["repeats"]})
     return out
 
 
 class LiveSegmenter:
-    """Incremental events for live capture: grasp, release, look, pause, and step boundaries."""
+    """Live steps, on the same idea of a step as ``segment_steps``: a hand-object interaction.
+
+    A hand that reaches an object and stays with it opens a step (event ``grasp``); once every hand has been
+    off its object for GAP seconds the step closes (``release``, then ``step``), so the coach asks right after
+    the action. As offline, contacts while walking and a hand resting on something it never reached for do
+    not count, and the object that moves wins over the clutter around it. Until the first interaction, a pause
+    after a stretch of hand movement closes a step instead (the offline fallback for footage without
+    hand-object contact).
+    """
 
     def __init__(self):
-        self.state: dict[str, dict] = {}
-        self.closures: dict[str, deque] = {}
+        self.i = -1
+        self.widths: deque = deque(maxlen=300)        # shoulder widths seen (or hand box widths, scaled)
+        self.tracker: ObjectTracker | None = None
+        self.seen: deque = deque(maxlen=300)          # recent frames, sides fixed: names, walking, facing
+        self.hist = {"left": deque(maxlen=40), "right": deque(maxlen=40)}   # (t, hand point)
+        self.hand: dict[str, dict] = {}               # side -> the contact it is in
+        self.step: dict | None = None                 # the interaction under way
+        self.steps_closed = 0
+        self.interactions = 0
+        self.gaze_target: str | None = None
+        self.gaze_since = 0.0
+        # pause fallback (no interaction seen yet)
         self.last_active_t: float | None = None
         self.active_since: float | None = None
-        self.gaze_target: str | None = None
-        self.gaze_since: float = 0.0
-        self.step_start: float = 0.0
-        self.step_objects: Counter = Counter()
-        self.step_hand: Counter = Counter()
-        self.last_wrist: dict[str, tuple[float, np.ndarray]] = {}
-        self.steps_closed = 0
+        self.step_start = 0.0
         self.last_step_end = 0.0
+        self.last_wrist: dict[str, tuple[float, np.ndarray]] = {}
+        self.pause_objects: Counter = Counter()
+        self.pause_hands: Counter = Counter()
 
-    def _close_step(self, t: float, why: str, target: str | None = None) -> dict | None:
-        if t - self.step_start < 1.2:
-            return None
-        obj = self.step_objects.most_common(1)[0][0] if self.step_objects else None
-        hand = self.step_hand.most_common(1)[0][0] if self.step_hand else None
-        self.steps_closed += 1
-        step = {"index": self.steps_closed, "t_start": round(self.step_start, 2), "t_end": round(t, 2), "hand": hand,
-                "objects": [o for o in (obj, target) if o], "gaze_target": self.gaze_target, "why_closed": why,
-                "draft": (f"Move the {obj} to the {target}" if obj and target else f"Work with the {obj}" if obj else "Hand movement")}
-        self.step_start = t
-        self.last_step_end = t
-        self.step_objects.clear()
-        self.step_hand.clear()
-        return step
+    # ---- what the offline segmentation knows from the whole clip, estimated from what was seen so far
+    @property
+    def scale(self) -> float:
+        return float(np.median(self.widths)) if self.widths else 200.0
 
+    def _observe_scale(self, f: dict) -> None:
+        sw = None
+        lm = (f.get("pose") or {}).get("lm2d")
+        if lm and len(lm) > 12:
+            sw = float(np.linalg.norm(np.asarray(lm[11][:2]) - np.asarray(lm[12][:2])))
+        if sw:
+            self.widths.append(sw)
+        elif not any(True for _ in self.widths):
+            for hd in f.get("hands", []):
+                if hd.get("bbox"):
+                    self.widths.append(HAND_TO_SCALE * (hd["bbox"][2] - hd["bbox"][0]))
+
+    def _engaged(self, tr, box) -> bool:
+        home = self.tracker._home.get(tr.id)
+        diag_ = math.hypot(box[2] - box[0], box[3] - box[1])
+        return home is not None and float(np.linalg.norm(center(box) - home)) >= max(SHIFTED * self.scale, 0.5 * diag_)
+
+    def _walking(self, t: float) -> bool:
+        pts = [(f["t"], c) for f in self.seen if t - f["t"] <= 1.0 for c in [body_center(f)] if c is not None]
+        if len(pts) < 2 or pts[-1][0] - pts[0][0] < 0.5:
+            return False
+        return float(np.linalg.norm(pts[-1][1] - pts[0][1])) / self.scale / (pts[-1][0] - pts[0][0]) > WALK
+
+    def _approached(self, side: str, t: float, p) -> bool:
+        return any(t - tt <= 1.5 and float(np.linalg.norm(q - p)) / self.scale > REST for tt, q in self.hist[side])
+
+    def _names(self) -> dict[int, str]:
+        frames = list(self.seen)
+        return _names(self.tracker.tracks, frames, faces_camera(frames), self.scale, frames[-1] if frames else None)
+
+    # ---- frames in, events out
     def update(self, f: dict) -> list[dict]:
+        self.i += 1
         t = f["t"]
+        f = fix_sides(f)
+        self._observe_scale(f)
+        if self.tracker is None:
+            self.tracker = ObjectTracker(self.scale)
+        self.tracker.scale = self.scale
+        pts = {hd["side"]: hand_point(hd) for hd in f.get("hands", []) if hd.get("side") in self.hist}
+        present = self.tracker.update(self.i, t, f.get("objects", []), list(pts.values()))
+        self.seen.append(f)
+        walking = self._walking(t)
+        events: list[dict] = []
+        for side, p in pts.items():
+            c = None if walking else pick_contact(p, present, self.scale, self._engaged)
+            if c is not None:
+                tr, mouth, eng = c
+                st = self.hand.get(side)
+                if st is None:
+                    st = self.hand[side] = {"obj": tr.id, "since": t, "i0": self.i, "last": t, "n": 0, "open": False,
+                                            "resting": not self._approached(side, t, p)}
+                st["obj"], st["last"], st["n"] = tr.id, t, st["n"] + 1   # an open contact may move to a neighbour
+                if eng:
+                    st["resting"] = False
+                if not st["open"] and st["n"] >= 2 and not st["resting"]:
+                    st["open"] = True
+                    if self.step is None:
+                        self.step = {"t0": st["since"], "i0": st["i0"], "t1": t, "i1": self.i, "per_obj": Counter(),
+                                     "per_side": Counter(), "mouth": 0, "n": 0, "handled": False}
+                    events.append({"type": "event", "t": t, "kind": "grasp", "hand": side, "object": self._names()[tr.id]})
+                if st["open"] and self.step is not None:
+                    s = self.step
+                    s["t1"], s["i1"], s["n"], s["mouth"] = t, self.i, s["n"] + 1, s["mouth"] + int(mouth)
+                    s["per_obj"][tr.id] += 1 + 4 * int(eng)
+                    s["per_side"][side] += 1
+                    s["handled"] = s["handled"] or eng
+            self.hist[side].append((t, p))
+        for side, st in list(self.hand.items()):
+            if t - st["last"] > GAP:
+                if st["open"]:
+                    events.append({"type": "event", "t": t, "kind": "release", "hand": side,
+                                   "object": self._names().get(st["obj"]), "target": None})
+                del self.hand[side]
+        if self.step is not None and not any(st["open"] for st in self.hand.values()):
+            step = self._close_interaction("release")
+            if step:
+                events.append({"type": "step", "step": step})
+        if self.interactions == 0 and self.step is None:
+            events += self._pause_fallback(f, t)
+        g = (f.get("gaze") or {}).get("target")
+        if g and g != self.gaze_target and t - self.gaze_since > 0.5:
+            self.gaze_target, self.gaze_since = g, t
+            events.append({"type": "event", "t": t, "kind": "look", "object": g})
+        return events
+
+    def _close_interaction(self, why: str) -> dict | None:
+        s, self.step = self.step, None
+        if s is None or (s["t1"] - s["t0"] < 1.0 and not s["handled"]):
+            return None
+        tracks = {tr.id: tr for tr in self.tracker.tracks}
+        names = self._names()
+        main = tracks[s["per_obj"].most_common(1)[0][0]]
+        (first, n_first), *rest = s["per_side"].most_common()
+        n_second = rest[0][1] if rest else 0
+        hand = "both" if n_second >= 0.7 * n_first else first
+        mv = _object_motion(main, s["i0"], s["i1"], self.scale)
+        if main.label in CONTAINERS and s["mouth"] >= 0.5 * s["n"] and mv["max"] < MOVED:
+            kind = "insert"
+        elif mv["end"] >= MOVED:
+            kind = "move"
+        elif mv["max"] >= MOVED:
+            kind = "lift_return"
+        elif mv["lift"] >= MOVED:
+            kind = "lift"
+        else:
+            kind = "handle"
+        target = None
+        if kind == "move":
+            target = _target_near(mv["end_c"], self.tracker.tracks, s["i1"], main.id, names, self.scale)
+        others = [names[k] for k, _ in s["per_obj"].most_common() if k != main.id]
+        self.interactions += 1
+        self.steps_closed += 1
+        self.last_step_end = s["t1"]
+        return {"index": self.steps_closed, "t_start": round(s["t0"], 2), "t_end": round(s["t1"], 2), "hand": hand,
+                "objects": [names[main.id]] + [o for o in dict.fromkeys([target] + others) if o and o != names[main.id]],
+                "gaze_target": self.gaze_target, "why_closed": why, "action": kind,
+                "draft": _describe(kind, hand, names[main.id], target)}
+
+    def _pause_fallback(self, f: dict, t: float) -> list[dict]:
+        """Before any interaction: a pause after a stretch of hand movement closes a step (as the old segmenter did)."""
         events: list[dict] = []
         dg = diag(f.get("size", [1280, 720]))
         moving = False
@@ -705,52 +869,39 @@ class LiveSegmenter:
                 if 0 < t - t0 < 0.6 and float(np.linalg.norm(ft["wrist"] - w0)) / dg / (t - t0) > 0.06:
                     moving = True
             self.last_wrist[side] = (t, ft["wrist"])
-            hist = self.closures.setdefault(side, deque(maxlen=90))
-            hist.append(ft["closure"])
-            # Thresholds sit between this hand's own open and closed poses once both have been seen.
-            open_ref, closed_ref = (np.percentile(hist, 90), np.percentile(hist, 10)) if len(hist) >= 10 else (1.8, 1.0)
-            span = open_ref - closed_ref
-            if span > 0.3:
-                mid = (open_ref + closed_ref) / 2
-                grasp_thr, release_thr = mid - 0.1 * span, mid + 0.1 * span
-            else:
-                grasp_thr, release_thr = 1.3, 1.5
-            st = self.state.setdefault(side, {"held": None, "count": 0})
             obj = near_object(ft["center"], ft["size"], f.get("objects", []))
             if obj:
-                self.step_objects[obj] += 1
-            self.step_hand[side] += 1
-            if st["held"] is None and obj and ft["closure"] < grasp_thr:
-                st["count"] += 1
-                if st["count"] >= 2:
-                    st["held"], st["count"] = obj, 0
-                    events.append({"type": "event", "t": t, "kind": "grasp", "hand": side, "object": obj})
-            elif st["held"] is not None and ft["closure"] > release_thr:
-                st["count"] += 1
-                if st["count"] >= 2:
-                    held, st["held"], st["count"] = st["held"], None, 0
-                    target = obj if obj and obj != held else None
-                    events.append({"type": "event", "t": t, "kind": "release", "hand": side, "object": held, "target": target})
-                    step = self._close_step(t, "release", target)
-                    if step:
-                        events.append({"type": "step", "step": step})
-            else:
-                st["count"] = 0
+                self.pause_objects[obj] += 1
+            self.pause_hands[side] += 1
         if moving:
             self.last_active_t = t
             self.active_since = self.active_since or t
         elif self.last_active_t is not None and t - self.last_active_t > 1.2 and self.active_since is not None:
             if self.last_active_t - self.active_since > 1.5 and t - self.last_step_end > 2.0:
                 events.append({"type": "event", "t": t, "kind": "pause"})
-                step = self._close_step(t, "pause")
+                step = self._close_pause(t, "pause")
                 if step:
                     events.append({"type": "step", "step": step})
             self.active_since = None
-        g = (f.get("gaze") or {}).get("target")
-        if g and g != self.gaze_target and t - self.gaze_since > 0.5:
-            self.gaze_target, self.gaze_since = g, t
-            events.append({"type": "event", "t": t, "kind": "look", "object": g})
         return events
 
+    def _close_pause(self, t: float, why: str) -> dict | None:
+        if t - self.step_start < 1.2:
+            return None
+        obj = self.pause_objects.most_common(1)[0][0] if self.pause_objects else None
+        hand = self.pause_hands.most_common(1)[0][0] if self.pause_hands else None
+        self.steps_closed += 1
+        step = {"index": self.steps_closed, "t_start": round(self.step_start, 2), "t_end": round(t, 2), "hand": hand,
+                "objects": [obj] if obj else [], "gaze_target": self.gaze_target, "why_closed": why, "action": "handle",
+                "draft": f"Work with the {obj}" if obj else f"Move the {hand or 'working'} hand"}
+        self.step_start = self.last_step_end = t
+        self.pause_objects.clear()
+        self.pause_hands.clear()
+        return step
+
     def finish(self, t: float) -> dict | None:
-        return self._close_step(t, "stop")
+        if self.step is not None:
+            return self._close_interaction("stop")
+        if self.interactions == 0:
+            return self._close_pause(t, "stop")
+        return None

@@ -3,6 +3,7 @@
     python backend/tools/eval_steps.py                    # every clip in ground_truth.json, steps from segment_steps()
     python backend/tools/eval_steps.py --stored           # the steps stored in each skill.json instead (after the writer)
     python backend/tools/eval_steps.py --skill smp_vase=sk_c28f1461 -v --json out.json
+    python backend/tools/eval_steps.py --live --fps 5         # the live segmenter, fed frame by frame at 5 fps
 
 For each clip it takes a processed skill of that sample (its cached tracks.json), segments it with the
 current `tacit.perception.timeline.segment_steps` (or reads the stored steps), and matches detected
@@ -24,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tacit.perception.timeline import segment_steps  # noqa: E402
+from tacit.perception.timeline import LiveSegmenter, segment_steps  # noqa: E402
 
 DATA = Path(os.environ.get("TACIT_DATA", Path.home() / "tacit" / "data"))
 IOU_MIN = 0.3
@@ -92,13 +93,33 @@ def skills_for(clip: str) -> list[Path]:
     return out
 
 
-def detected_steps(skill_dir: Path, stored: bool) -> list[dict]:
+def subsample(frames: list[dict], fps: float | None) -> list[dict]:
+    if not fps:
+        return frames
+    out, next_t = [], -1.0
+    for f in frames:
+        if f["t"] >= next_t:
+            out.append(f)
+            next_t = f["t"] + 1.0 / fps - 1e-6
+    return out
+
+
+def live_steps(frames: list[dict]) -> list[dict]:
+    """What the live segmenter emits when the frames arrive one by one (the steps the coach asks about)."""
+    seg, out = LiveSegmenter(), []
+    for f in frames:
+        out += [e["step"] for e in seg.update(f) if e["type"] == "step"]
+    last = seg.finish(frames[-1]["t"]) if frames else None
+    return out + ([last] if last else [])
+
+
+def detected_steps(skill_dir: Path, stored: bool, live: bool = False, fps: float | None = None) -> list[dict]:
     if stored:
         sk = json.loads((skill_dir / "skill.json").read_text())
         return [{"t_start": s["t_start"], "t_end": s["t_end"], "hand": s.get("hand"), "objects": s.get("objects", []),
                  "draft": f"{s.get('title', '')}. {s.get('instruction', '')}"} for s in sk.get("steps", [])]
-    frames = json.loads((skill_dir / "tracks.json").read_text())["frames"]
-    return segment_steps(frames)
+    frames = subsample(json.loads((skill_dir / "tracks.json").read_text())["frames"], fps)
+    return live_steps(frames) if live else segment_steps(frames)
 
 
 def main() -> None:
@@ -106,6 +127,8 @@ def main() -> None:
     ap.add_argument("--gt", default=str(DATA / "samples" / "ground_truth.json"))
     ap.add_argument("--skill", action="append", default=[], help="CLIP=SKILL_ID (default: the first processed skill of each clip)")
     ap.add_argument("--stored", action="store_true", help="score the steps stored in skill.json instead of re-segmenting")
+    ap.add_argument("--live", action="store_true", help="score the live segmenter (frames fed one by one)")
+    ap.add_argument("--fps", type=float, help="subsample the tracks to this frame rate first (live capture runs slower)")
     ap.add_argument("--json", help="write the full results here")
     ap.add_argument("-v", "--verbose", action="store_true", help="list every detected and ground-truth step")
     a = ap.parse_args()
@@ -122,7 +145,7 @@ def main() -> None:
                 print(f"{clip}: no processed skill with tracks.json; skipped")
                 continue
             sdir = found[0]
-        det = detected_steps(sdir, a.stored)
+        det = detected_steps(sdir, a.stored, a.live, a.fps)
         res = score(det, gt["steps"])
         res["skill"] = sdir.name
         res["steps"] = [{k: s.get(k) for k in ("t_start", "t_end", "hand", "objects", "draft")} for s in det]
