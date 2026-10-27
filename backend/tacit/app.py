@@ -104,7 +104,8 @@ async def health_():
 
 @app.get("/api/box")
 async def box_():
-    return await box_status()
+    from .models.speech import GATE
+    return {**(await box_status()), "speech_queue": GATE.waiting()}
 
 
 @app.get("/api/users")
@@ -196,7 +197,7 @@ async def skills_create(request: Request, x_tacit_user: str | None = Header(defa
         sample = next((x for x in seed.samples() if x["id"] == body.get("sample_id")), None)
         if not sample:
             raise HTTPException(404, "no such sample")
-        skill = seed.create_skill_from_sample(sample, expert_id=expert["id"])
+        skill = seed.create_skill_from_sample(sample, expert_id=expert["id"], title=body.get("title"))
         return {"skill_id": skill["id"], "status": skill["status"]}
     if body.get("source") == "live":
         sid = new_id("sk")
@@ -238,6 +239,8 @@ async def skills_patch(skill_id: str, body: dict):
     for k in ("title", "summary"):
         if k in body:
             sk[k] = body[k]
+    if str(body.get("title", "")).startswith("QA "):
+        sk["test"] = True
     if "steps" in body:
         by_id = {s["id"]: s for s in body["steps"] if "id" in s}
         for st in sk.get("steps", []):
@@ -419,10 +422,10 @@ async def stt_(file: UploadFile = File(...)):
 
 # ------------------------------------------------------------------------------------ learn
 @app.get("/api/learn/lessons")
-async def lessons(x_tacit_user: str | None = Header(default=None)):
+async def lessons(x_tacit_user: str | None = Header(default=None), include_test: bool = False):
     uid = user_id(x_tacit_user)
     with session() as s:
-        rows = [r for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if not r.test]
+        rows = [r for r in s.exec(select(SkillRow).where(SkillRow.status == "ready")).all() if include_test or not r.test]
         prog = {p.skill_id: p for p in s.exec(select(LessonProgress).where(LessonProgress.trainee_id == uid)).all()}
     out = []
     for r in rows:

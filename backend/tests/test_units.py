@@ -164,3 +164,25 @@ def test_merge_groups_follows_covers_and_falls_back():
     assert [[s["index"] for s in g] for _, g in groups] == [[1, 2], [3, 4], [5]]   # 4 joins the nearest earlier group
     fallback = merge_groups([{"index": 1, "title": "A"}], obs)
     assert len(fallback) == 5 and fallback[0][0]["title"] == "A" and fallback[1][0] == {}
+
+
+async def test_tts_gate_serves_interactive_before_batch():
+    import asyncio
+    from tacit.models.speech import _Gate
+    gate, order = _Gate(), []
+
+    async def use(name, prio, hold=0.02):
+        await gate.acquire(prio)
+        order.append(name)
+        await asyncio.sleep(hold)
+        gate.release()
+
+    await gate.acquire(gate.BATCH)          # a narration line holds the voice
+    tasks = [asyncio.create_task(use("batch-2", gate.BATCH)), asyncio.create_task(use("batch-3", gate.BATCH))]
+    await asyncio.sleep(0)
+    tasks.append(asyncio.create_task(use("coach", gate.INTERACTIVE)))
+    await asyncio.sleep(0)
+    gate.release()
+    await asyncio.gather(*tasks)
+    assert order == ["coach", "batch-2", "batch-3"]
+    assert gate.waiting() == {"interactive": 0, "batch": 0, "busy": False}

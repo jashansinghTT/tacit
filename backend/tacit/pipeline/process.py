@@ -216,7 +216,7 @@ async def process_skill(job: jobs.Job, skill_id: str) -> dict:
     narration = {}
     for k, (key, text) in enumerate(first):
         try:
-            path, dur, sb = await speech.tts(text)
+            path, dur, sb = await speech.tts(text, batch=True)
             narration[key] = {"audio": media_url(path), "duration": round(dur, 2), "text": text}
             extra_served.append(sb)
         except ModelUnavailable as e:
@@ -289,7 +289,7 @@ def _background(coro) -> None:
 async def narrate_rest(skill_id: str, lines: list[tuple[str, str]]) -> None:
     for key, text in lines:
         try:
-            path, dur, _ = await speech.tts(text)
+            path, dur, _ = await speech.tts(text, batch=True)
         except ModelUnavailable:
             log.warning("background narration stopped for %s", skill_id)
             return
