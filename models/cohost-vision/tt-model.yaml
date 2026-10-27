@@ -124,6 +124,8 @@ serve_profiles:
       TT_METAL_VISIBLE_DEVICES: "0"
       TT_MESH_GRAPH_DESC_PATH: /opt/tt-metal/tt_metal/fabric/mesh_graph_descriptors/p150_mesh_graph_descriptor.textproto
       TT_MESH_SHAPE: "1x1"
+      # boot log: every live L1 buffer after each member's phase (nothing may stay resident)
+      TT_COHOST_L1_REPORT: "1"
 default_profile: p150
 
 verify:

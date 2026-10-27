@@ -64,6 +64,30 @@ class Rounds:
         return self.n
 
 
+def unpin_l1(params: dict, l1_key: str, dram_key: str) -> int:
+    """Use the DRAM copy of a constant where a model kept a second copy resident in L1, and free
+    that L1 copy. Returns 1 if one was freed.
+
+    HaMeR and RF-DETR keep small constant rows (ones, layer-scale) in L1 so that the fused
+    matmul-addcmul op reads its scale row from the same buffer type as an L1 residual; HaMeR's
+    own notes call it a precaution (the op takes one accessor per tensor, so mixed placement is
+    legal), and the values are the same either way. Resident L1 is what co-hosting cannot afford:
+    every interleaved L1 buffer holds the same address range on every core, and VGGT's camera
+    layer norm needs nearly the whole L1 of core (0,0). Worse, a trace replay does not re-check
+    circular buffers, so a replay can silently overwrite another member's resident L1."""
+    import ttnn
+
+    old = params.get(l1_key)
+    new = params[dram_key]
+    if old is None or old is new:
+        return 0
+    if old.memory_config().buffer_type != ttnn.BufferType.L1:
+        return 0
+    params[l1_key] = new
+    ttnn.deallocate(old)
+    return 1
+
+
 def programs(mesh) -> int:
     return mesh.num_program_cache_entries() if hasattr(mesh, "num_program_cache_entries") else -1
 

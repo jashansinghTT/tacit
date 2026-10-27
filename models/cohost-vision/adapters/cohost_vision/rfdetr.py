@@ -12,7 +12,7 @@ import time
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, log, note, programs, without_lifespan
+from .common import Rounds, StepModel, log, note, programs, unpin_l1, without_lifespan
 
 
 class RfDetrMember(AppMember):
@@ -40,6 +40,8 @@ class RfDetrMember(AppMember):
         model = TtRfDetr(ref, mesh)
         if not model.use_trace:
             raise RuntimeError("the co-host adapter serves RF-DETR's traced path only (RFDETR_EAGER unset)")
+        freed = sum(unpin_l1(p, f"{k}_l1", k) for p in model.backbone.layers for k in ("ls1", "ls2"))
+        log.info("cohost-vision: rfdetr: %d resident L1 layer-scale row(s) moved to their DRAM copies", freed)
         self.model, self.pre, self.srv = model, pre, srv
         srv.STATE.update(
             device=mesh, pre=pre, config=cfg,

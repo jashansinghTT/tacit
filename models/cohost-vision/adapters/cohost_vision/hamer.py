@@ -14,7 +14,7 @@ from typing import Any, Dict
 
 from tt_kernel.cohost.apps import AppMember
 
-from .common import Rounds, StepModel, log, note, programs, without_lifespan
+from .common import Rounds, StepModel, log, note, programs, unpin_l1, without_lifespan
 
 
 class HamerMember(AppMember):
@@ -62,6 +62,9 @@ class HamerMember(AppMember):
         self.model = SharedMeshTtHamer(ref, device_id=cfg.device_id, strict=True, use_trace=cfg.use_trace)
         if self.model._vit_params is None or self.model._head_params is None:
             raise RuntimeError("tt-nn parameters not available after the upload")
+        freed = sum(unpin_l1(p["fused"], "ones_l1", "ones")
+                    for p in (self.model._vit_params, self.model._head_params) if p.get("fused"))
+        log.info("cohost-vision: hamer: %d resident L1 constant(s) moved to their DRAM copies", freed)
         self.ref, self.cfg, self.srv = ref, cfg, srv
         self.x_a, self.x_b = sample_input(batch=1, seed=0), sample_input(batch=1, seed=1)
         srv.STATE.update(mano=mano, mano_path=str(mano_path) if mano_path else None, cfg=cfg,
