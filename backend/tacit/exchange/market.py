@@ -34,7 +34,8 @@ def listing_dict(l: Listing) -> dict:
     expert = _user(l.expert_id)
     skill = load_skill(l.skill_id) or {}
     ver = (skill.get("verification") or {})
-    return {"id": l.id, "skill_id": l.skill_id, "title": l.title, "summary": l.summary, "thumb": l.thumb,
+    thumb = skill.get("motion_thumb", "") if l.thumb.endswith("/thumb.jpg") or not l.thumb else l.thumb
+    return {"id": l.id, "skill_id": l.skill_id, "title": l.title, "summary": l.summary, "thumb": thumb,
             "preview_video": l.preview_video, "expert": {"id": expert["id"], "name": expert["name"]}, "plant": l.plant,
             "industry": l.industry, "robot_types": json.loads(l.robot_types), "verified": ver.get("status") == "verified",
             "verification_score": ver.get("score"), "consent": json.loads(l.consent or "{}"), "price": json.loads(l.price),
@@ -43,9 +44,13 @@ def listing_dict(l: Listing) -> dict:
             "steps_count": len(skill.get("steps", [])), "duration": (skill.get("source") or {}).get("duration")}
 
 
-def list_listings(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None) -> list[dict]:
+def list_listings(q: str = "", industry: str = "", robot: str = "", verified: bool | None = None,
+                  include_test: bool = False) -> list[dict]:
     with session() as s:
         rows = s.exec(select(Listing)).all()
+        if not include_test:
+            test_ids = {r.id for r in s.exec(select(SkillRow).where(SkillRow.test == True)).all()}  # noqa: E712
+            rows = [l for l in rows if l.skill_id not in test_ids]
     out = [listing_dict(l) for l in rows]
     if q:
         ql = q.lower()
@@ -110,7 +115,8 @@ def create_listing(skill_id: str, body: dict, user_id: str) -> dict:
     split = body.get("royalty_split") or DEFAULT_SPLIT
     total = float(split.get("expert", 0.7)) + float(split.get("plant", 0.3))
     split = {"expert": round(float(split.get("expert", 0.7)) / total, 3), "plant": round(float(split.get("plant", 0.3)) / total, 3)}
-    row = Listing(id=lid, skill_id=skill_id, title=skill["title"], summary=skill.get("summary", ""), thumb=skill.get("thumb", ""),
+    # Buyers see a motion-only preview (no video pixels), never a frame of the expert.
+    row = Listing(id=lid, skill_id=skill_id, title=skill["title"], summary=skill.get("summary", ""), thumb=skill.get("motion_thumb", ""),
                   preview_video=f"/api/skills/{skill_id}/twin", expert_id=skill["expert"]["id"],
                   plant=body.get("plant") or "Northline Assembly, Plant 2", industry=body.get("industry") or "Manufacturing",
                   robot_types=json.dumps(body.get("robot_types") or ["franka"]),

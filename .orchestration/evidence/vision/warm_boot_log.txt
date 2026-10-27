@@ -1,0 +1,61 @@
+2026-10-27 19:18:05,272 tt_cohost INFO cohost mesh P150 open: 1 devices
+2026-10-27 19:18:08,146 cohost_vision INFO cohost-vision: hamer weights /hf/hub/models--changh95--hamer-weights/snapshots/e8217b46d54b4e8afaaf0dd6efb6b62341c97d32/hamer.ckpt, MANO absent (MANO parameters only)
+2026-10-27 19:18:09,181 cohost_vision INFO cohost-vision: hamer: 1 resident L1 constant(s) freed; copied into L1 per use
+2026-10-27 19:18:09,182 cohost_vision INFO cohost-vision: hamer load: 1 programs cached; L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:09,182 tt_cohost INFO cohost: hamer load: +1.18 GiB/chip DRAM (total 1.18); L1 held 0.0 KiB/core
+2026-10-27 19:18:09,185 tt_cohost INFO cohost: L1 buffers after hamer load (0): none
+2026-10-27 19:18:09,185 tt_cohost INFO cohost: hamer load_model: loaded
+2026-10-27 19:18:09,746 cohost_vision INFO cohost-vision: gaze load: 1 programs cached; L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:09,747 tt_cohost INFO cohost: gaze load: +0.13 GiB/chip DRAM (total 1.31); L1 held 0.0 KiB/core
+2026-10-27 19:18:09,750 tt_cohost INFO cohost: L1 buffers after gaze load (0): none
+2026-10-27 19:18:09,750 tt_cohost INFO cohost: gaze load_model: loaded
+2026-10-27 19:18:09,916 cohost_vision INFO cohost-vision: rfdetr: 22 resident L1 layer-scale row(s) freed; copied into L1 per use
+2026-10-27 19:18:09,916 cohost_vision INFO cohost-vision: rfdetr load: 4 programs cached; L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:09,917 tt_cohost INFO cohost: rfdetr load: +0.06 GiB/chip DRAM (total 1.37); L1 held 0.0 KiB/core
+2026-10-27 19:18:09,920 tt_cohost INFO cohost: L1 buffers after rfdetr load (0): none
+2026-10-27 19:18:09,920 tt_cohost INFO cohost: rfdetr load_model: loaded
+2026-10-27 19:18:16,107 cohost_vision INFO cohost-vision: vggt load: 4 programs cached; L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:16,108 tt_cohost INFO cohost: vggt load: +2.59 GiB/chip DRAM (total 3.97); L1 held 0.0 KiB/core
+2026-10-27 19:18:16,117 tt_cohost INFO cohost: L1 buffers after vggt load (0): none
+2026-10-27 19:18:16,117 tt_cohost INFO cohost: vggt load_model: loaded
+2026-10-27 19:18:16,165 cohost_vision INFO cohost-vision: hamer compile: 28 programs cached (+24 compiled); L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:16,166 tt_cohost INFO cohost: hamer warmup-compile: +0.00 GiB/chip DRAM (total 3.97); L1 held 0.0 KiB/core
+2026-10-27 19:18:16,175 tt_cohost INFO cohost: L1 buffers after hamer warmup-compile (0): none
+2026-10-27 19:18:16,175 tt_cohost INFO cohost: hamer compiled
+2026-10-27 19:18:16,336 cohost_vision INFO cohost-vision: gaze compile: 113 programs cached (+85 compiled); L1_SMALL held 0.0 KiB/core
+2026-10-27 19:18:16,337 tt_cohost INFO cohost: gaze warmup-compile: +0.01 GiB/chip DRAM (total 3.97); L1 held 0.0 KiB/core
+2026-10-27 19:18:16,346 tt_cohost INFO cohost: L1 buffers after gaze warmup-compile (0): none
+2026-10-27 19:18:16,346 tt_cohost INFO cohost: gaze compiled
+2026-10-27 19:18:16,508 cohost_vision INFO cohost-vision: rfdetr compile: 207 programs cached (+94 compiled); L1_SMALL held 0.4 KiB/core
+2026-10-27 19:18:16,509 tt_cohost INFO cohost: rfdetr warmup-compile: +0.01 GiB/chip DRAM (total 3.98); L1 held 0.0 KiB/core
+2026-10-27 19:18:16,517 tt_cohost INFO cohost: L1 buffers after rfdetr warmup-compile (0): none
+2026-10-27 19:18:16,518 tt_cohost INFO cohost: rfdetr compiled
+2026-10-27 19:18:24,599 cohost_vision INFO cohost-vision: vggt compile: 720 programs cached (+513 compiled); L1_SMALL held 14.8 KiB/core
+2026-10-27 19:18:24,600 tt_cohost INFO cohost: vggt warmup-compile: +0.46 GiB/chip DRAM (total 4.44); L1 held 0.0 KiB/core
+2026-10-27 19:18:24,612 tt_cohost INFO cohost: L1 buffers after vggt warmup-compile (0): none
+2026-10-27 19:18:24,612 tt_cohost INFO cohost: vggt compiled
+2026-10-27 19:18:24,653 cohost_vision INFO cohost-vision: hamer capture: 720 programs cached (+0 compiled); L1_SMALL held 14.8 KiB/core
+2026-10-27 19:18:25,405 cohost_vision INFO cohost-vision: hamer warm-up PCC {'eager_vs_ref_pcc': 0.99983, 'replay_vs_eager_pcc': 1.0, 'fresh_input_vs_ref_pcc': 0.99966, 'min_pcc': 0.99} (capture + 2 replays 39 ms)
+2026-10-27 19:18:25,407 tt_cohost INFO cohost: hamer warmup-capture: +0.00 GiB/chip DRAM (total 4.44); L1 held 0.0 KiB/core
+2026-10-27 19:18:25,418 tt_cohost INFO cohost: L1 buffers after hamer warmup-capture (0): none
+2026-10-27 19:18:25,418 tt_cohost INFO cohost: hamer traces captured
+2026-10-27 19:18:25,433 cohost_vision INFO cohost-vision: gaze capture: 720 programs cached (+0 compiled); L1_SMALL held 14.8 KiB/core
+2026-10-27 19:18:25,445 cohost_vision INFO cohost-vision: gaze traces for head buckets [1, 2, 3, 4, 6, 8, 10] captured in 0.0s; warm [5.9, 5.7] ms
+2026-10-27 19:18:25,447 tt_cohost INFO cohost: gaze warmup-capture: +0.00 GiB/chip DRAM (total 4.45); L1 held 0.0 KiB/core
+2026-10-27 19:18:25,457 tt_cohost INFO cohost: L1 buffers after gaze warmup-capture (0): none
+2026-10-27 19:18:25,457 tt_cohost INFO cohost: gaze traces captured
+2026-10-27 19:18:25,474 cohost_vision INFO cohost-vision: rfdetr capture: 720 programs cached (+0 compiled); L1_SMALL held 14.8 KiB/core
+2026-10-27 19:18:25,484 cohost_vision INFO cohost-vision: rfdetr trace captured in 0.0s; traced call 9.2 ms
+2026-10-27 19:18:25,485 tt_cohost INFO cohost: rfdetr warmup-capture: +0.00 GiB/chip DRAM (total 4.45); L1 held 0.0 KiB/core
+2026-10-27 19:18:25,496 tt_cohost INFO cohost: L1 buffers after rfdetr warmup-capture (0): none
+2026-10-27 19:18:25,496 tt_cohost INFO cohost: rfdetr traces captured
+2026-10-27 19:18:26,441 cohost_vision INFO cohost-vision: vggt capture: 720 programs cached (+0 compiled); L1_SMALL held 14.8 KiB/core
+2026-10-27 19:18:26,441 cohost_vision INFO cohost-vision: vggt traces for S=[1, 2, 3, 4] captured in 0.9s
+2026-10-27 19:18:26,444 tt_cohost INFO cohost: vggt warmup-capture: +0.37 GiB/chip DRAM (total 4.82); L1 held 0.0 KiB/core
+2026-10-27 19:18:26,456 tt_cohost INFO cohost: L1 buffers after vggt warmup-capture (0): none
+2026-10-27 19:18:26,456 tt_cohost INFO cohost: vggt traces captured
+2026-10-27 19:18:27,277 tt_cohost INFO cohost: hamer ready on port 21000
+2026-10-27 19:18:27,277 tt_cohost INFO cohost: gaze ready on port 21001
+2026-10-27 19:18:27,277 tt_cohost INFO cohost: rfdetr ready on port 21002
+2026-10-27 19:18:27,277 tt_cohost INFO cohost: vggt ready on port 21003
+cohost: all members ready

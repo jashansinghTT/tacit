@@ -66,7 +66,11 @@ def _llm(request: httpx.Request) -> httpx.Response:
     if body.get("stream"):
         chunks = "".join(f"data: {json.dumps({'choices': [{'delta': {'content': w}}]})}\n\n" for w in ["Maria ", "says ", "hold it by the body. ", "Then place it."])
         return httpx.Response(200, text=chunks + "data: [DONE]\n\n", headers={"content-type": "text/event-stream"})
-    if "pending_questions" in prompt:
+    if "translate" in body["messages"][0]["content"]:
+        content = prompt  # identity "translation": same JSON back
+    elif "quality lead" in body["messages"][0]["content"]:
+        content = "You did the first step well. Do not skip setting the cup in the bowl."
+    elif "pending_questions" in prompt:
         content = json.dumps(STRUCTURE)
     elif "sop_markdown" in prompt:
         content = "```json\n" + json.dumps(DOCS) + "\n```"
@@ -150,8 +154,9 @@ def test_tutor_streams_text_and_sentence_audio(api):
     with api.stream("POST", f"/api/tutor/{sid}/ask", json={"question": "How do I hold it?"}) as r:
         body = "".join(r.iter_text())
     events = [line.split(": ", 1)[1] for line in body.splitlines() if line.startswith("event: ")]
-    assert events[0] == "delta" and "audio" in events and events[-1] == "done"
-    done = json.loads(body.strip().splitlines()[-1].split("data: ", 1)[1])
+    assert events[0] == "delta" and "audio" in events and "done" in events and events[-1] == "end"
+    done_line = next(l for l in body.splitlines() if l.startswith("data: ") and '"audio_parts"' in l)
+    done = json.loads(done_line.split("data: ", 1)[1])
     assert done["text"].startswith("Maria says")
 
 
@@ -160,3 +165,46 @@ def test_box_and_lessons(api):
     assert [c["id"] for c in box["chips"]] == [0, 1, 2, 3]
     assert box["totals"]["models"] == 9
     assert isinstance(api.get("/api/learn/lessons", headers={"X-Tacit-User": "u_sam"}).json(), list)
+
+
+def test_restart_recovers_interrupted_jobs(api):
+    from tacit import app as appmod
+    from tacit.db import JobRow, session
+    from tacit.storage import load_skill, save_skill
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    sk = load_skill(sid)
+    sk["status"] = "processing"
+    save_skill(sk)
+    with session() as s:
+        s.add(JobRow(id="job_orphan", kind="process", skill_id=sid, status="running", payload="{}"))
+        s.commit()
+    assert appmod.recover_interrupted_jobs() == [sid]
+    assert api.get("/api/jobs/job_orphan").json()["status"] == "failed"
+    assert load_skill(sid)["status"] == "draft"
+
+
+def test_listing_preview_never_shows_video_pixels(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    sk = api.get(f"/api/skills/{sid}").json()
+    assert sk["motion_thumb"].endswith("/motion.jpg") and sk["thumb"].endswith("/thumb.jpg")
+    lst = api.post("/api/exchange/listings", json={"skill_id": sid, "consent": {"expert_confirmed": True}}, headers=H).json()
+    assert lst["thumb"] == sk["motion_thumb"]
+    assert all(l["thumb"] != sk["thumb"] for l in api.get("/api/exchange/listings").json())
+
+
+
+def test_audit_and_translated_lesson(api):
+    sid = api.post("/api/skills", json={"source": "sample", "sample_id": "smp_unit"}, headers=H).json()["skill_id"]
+    _wait(api, api.post(f"/api/skills/{sid}/process").json()["job_id"])
+    vid = config.SAMPLES / "unit.mp4"
+    r = api.post(f"/api/skills/{sid}/audit", files={"file": ("run.mp4", vid.read_bytes(), "video/mp4")}, data={"worker": "Sam Okafor"}).json()
+    job = _wait(api, r["job_id"])
+    assert job["status"] == "done", job
+    rep = api.get(f"/api/skills/{sid}/audits/{r['audit_id']}").json()
+    assert rep["summary"]["steps_total"] == len(api.get(f"/api/skills/{sid}").json()["steps"])
+    assert {row["status"] for row in rep["steps"]} <= {"done", "missing", "out_of_order"}
+    assert rep["narrative"].startswith("You did")
+    assert api.get(f"/api/skills/{sid}/audits").json()[0]["id"] == r["audit_id"]
+    les = api.get(f"/api/learn/lessons/{sid}?lang=es").json()
+    assert les["lang"] == "es" and les["steps"] and any(l["code"] == "es" for l in les["languages"])

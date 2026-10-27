@@ -40,6 +40,7 @@ class SkillRow(SQLModel, table=True):
     listing_id: Optional[str] = None
     source_kind: str = "upload"
     sample_id: Optional[str] = None
+    test: bool = False
 
 
 class JobRow(SQLModel, table=True):
@@ -112,6 +113,10 @@ class LedgerEntry(SQLModel, table=True):
 
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    with engine.begin() as conn:  # columns added after the first release
+        cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(skillrow)").fetchall()}
+        if "test" not in cols:
+            conn.exec_driver_sql("ALTER TABLE skillrow ADD COLUMN test BOOLEAN DEFAULT 0")
 
 
 @contextmanager

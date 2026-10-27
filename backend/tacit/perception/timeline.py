@@ -191,6 +191,19 @@ def activity_segments(frames: list[dict], act: np.ndarray, min_len: float = 1.5)
     return [(a, b) for a, b in merged if frames[b]["t"] - frames[a]["t"] >= min_len]
 
 
+def _wrist_regions(frames: list[dict], a: int, b: int, side: str | None) -> tuple[str | None, str | None]:
+    """Where the working hand starts and ends a segment, as bench regions."""
+    pts = []
+    for f in frames[a:b + 1]:
+        h = next((h for h in f.get("hands", []) if side is None or h["side"] == side), None)
+        if h:
+            pts.append((h["lm2d"][0], f.get("size", [1280, 720])))
+    if len(pts) < 2:
+        return None, None
+    (s, size), (e, _) = pts[0], pts[-1]
+    return _region(s[0], s[1], size), _region(e[0], e[1], size)
+
+
 def _dominant(frames: list[dict], a: int, b: int, key) -> str | None:
     c = Counter(v for f in frames[a:b + 1] for v in key(f) if v)
     return c.most_common(1)[0][0] if c else None
@@ -224,8 +237,11 @@ def segment_steps(frames: list[dict], max_steps: int = 8) -> list[dict]:
         for a, b in activity_segments(frames, act)[:max_steps]:
             obj = _dominant(frames, a, b, _objects_near_hands)
             hand = _dominant(frames, a, b, lambda f: [h["side"] for h in f.get("hands", [])])
+            src, dst = _wrist_regions(frames, a, b, hand)
+            draft = (f"Work with the {obj}" if obj else f"Move the {hand or 'working'} hand") + \
+                    (f" from the {src} to the {dst}" if src and dst and src != dst else f" at the {src}" if src else "")
             steps.append({"i_start": a, "i_end": b, "objects": [obj] if obj else [], "hand": hand,
-                          "draft": f"Work with the {obj}" if obj else "Hand movement", "object": obj})
+                          "draft": draft, "object": obj, "from": src, "to": dst})
     if len(steps) < 2 and len(frames) > 20:
         n = 3
         edges = np.linspace(0, len(frames) - 1, n + 1).astype(int)

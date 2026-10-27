@@ -1,0 +1,88 @@
+{
+ "cohost_config_version": 1,
+ "mesh_device": "P150",
+ "members": [
+  {
+   "name": "hamer",
+   "kind": "app",
+   "port": 21000,
+   "model": "changh95/hamer-weights",
+   "args": [],
+   "env": {
+    "HF_MODEL": "changh95/hamer-weights",
+    "TT_WEIGHTS_REVISION": "e8217b46d54b4e8afaaf0dd6efb6b62341c97d32",
+    "HAMER_FORCE_TT": "1",
+    "HAMER_TRACE": "1",
+    "HAMER_WARMUP_ITERS": "3",
+    "TT_FUSED": "1",
+    "TT_FUSED_PATCH": "fp32w",
+    "TT_FUSED_SDPA": "default",
+    "TT_FUSED_HEAD_L1": "0"
+   },
+   "kv_tokens": 0,
+   "app": "models.cohost_vision.hamer:member",
+   "preload": ""
+  },
+  {
+   "name": "gaze",
+   "kind": "app",
+   "port": 21001,
+   "model": "changh95/gaze-lle-weights",
+   "args": [],
+   "env": {
+    "HF_MODEL": "changh95/gaze-lle-weights",
+    "TT_WEIGHTS_REVISION": "f83e53f0f17dd2175f31ceaf9fa650044147ada1",
+    "GAZE_LLE_MAX_HEADS": "10",
+    "TT_FUSED": "1",
+    "TT_FUSED_SDPA_Q": "128",
+    "TT_FUSED_SDPA_K": "128",
+    "TT_FUSED_HEAD": "separate"
+   },
+   "kv_tokens": 0,
+   "app": "models.cohost_vision.gaze:member",
+   "preload": ""
+  },
+  {
+   "name": "rfdetr",
+   "kind": "app",
+   "port": 21002,
+   "model": "Roboflow/rf-detr-base",
+   "args": [],
+   "env": {
+    "HF_MODEL": "Roboflow/rf-detr-base",
+    "TT_WEIGHTS_REVISION": "7b95b089788e6c7db56d5ea9b0a07ca08ea6ac0a"
+   },
+   "kv_tokens": 0,
+   "app": "models.cohost_vision.rfdetr:member",
+   "preload": ""
+  },
+  {
+   "name": "vggt",
+   "kind": "app",
+   "port": 21003,
+   "model": "facebook/VGGT-1B",
+   "args": [],
+   "env": {
+    "HF_MODEL": "facebook/VGGT-1B",
+    "TT_WEIGHTS_REVISION": "860abec7937da0a4c03c41d3c269c366e82abdf9",
+    "VGGT_S_MAX": "4",
+    "VGGT_PREWARM_SEQS": "1,2,3,4",
+    "VGGT_S_CANON": "1",
+    "VGGT_TT_SCRATCH": "1",
+    "VGGT_TT_PRELUDE": "0",
+    "VGGT_BLOCK_TRACE": "0",
+    "VGGT_TT_SCRATCH_COMPARE": "0",
+    "TT_FUSED": "1"
+   },
+   "kv_tokens": 0,
+   "app": "models.cohost_vision.vggt:member",
+   "preload": ""
+  }
+ ],
+ "tt_config": {
+  "l1_small_size": 65536,
+  "trace_region_size": 1979711488,
+  "num_command_queues": 1
+ },
+ "status_port": 21004
+}

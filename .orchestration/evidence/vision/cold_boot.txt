@@ -1,0 +1,11 @@
+[vision-up] building the image and staging /home/jashan/tacit/build/cohost-vision
+[vision-up] starting the group on chip 0
+[vision-up] waiting for every member (timeout 2400s; follow: /home/jashan/tacit/.tools/ttm/bin/tt-model logs /home/jashan/tacit/build/cohost-vision/tt_kernel_manifest.json -f)
+[vision-up] 15s: cohost: rfdetr load_model: loaded
+[vision-up] 20s: cohost: vggt load_model: loaded
+[vision-up] 35s: cohost: hamer compiled
+[vision-up] 70s: cohost: gaze compiled
+[vision-up] 100s: cohost: rfdetr compiled
+[vision-up] up in 221s: hamer :21000 gaze :21001 rfdetr :21002 vggt :21003 status :21004
+real	3m43.326s
+rc=0
