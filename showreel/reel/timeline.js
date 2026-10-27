@@ -3,6 +3,7 @@
 import coldOpen from './sections/coldopen.js'
 import hands from './sections/hands.js'
 import title from './sections/title.js'
+import watch from './sections/watch.js'
 
 export const MUSIC = { take: 'take_11', offset: 0 }
 
@@ -33,6 +34,7 @@ export async function buildTimeline(R) {
     [coldOpen, 0, 3],
     [hands, 3, 9],
     [title, 9, 10],
+    [watch, 10, 13],
   ]
   for (const [make, b0, b1] of plan) {
     const s = make(T)

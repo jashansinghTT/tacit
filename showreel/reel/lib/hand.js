@@ -96,39 +96,43 @@ export function project([x, y, z], { cx, cy, f, dist }) {
  * Draw a lit hand skeleton. pts: 21 screen points [x, y, depth?]. draw(i) in 0..1 is how much of
  * bone i is drawn (draw-on); joints pop with their parent bone. Additive glow in `color`.
  */
-export function drawHand(g, pts, { color = '#3cd7ff', width = 3, glow = 1, alpha = 1, draw = () => 1, jointR = 5, core = '#ffffff' } = {}) {
+export function drawHand(g, pts, { color = '#3cd7ff', width = 3, glow = 1, alpha = 1, draw = () => 1, jointR = 5, core = '#ffffff',
+  boneAlpha = () => 1, jointAlpha = () => 1, depthScale = () => 1 } = {}) {
   g.save()
   g.globalCompositeOperation = 'lighter'
   g.lineCap = 'round'
   const passes = [
-    [width * 7, 0.05 * glow],
-    [width * 3.2, 0.14 * glow],
-    [width * 1.6, 0.45],
-    [width * 0.7, 0.9],
+    [width * 9, 0.045 * glow],
+    [width * 4.2, 0.12 * glow],
+    [width * 2.0, 0.5],
+    [width * 0.9, 1],
   ]
   for (const [w, a] of passes) {
     g.lineWidth = w
     g.strokeStyle = color
-    g.globalAlpha = a * alpha
-    g.beginPath()
     BONES.forEach(([p, c], i) => {
       const k = draw(i)
-      if (k <= 0) return
+      const ba = boneAlpha(i)
+      if (k <= 0 || ba <= 0) return
       const A = pts[p], B = pts[c]
+      const ds = (depthScale(p) + depthScale(c)) / 2
+      g.globalAlpha = a * alpha * ba * Math.min(1, 0.35 + 0.65 * ds)
+      g.lineWidth = w * ds
+      g.beginPath()
       g.moveTo(A[0], A[1])
       g.lineTo(mix(A[0], B[0], k), mix(A[1], B[1], k))
+      g.stroke()
     })
-    g.stroke()
   }
   // Joints: a soft halo and a hot core, scaled in as their bone arrives.
   const jointK = new Array(21).fill(0)
   jointK[0] = draw(0) > 0 || draw(4) > 0 ? 1 : 0
   BONES.forEach(([, c], i) => { jointK[c] = Math.max(jointK[c], clamp((draw(i) - 0.85) / 0.15)) })
   for (let j = 0; j < 21; j++) {
-    const k = jointK[j]
+    const k = jointK[j] * jointAlpha(j)
     if (k <= 0) continue
     const [x, y] = pts[j]
-    const r = jointR * (TIPS.includes(j) ? 1.25 : 1) * (0.4 + 0.6 * k)
+    const r = jointR * (TIPS.includes(j) ? 1.25 : 1) * (0.4 + 0.6 * k) * depthScale(j)
     const grad = g.createRadialGradient(x, y, 0, x, y, r * 4.5)
     grad.addColorStop(0, color)
     grad.addColorStop(1, 'rgba(0,0,0,0)')
