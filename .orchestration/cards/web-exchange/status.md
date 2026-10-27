@@ -1,31 +1,51 @@
 # Status: web-exchange
 
 State: running
-Updated: 2026-10-27T19:27:00+00:00
+Updated: 2026-10-27T20:00:00+00:00
 
-## Now
-Read SPEC (F6, section 7), MOAT, API (exchange), the web card and the existing `web/src` (design
-system, mock layer, `ListingCard`). Building the five exchange pages against the real backend code.
+## Works (on the real backend, 8710, real model data)
+- **Exchange** `/exchange`: stats strip, provenance strip, search, industry, robot and verified-only
+  filters (in the URL), sort, listing cards with a motion signature drawn from `/twin` (never a
+  video frame), verified and consent badges, price from, licenses sold, expert. Empty state and
+  sparse-grid card explain how skills get here. "List a skill" picker for experts.
+- **Listing** `/exchange/:id`: 3D motion replay (own self-framing scene: body, glowing hands, wrist
+  paths, gaze, parts; no point cloud, no frames) on a time-true step track; buy box with license
+  types, terms, royalty bar; VGGT certificate, consent record (shared vs never shared), pack
+  contents with the zip tree, steps with the expert's "why", terms table, models that made it.
+  **License** opens a checkout labelled "Demo checkout: no payment is taken" (no payment fields;
+  the E2E asserts none exist), then the receipt (amount, royalties to the expert and the plant,
+  demo stamp) and the pack download.
+- **Sell** `/exchange/sell/:skillId`: six steps (check, consent, prices, royalty split with a
+  worked example, industry and robots, review and publish) with a live buyer-view preview; the
+  backend's 400 message is shown inline; already-listed and not-the-expert states.
+- **Library** `/library`: licensed packs, download, "what's inside" (zip tree, certificates, terms).
+- **Earnings** `/earnings`: total, last six months chart, ledger, by skill, your listings.
+- **E2E** `web/e2e/exchange.spec.ts` (+ `web/e2e/exchange.config.ts`): Maria lists through the
+  wizard → Atlas licenses through the checkout → downloads the pack (zip opened: motion, SOP,
+  program, certificates; no video or images; no keyframes) → library → Maria's ledger shows the
+  royalty. **Green twice in a row on 8710** (listed `sk_c28f1461` vase and `sk_3b7c613d` jars),
+  green on the production build (`vite preview` → 8710), green on the dev backend.
+- `npm run typecheck`, `npm run lint`, `npm run build` pass.
 
-## Findings
-- The real backend on 8710 has no skills yet: the vision models on chip 0 are down (vision card not
-  started) and the sample list (`data/samples/samples.json`) is not curated yet, so no skill is
-  ready and VGGT-verified, and the sell flow cannot run there today.
-- So for development I run a private copy of the backend code from this worktree on **port 8714**
-  with its own data dir and every model endpoint mocked in-process (respx, using the backend's own
-  test fixtures). The real pipeline turns three sample clips into ready, verified skills there.
-  It never calls a model port (21000-21039 are all mocked) and touches no chip.
-  Script: `.orchestration/evidence/web-exchange/devbackend.py` (committed with the evidence).
-- Backend vs `docs/API.md` (the UI follows the backend): listing `terms` is a dict per license
-  type (not a string); `contents` also has `steps` and `policy`; listings carry
-  `verification_score`, `steps_count`, `duration`; the receipt carries `license_type`, `demo`,
-  `issued_at`; `POST /api/exchange/listings` requires `consent.expert_confirmed: true` and accepts
-  `plant`; library license rows have no `listing_id`.
+## Evidence
+`.orchestration/evidence/web-exchange/`: `e2e-01..10-*.png` from the real-backend run (sell
+check/consent/split/published, grid, listing, checkout, receipt, library, earnings).
+
+## Decisions
+- Buyers never see pixels from the recording: cards and the listing draw motion only. Told the
+  lead the listing `thumb` was a video frame; fixed in main (9236ea9, motion-only thumb).
+- Built `features/exchange/MotionScene.tsx` instead of reusing `components/skill/TwinViewer`:
+  its fixed camera frames real twins off-screen and it keys parts by label (duplicate-key
+  warnings). Told the lead/web.
+- The UI follows the backend where it differs from API.md (terms per type, `contents.steps` and
+  `policy`, `verification_score`, receipt `issued_at`), with defaults for the API.md shapes.
+- Dev ports: 5712 is held by the web worker's leftover vite (pid 255570), so I use 5715 (dev
+  backend 8714, mocked models, `evidence/web-exchange/devbackend.py`), 5716 (dev → 8710) and
+  5717 (preview → 8710).
 
 ## Next
-Exchange grid, Listing detail with checkout, Sell wizard, Library, Earnings; Playwright
-`web/e2e/exchange.spec.ts`; screenshots in `.orchestration/evidence/web-exchange/`.
+Full-page screenshots of every state at 1280/1440/1920 and tablet width, a last design pass,
+handoff.
 
 ## Blockers
-None for building. The merge gate on the real 8710 needs one ready, verified skill there (needs
-chip 0 vision up and samples seeded); until then the gate flow runs against the backend code on 8714.
+None.
