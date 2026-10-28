@@ -61,7 +61,7 @@ for your review (no final render without you). No agent sessions are running; on
 - Optional: add user `jashan` to the `render` group for GPU rendering in the sim (system change, not done).
 
 <!-- runtime:start -->
-### Runtime (watchdog, 2026-10-27T23:19:57+00:00)
+### Runtime (watchdog, 2026-10-28T03:34:56+00:00)
 
 | service | state | check |
 |---|---|---|
@@ -74,5 +74,5 @@ for your review (no final render without you). No agent sessions are running; on
 | rfdetr | up | http://127.0.0.1:21002/health |
 | vggt | up | http://127.0.0.1:21003/health |
 
-tmux sessions: drama3: 2 windows (created Mon Oct 19 07:45:00 2026); gptoss: 3 windows (created Tue Oct 13 04:19:04 2026); mm3: 1 windows (created Wed Sep  9 14:57:33 2026); tacit-heartbeat: 1 windows (created Tue Oct 27 19:10:18 2026); tacit-models: 1 windows (created Tue Oct 27 18:33:23 2026); tacit-team: 8 windows (created Tue Oct 27 18:42:05 2026)
+tmux sessions: drama3: 2 windows (created Mon Oct 19 07:45:00 2026); gptoss: 3 windows (created Tue Oct 13 04:19:04 2026); mm3: 1 windows (created Wed Sep  9 14:57:33 2026); tacit-models: 1 windows (created Tue Oct 27 18:33:23 2026); tacit-team: 8 windows (created Tue Oct 27 18:42:05 2026)
 <!-- runtime:end -->
