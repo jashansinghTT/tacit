@@ -1,5 +1,9 @@
 # Design sources for the web card
 
+> The third-party previews, background frames and component files this note mentions were working
+> references during the build and are not kept in the repository. The shipped backgrounds are in
+> `web/public/bg/`; sources: [MotionSites](https://motionsites.ai) and [21st.dev](https://21st.dev).
+
 Fetched by the lead from MotionSites and 21st.dev (the MCP tools only exist in the lead's session).
 Adapt them to the Tacit design system; do not copy third-party branding or copy text.
 
