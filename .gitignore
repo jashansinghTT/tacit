@@ -27,6 +27,7 @@ web/playwright-report/
 *.task
 *.tflite
 !web/public/**/*.mp4
+!docs/media/*.mp4
 web/dist-mock/
 web/e2e/.media/
 # qa dev runs (timestamped runs are evidence and are committed)
